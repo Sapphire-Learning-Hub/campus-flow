@@ -1,31 +1,78 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router";
+import { Suspense, lazy } from "react";
+import { createBrowserRouter, Navigate } from "react-router-dom";
+import { RouterProvider } from "react-router/dom";
+import AppLayout from "@/layouts/AppLayout";
 
-import LoginPage from "@/pages/auth/LoginPage.tsx";
-import RegisterPage from "@/pages/auth/RegisterPage.tsx";
-import NotFoundPage from "@/pages/error/NotFoundPage.tsx";
-import DashboardPage from "@/pages/dashboard/DashboardPage.tsx";
-import ProjectsPage from "@/pages/projects/ProjectsPage.tsx";
-import TasksPage from "@/pages/tasks/TasksPage.tsx";
-import MembersPage from "@/pages/members/MembersPage.tsx";
-import SettingsPage from "@/pages/settings/SettingsPage.tsx";
+// ---------- 1. 懒加载所有页面组件 ----------
+const LoginPage = lazy(() => import("@/pages/Login/Login"));
+const RegisterPage = lazy(() => import("@/pages/Register/Register.tsx"));
+const DashboardPage = lazy(() => import("@/pages/Dashboard/Dashboard"));
+const ProjectsPage = lazy(() => import("@/pages/Projects/Project.tsx"));
+const TasksPage = lazy(() => import("@/pages/Tasks/Tasks"));
+const MembersPage = lazy(() => import("@/pages/Members/Members.tsx"));
+const SettingsPage = lazy(() => import("@/pages/Settings/Setting.tsx"));
+const ErrorPage = lazy(() => import("@/pages/Error/Error"));
 
+// ---------- 2. 统一懒加载包装（消除重复代码） ----------
+const withLazy = (Component: React.LazyExoticComponent<React.FC>) => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <Component />
+  </Suspense>
+);
+
+// ---------- 3. 创建路由实例 ----------
+const router = createBrowserRouter([
+  // 无公共布局的页面：登录、注册
+  {
+    path: "/login",
+    element: withLazy(LoginPage),
+  },
+  {
+    path: "/register",
+    element: withLazy(RegisterPage),
+  },
+
+  // 有公共布局的业务页面：统一嵌套 AppLayout
+  {
+    path: "/",
+    element: <AppLayout />,
+    children: [
+      // 根路径默认重定向到工作台
+      {
+        index: true,
+        element: <Navigate to="/dashboard" replace />,
+      },
+      {
+        path: "dashboard",
+        element: withLazy(DashboardPage),
+      },
+      {
+        path: "projects",
+        element: withLazy(ProjectsPage),
+      },
+      {
+        path: "tasks",
+        element: withLazy(TasksPage),
+      },
+      {
+        path: "members",
+        element: withLazy(MembersPage),
+      },
+      {
+        path: "settings",
+        element: withLazy(SettingsPage),
+      },
+    ],
+  },
+
+  // 全局 404 页面
+  {
+    path: "*",
+    element: withLazy(ErrorPage),
+  },
+]);
+
+// ---------- 4. 导出路由提供者 ----------
 export function AppRoutes() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />}></Route>
-        <Route>
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/projects" element={<ProjectsPage />} />
-
-          <Route path="/tasks" element={<TasksPage />} />
-          <Route path="/members" element={<MembersPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-        </Route>
-        <Route path="*" element={<NotFoundPage />}></Route>
-      </Routes>
-    </BrowserRouter>
-  );
+  return <RouterProvider router={router} />;
 }
