@@ -1,27 +1,26 @@
 .register-card {
-    margin: 80px auto;
-    width: min(500px, 100%);
-    padding-block: 28px;
+  margin: 80px auto;
+  width: min(500px, 100%);
+  padding-block: 28px;
 }
 .register-form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
 }
 .register-options {
-    display: grid;
-    gap: 9px;
-    margin: 2px 0 20px;
-    color: var(--text-secondary);
+  display: grid;
+  gap: 9px;
+  margin: 2px 0 20px;
+  color: var(--text-secondary);
 }
 .auth-switch {
-    margin: 18px 0 0;
-    color: #5f6673;
-    text-align: center;
+  margin: 18px 0 0;
+  color: #5f6673;
+  text-align: center;
 }
 .auth-switch a {
-    margin-left: 4px;
-    color: #1d5eff;
-    font-weight: 650;
+  margin-left: 4px;
+  color: #1d5eff;
+  font-weight: 650;
 }
-
