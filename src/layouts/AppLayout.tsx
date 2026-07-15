@@ -29,6 +29,7 @@ import {
 import { useMemo, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { BrandMark } from "@/components/common/BrandMark";
+import { MemberAvatar } from "@/components/common/MemberAvatar.tsx";
 import "./AppLayout.css";
 
 const { Header, Sider, Content } = Layout;
@@ -82,15 +83,13 @@ export function AppLayout() {
           setMobileOpen(false);
         }}
       />
+      <div className="sider-line"></div>
       <div className="sider-footnote">
-        {collapsed && !isMobile ? (
-          <span className="status-dot" />
-        ) : (
-          <>
-            <span className="status-dot" />
-            Mock 服务正常
-          </>
-        )}
+        <MemberAvatar />
+        <span className="user-trigger-text">
+          <b>{"张三"}</b>
+          <small>{"管理员"}</small>
+        </span>
       </div>
     </>
   );

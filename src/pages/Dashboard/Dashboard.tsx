@@ -3,6 +3,7 @@ import {
   CalendarOutlined,
   ClockCircleOutlined,
   FolderOpenOutlined,
+  PlusOutlined,
   TeamOutlined,
   WarningFilled,
 } from "@ant-design/icons";
@@ -12,6 +13,7 @@ import { Button, Progress, Space } from "antd";
 import dayjs from "dayjs";
 
 import "./index.css";
+import { PageHeader } from "@/components/common/PageHeader.tsx";
 
 const metrics = [
   {
@@ -131,22 +133,18 @@ export default function DashboardPage() {
     <div className="page-container dashboard-page">
       {/* Header */}
 
-      <div className="page-header">
-        <div>
-          <h1>下午好，Developer</h1>
-
-          <p>
-            {dayjs().format("YYYY年M月D日")}
-            {" · "}
-            查看项目进度和团队动态
-          </p>
-        </div>
-
-        <Space>
-          <Button>创建任务</Button>
-          <Button type="primary">创建项目</Button>
-        </Space>
-      </div>
+      <PageHeader
+        title={`下午好，${"张三"}`}
+        description={`${dayjs().format("YYYY年M月D日")} · 用进度、截止与动态同步今天的协作重点`}
+        actions={
+          <Space>
+            <Button icon={<PlusOutlined />}>创建任务</Button>
+            <Button type="primary" icon={<PlusOutlined />}>
+              创建项目
+            </Button>
+          </Space>
+        }
+      />
 
       {/* 数据指标 */}
 
