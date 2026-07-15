@@ -1,0 +1,254 @@
+/* ===== Metric Band ===== */
+.metric-band {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin-top: 10px;
+  margin-bottom: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+.metric-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 18px;
+  border-right: 1px solid var(--line);
+}
+.metric-item:last-child {
+  border-right: 0;
+}
+.metric-icon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 8px;
+  font-size: 17px;
+}
+.metric-icon.blue {
+  color: #1d5eff;
+  background: rgba(29, 94, 255, 0.1);
+}
+.metric-icon.cyan {
+  color: #0891b2;
+  background: rgba(8, 145, 178, 0.1);
+}
+.metric-icon.red {
+  color: #e5484d;
+  background: rgba(229, 72, 77, 0.1);
+}
+.metric-icon.amber {
+  color: #d97706;
+  background: rgba(245, 158, 11, 0.12);
+}
+.metric-icon.green {
+  color: #059669;
+  background: rgba(16, 185, 129, 0.11);
+}
+.metric-icon.violet {
+  color: #6d5dfc;
+  background: rgba(109, 93, 252, 0.1);
+}
+.metric-item > div {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  column-gap: 8px;
+  min-width: 0;
+}
+.metric-item small {
+  grid-column: 1 / -1;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 550;
+}
+.metric-item strong {
+  color: var(--text-primary);
+  font-size: 24px;
+  font-weight: 760;
+  line-height: 1.35;
+}
+.metric-item span:not(.metric-icon) {
+  color: var(--text-tertiary);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* ===== Dashboard Grid ===== */
+.dashboard-main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.78fr);
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+/* ===== Project Progress ===== */
+.project-progress-header,
+.project-progress-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 8px minmax(200px, 1.35fr) minmax(126px, 0.48fr) minmax(
+      132px,
+      0.58fr
+    ) 72px 78px 18px;
+  align-items: center;
+  gap: 12px;
+}
+.project-progress-header {
+  padding: 0 20px 8px;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  font-weight: 650;
+}
+.project-progress-row {
+  padding: 13px 20px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.18s ease;
+}
+.project-progress-row:hover {
+  background: var(--surface-subtle);
+}
+.project-color {
+  width: 6px;
+  height: 34px;
+  border-radius: 4px;
+}
+.project-progress-name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.project-progress-name b {
+  color: var(--text-primary);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.project-progress-name small {
+  display: flex;
+  align-items: center;
+  margin-top: 5px;
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+.project-progress-owner {
+  min-width: 0;
+  overflow: hidden;
+}
+.project-progress-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.project-progress-bar .ant-progress {
+  flex: 1;
+  margin: 0;
+}
+.project-progress-bar small {
+  width: 30px;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+.project-progress-row time {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+/* ===== Deadline Timeline ===== */
+.deadline-timeline {
+  padding-bottom: 8px;
+}
+.deadline-timeline button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+.deadline-timeline button:hover {
+  background: var(--surface-subtle);
+}
+.deadline-marker {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  color: #d97706;
+  background: rgba(245, 158, 11, 0.11);
+}
+.deadline-marker.overdue {
+  color: #e5484d;
+  background: rgba(229, 72, 77, 0.1);
+}
+.deadline-timeline button > span:nth-child(2) {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.deadline-timeline b {
+  color: var(--text-primary);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.deadline-timeline small {
+  margin-top: 4px;
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+.deadline-timeline time {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+/* ===== Activity Feed ===== */
+.activity-panel {
+  padding-bottom: 10px;
+}
+.activity-list {
+  display: block;
+  padding: 0 20px 16px;
+}
+.activity-list > div {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+.activity-list > div:first-child {
+  border-top: 0;
+}
+.activity-list > div > span {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.55;
+}
+.activity-list b {
+  color: var(--text-primary);
+}
+.activity-list small {
+  margin-top: 4px;
+  color: var(--text-tertiary);
+}
