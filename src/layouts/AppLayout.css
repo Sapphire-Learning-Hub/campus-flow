@@ -1,4 +1,14 @@
-/* ===== Sidebar & Brand ===== */
+/* ===== App shell & sidebar ===== */
+.app-shell {
+  min-height: 100vh;
+  background: var(--layout-bg);
+}
+
+.app-content {
+  min-width: 0;
+  background: var(--layout-bg);
+}
+
 .app-sider {
   position: sticky !important;
   top: 0;
@@ -14,47 +24,6 @@
   padding: 0 20px;
   border-bottom: 1px solid var(--line);
 }
-.brand-mark {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--text-primary);
-  font-size: 17px;
-  font-weight: 760;
-  letter-spacing: 0;
-  text-decoration: none;
-  white-space: nowrap;
-}
-.brand-symbol {
-  width: 28px;
-  height: 28px;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  align-items: end;
-  gap: 3px;
-  padding: 5px;
-  border-radius: 8px;
-  background: var(--brand-primary);
-  box-shadow: 0 8px 18px
-    color-mix(in srgb, var(--brand-primary) 18%, transparent);
-}
-.brand-symbol i {
-  display: block;
-  border-radius: 3px 3px 1px 1px;
-  background: #fff;
-}
-.brand-symbol i:nth-child(1) {
-  height: 9px;
-  opacity: 0.75;
-}
-.brand-symbol i:nth-child(2) {
-  height: 18px;
-}
-.brand-symbol i:nth-child(3) {
-  height: 13px;
-  opacity: 0.88;
-}
-
 /* ===== Navigation ===== */
 .main-nav.ant-menu {
   background: transparent;
@@ -305,4 +274,44 @@
   border-color: rgba(229, 72, 77, 0.35);
   background: rgba(229, 72, 77, 0.07);
   color: #e5484d;
+}
+
+@media (max-width: 768px) {
+  .app-sider {
+    width: 72px !important;
+    min-width: 72px !important;
+    max-width: 72px !important;
+    flex: 0 0 72px !important;
+  }
+
+  .sider-brand {
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .sider-brand .brand-mark > span:last-child,
+  .main-nav .ant-menu-title-content,
+  .sider-footnote,
+  .sider-line {
+    display: none;
+  }
+
+  .main-nav.ant-menu {
+    padding-inline: 10px;
+  }
+
+  .main-nav .ant-menu-item {
+    padding-inline: 17px !important;
+  }
+
+  .app-header {
+    height: 58px;
+    padding: 0 12px !important;
+  }
+
+  .header-breadcrumb,
+  .global-search,
+  .user-trigger-text {
+    display: none;
+  }
 }

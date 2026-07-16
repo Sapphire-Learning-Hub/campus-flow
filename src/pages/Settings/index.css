@@ -1,4 +1,4 @@
-settings-page,
+.settings-page,
 .settings-page *,
 .settings-page *::before,
 .settings-page *::after {
@@ -162,7 +162,7 @@ settings-page,
 .theme-mode-group .ant-radio-button-wrapper-checked {
   border-color: var(--brand-primary) !important;
   box-shadow: 0 0 0 2px
-    color-mix(in srgb, var(--brand-primary) 12%, transparent);
+  color-mix(in srgb, var(--brand-primary) 12%, transparent);
 }
 
 .theme-card {
@@ -199,11 +199,11 @@ settings-page,
 
 .theme-preview.system {
   background: linear-gradient(
-    90deg,
-    #fff 0 15%,
-    #141414 15% 30%,
-    #f5f7fa 30% 65%,
-    #1f1f1f 65% 100%
+          90deg,
+          #fff 0 15%,
+          #141414 15% 30%,
+          #f5f7fa 30% 65%,
+          #1f1f1f 65% 100%
   );
 }
 
@@ -249,90 +249,80 @@ settings-page,
 }
 
 @media (max-width: 768px) {
-  .settings-layout {
-    width: 100%;
-    min-height: auto;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .settings-sider {
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-    flex: 0 0 auto !important;
-    overflow: visible;
-  }
-
-  .settings-sider .ant-menu {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 4px;
+  .settings-mobile-form {
     width: 100%;
     min-width: 0;
-    padding: 4px;
   }
 
-  .settings-sider .ant-menu-item {
-    display: flex;
+  .settings-mobile-collapse {
     width: 100%;
     min-width: 0;
-    height: 44px;
-    justify-content: center;
-    margin: 0;
-    padding-inline: 6px !important;
-    font-size: 12px;
+    background: transparent;
   }
 
-  .settings-sider .ant-menu-item .anticon {
-    flex: 0 0 auto;
+  .settings-mobile-collapse > .ant-collapse-item {
+    margin-bottom: 12px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface);
+  }
+
+  .settings-mobile-collapse > .ant-collapse-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .settings-mobile-collapse
+    > .ant-collapse-item
+    > .ant-collapse-header {
+    min-height: 56px;
+    align-items: center;
+    padding: 15px 16px;
+    color: var(--text-primary);
     font-size: 15px;
+    font-weight: 650;
   }
 
-  .settings-sider .ant-menu-item .ant-menu-title-content {
-    margin-inline-start: 5px;
+  .settings-mobile-collapse
+    > .ant-collapse-item-active
+    > .ant-collapse-header {
+    color: var(--brand-primary);
+    background: color-mix(in srgb, var(--brand-primary) 8%, transparent);
   }
 
-  .settings-content {
-    width: 100%;
+  .settings-collapse-label {
+    display: inline-flex;
+    min-width: 0;
+    align-items: center;
+    gap: 10px;
   }
 
-  .settings-content .ant-card-head {
-    min-height: 0;
-    padding: 12px 14px;
+  .settings-collapse-label .anticon {
+    flex: 0 0 auto;
+    font-size: 17px;
   }
 
-  .settings-content .ant-card-head-wrapper {
-    display: block;
+  .settings-mobile-collapse .ant-collapse-content {
+    background: var(--surface);
+    border-top: 1px solid var(--line);
   }
 
-  .settings-content .ant-card-head-title,
-  .settings-content .ant-card-extra {
-    padding: 0;
-    white-space: normal;
-    overflow-wrap: anywhere;
+  .settings-mobile-collapse .ant-collapse-content-box {
+    padding: 18px 16px;
   }
 
-  .settings-content .ant-card-extra {
-    margin-top: 4px;
-  }
-
-  .settings-content .ant-card-body {
-    padding: 16px;
-  }
-
-  .settings-content .ant-row {
+  .settings-mobile-collapse .ant-row {
     display: block;
     margin-inline: 0 !important;
   }
 
-  .settings-content .ant-col {
+  .settings-mobile-collapse .ant-col {
     width: 100%;
     max-width: none;
     padding-inline: 0 !important;
   }
 
-  .settings-content .ant-form-item {
+  .settings-mobile-collapse .ant-form-item {
     margin-bottom: 16px;
   }
 
@@ -347,6 +337,7 @@ settings-page,
 
   .profile-row {
     width: 100%;
+    margin-top: 15px;
     align-items: flex-start;
     flex-direction: column;
     gap: 14px;
@@ -355,21 +346,15 @@ settings-page,
 }
 
 @media (max-width: 480px) {
-  .settings-sider .ant-menu-item {
-    padding-inline: 4px !important;
-    font-size: 11px;
-  }
-
-  .settings-sider .ant-menu-item .ant-menu-title-content {
-    margin-inline-start: 3px;
-  }
-
-  .settings-content .ant-card-head {
-    padding: 12px;
-  }
-
-  .settings-content .ant-card-body {
+  .settings-mobile-collapse .ant-collapse-content-box {
     padding: 14px 12px;
+  }
+
+  .settings-mobile-collapse
+    > .ant-collapse-item
+    > .ant-collapse-header {
+    min-height: 52px;
+    padding: 13px 14px;
   }
 
   .profile-row {

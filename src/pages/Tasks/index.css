@@ -33,6 +33,29 @@
   font-size: 10px;
 }
 
+.static-member {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.static-table-panel {
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.static-pagination {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-top: 0;
+  background: var(--surface);
+  color: var(--text-tertiary);
+  font-size: 12px;
+  text-align: right;
+}
+
 /* ===== Task Board ===== */
 .task-board {
   display: grid;
@@ -121,7 +144,7 @@
   color: var(--text-tertiary);
   font-size: 10px;
 }
-.task-card footer .member-inline {
+.task-card footer .static-member {
   font-size: 10px;
 }
 .task-card-plan {
@@ -149,4 +172,11 @@
 .task-card > .ant-select {
   width: 100%;
   margin-top: 10px;
+}
+
+@media (max-width: 768px) {
+  .view-toolbar .ant-segmented {
+    width: 100%;
+    overflow-x: auto;
+  }
 }

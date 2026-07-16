@@ -1,13 +1,18 @@
 .login-card {
-  margin: 80px auto;
+  width: min(500px, calc(100% - 32px)) !important;
+  margin: clamp(28px, 10vh, 80px) auto;
 }
-.auth-switch {
+
+.auth-switch,
+.autu-switch {
   margin: 18px 0 0;
-  color: #5f6673;
+  color: var(--text-secondary);
   text-align: center;
 }
-.auth-switch a {
+
+.auth-switch a,
+.autu-switch a {
   margin-left: 4px;
-  color: #1d5eff;
+  color: var(--brand-primary);
   font-weight: 650;
 }
