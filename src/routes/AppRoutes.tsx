@@ -1,5 +1,5 @@
 import { Suspense, lazy } from "react";
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router";
 import { RouterProvider } from "react-router/dom";
 import AppLayout from "@/layouts/AppLayout";
 
@@ -8,6 +8,9 @@ const LoginPage = lazy(() => import("@/pages/Login/Login"));
 const RegisterPage = lazy(() => import("@/pages/Register/Register.tsx"));
 const DashboardPage = lazy(() => import("@/pages/Dashboard/Dashboard"));
 const ProjectsPage = lazy(() => import("@/pages/Projects/Project.tsx"));
+const ProjectDetailPage = lazy(
+  () => import("@/pages/Projects/ProjectDetail.tsx"),
+);
 const TasksPage = lazy(() => import("@/pages/Tasks/Tasks"));
 const MembersPage = lazy(() => import("@/pages/Members/Members.tsx"));
 const SettingsPage = lazy(() => import("@/pages/Settings/Setting.tsx"));
@@ -49,6 +52,10 @@ const router = createBrowserRouter([
       {
         path: "projects",
         element: withLazy(ProjectsPage),
+      },
+      {
+        path: "projects/:projectId",
+        element: withLazy(ProjectDetailPage),
       },
       {
         path: "tasks",
