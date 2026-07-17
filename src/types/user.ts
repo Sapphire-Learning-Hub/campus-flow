@@ -8,7 +8,10 @@ export interface AuthUser {
   email: string;
   avatar?: string;
 }
-
+export interface AuthSession {
+  token: string;
+  user: AuthUser;
+}
 export interface MockUser extends AuthUser {
   password: string;
 }
