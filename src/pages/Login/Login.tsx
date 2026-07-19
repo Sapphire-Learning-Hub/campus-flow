@@ -8,13 +8,21 @@ import type { LoginPayload } from "@/types/user.ts";
 import { getApiErrorMessage } from "@/services/client.ts";
 import { login } from "@/services/auth.ts";
 
+function getInternalPath(value: unknown): string | undefined {
+  return typeof value === "string" && value.startsWith("/") && !value.startsWith("//")
+    ? value
+    : undefined;
+}
+
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { message } = App.useApp();
   const [submitted, setSubmitted] = useState<boolean>(false);
   const from =
-    (location.state as { from?: string } | null)?.from ?? "/dashboard";
+    getInternalPath(new URLSearchParams(location.search).get("redirectTo")) ??
+    getInternalPath((location.state as { from?: string } | null)?.from) ??
+    "/dashboard";
   const onFinish: FormProps<LoginPayload>["onFinish"] = async (values) => {
     setSubmitted(true);
     try {
@@ -81,7 +89,7 @@ const Login: React.FC = () => {
           登录 CampusFlow
         </Button>
         <p className="autu-switch">
-          <Link to="/register" state={from}>
+          <Link to="/register" state={{ from }}>
             {" "}
             没有账号,去注册
           </Link>

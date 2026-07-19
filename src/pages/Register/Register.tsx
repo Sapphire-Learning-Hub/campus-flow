@@ -26,6 +26,12 @@ import { getApiErrorMessage } from "@/services/client.ts";
 import { register } from "@/services/auth.ts";
 import "./index.css";
 
+function getInternalPath(value: unknown): string | undefined {
+  return typeof value === "string" && value.startsWith("/") && !value.startsWith("//")
+    ? value
+    : undefined;
+}
+
 type RegisterProps = RegisterPayload & {
   confirmPassword: string;
   agreement: boolean;
@@ -42,7 +48,8 @@ const Register: React.FC = () => {
   const [termsOpen, setTermsOpen] = useState(false);
 
   const from =
-    (location.state as { from?: string } | null)?.from ?? "/dashboard";
+    getInternalPath((location.state as { from?: string } | null)?.from) ??
+    "/dashboard";
 
   const onFinish: FormProps<RegisterProps>["onFinish"] = async (values) => {
     setSubmitted(true);

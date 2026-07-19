@@ -5,7 +5,7 @@ import "./style/base.css";
 
 async function enableMocking() {
   if (import.meta.env.DEV && import.meta.env.VITE_USE_MOCK === "true") {
-    const { worker } = await import("@/api/mockClient");
+    const { worker } = await import("@/api/mock/browser.ts");
 
     await worker.start({
       onUnhandledRequest: "bypass",

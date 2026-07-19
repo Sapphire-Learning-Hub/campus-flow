@@ -24,3 +24,19 @@
   color: var(--brand-primary);
   font-weight: 650;
 }
+.agreement-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.agreement-form-item {
+  margin-bottom: 0;
+}
+
+.agreement-link {
+  height: auto;
+  padding: 0;
+  margin-left: -15px;
+  line-height: 30px;
+}

@@ -2,7 +2,7 @@ import { Suspense, lazy } from "react";
 import { createBrowserRouter, Navigate } from "react-router";
 import { RouterProvider } from "react-router/dom";
 import AppLayout from "@/layouts/AppLayout";
-
+import { ProtectedRouter } from "@/routes/ProtectedRouter";
 // ---------- 1. 懒加载所有页面组件 ----------
 const LoginPage = lazy(() => import("@/pages/Login/Login"));
 const RegisterPage = lazy(() => import("@/pages/Register/Register.tsx"));
@@ -25,7 +25,6 @@ const withLazy = (Component: React.LazyExoticComponent<React.FC>) => (
 
 // ---------- 3. 创建路由实例 ----------
 const router = createBrowserRouter([
-  // 无公共布局的页面：登录、注册
   {
     path: "/login",
     element: withLazy(LoginPage),
@@ -34,41 +33,18 @@ const router = createBrowserRouter([
     path: "/register",
     element: withLazy(RegisterPage),
   },
-
-  // 有公共布局的业务页面：统一嵌套 AppLayout
   {
     path: "/",
+    loader: ProtectedRouter,
     element: <AppLayout />,
     children: [
-      // 根路径默认重定向到工作台
-      {
-        index: true,
-        element: <Navigate to="/dashboard" replace />,
-      },
-      {
-        path: "dashboard",
-        element: withLazy(DashboardPage),
-      },
-      {
-        path: "projects",
-        element: withLazy(ProjectsPage),
-      },
-      {
-        path: "projects/:projectId",
-        element: withLazy(ProjectDetailPage),
-      },
-      {
-        path: "tasks",
-        element: withLazy(TasksPage),
-      },
-      {
-        path: "members",
-        element: withLazy(MembersPage),
-      },
-      {
-        path: "settings",
-        element: withLazy(SettingsPage),
-      },
+      { index: true, element: <Navigate to="/dashboard" replace /> },
+      { path: "dashboard", element: withLazy(DashboardPage) },
+      { path: "projects", element: withLazy(ProjectsPage) },
+      { path: "projects/:projectId", element: withLazy(ProjectDetailPage) },
+      { path: "tasks", element: withLazy(TasksPage) },
+      { path: "members", element: withLazy(MembersPage) },
+      { path: "settings", element: withLazy(SettingsPage) },
     ],
   },
 

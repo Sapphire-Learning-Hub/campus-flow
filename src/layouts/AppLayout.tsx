@@ -30,6 +30,7 @@ import { useMemo, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { BrandMark } from "@/components/common/BrandMark";
 import { MemberAvatar } from "@/components/common/MemberAvatar.tsx";
+import { logout } from "@/services/auth";
 import "./AppLayout.css";
 
 const { Header, Sider, Content } = Layout;
@@ -67,6 +68,15 @@ export function AppLayout() {
     if (parts[0] === "projects" && parts[1]) items.push({ title: "项目详情" });
     return items;
   }, [location.pathname]);
+
+  const handleSignOut = async () => {
+    try {
+      await logout();
+    } finally {
+      setProfileOpen(false);
+      navigate("/login", { replace: true });
+    }
+  };
 
   const navigation = (
     <>
@@ -254,10 +264,7 @@ export function AppLayout() {
             <button
               className="danger"
               type="button"
-              onClick={() => {
-                setProfileOpen(false);
-                navigate("/login", { replace: true });
-              }}
+              onClick={() => void handleSignOut()}
             >
               <LogoutOutlined />
               <span>退出登录</span>
