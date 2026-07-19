@@ -3,11 +3,7 @@ import { mockDatabase } from "../database";
 import { fail, ok, readPositiveInteger } from "../response";
 import { createId } from "@/utils/id";
 import type { PaginatedResult } from "@/types/common";
-import type {
-  Project,
-  ProjectFormValues,
-  ProjectPatch,
-} from "@/types/project";
+import type { Project, ProjectFormValues, ProjectPatch } from "@/types/project";
 
 export const projectHandlers = [
   http.get("/api/projects", async ({ request }) => {
@@ -84,7 +80,9 @@ export const projectHandlers = [
 
   http.delete("/api/projects/:projectId", ({ params }) => {
     const projectId = String(params.projectId);
-    const index = mockDatabase.projects.findIndex((item) => item.id === projectId);
+    const index = mockDatabase.projects.findIndex(
+      (item) => item.id === projectId,
+    );
     if (index === -1) return fail("项目不存在", 404);
 
     mockDatabase.projects.splice(index, 1);

@@ -12,6 +12,7 @@ export const memberHandlers = [
     const memberIds = new Set(
       project?.members.map((member) => member.memberId),
     );
+
     return ok(
       mockDatabase.members.filter((member) => memberIds.has(member.id)),
     );
