@@ -274,6 +274,17 @@ a {
   box-shadow: var(--shadow-soft);
 }
 
+.view-toolbar {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.toolbar-view-row {
+  display: flex;
+  flex: 0 0 100%;
+  justify-content: flex-end;
+}
+
 .data-toolbar .ant-input-affix-wrapper {
   width: min(320px, 30vw);
 }
@@ -286,6 +297,7 @@ a {
   margin-left: auto;
   color: var(--text-tertiary);
   font-size: 12px;
+  line-height: 32px;
   white-space: nowrap;
 }
 

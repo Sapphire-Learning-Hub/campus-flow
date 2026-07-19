@@ -58,7 +58,7 @@
 }
 .sider-line{
   position: absolute;
-  inset: auto 0px 70px;
+  inset: auto 0 70px;
   border-bottom: 1.5px solid var(--line);
 }
 .sider-footnote {
@@ -231,7 +231,7 @@
 .profile-stat-grid strong {
   display: block;
   color: var(--text-primary);
-  font-size: 22px;
+  font-size: 16px;
   line-height: 1.2;
 }
 .profile-stat-grid span {
@@ -289,10 +289,10 @@
     padding-inline: 0;
   }
 
-  .sider-brand .brand-mark > span:last-child,
-  .main-nav .ant-menu-title-content,
-  .sider-footnote,
-  .sider-line {
+  .app-sider .sider-brand .brand-mark > span:last-child,
+  .app-sider .main-nav .ant-menu-title-content,
+  .app-sider .sider-footnote,
+  .app-sider .sider-line {
     display: none;
   }
 
@@ -311,7 +311,7 @@
 
   .header-breadcrumb,
   .global-search,
-  .user-trigger-text {
+  .app-header .user-trigger-text {
     display: none;
   }
 }

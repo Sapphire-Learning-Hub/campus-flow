@@ -34,6 +34,7 @@ const router = createBrowserRouter([
     element: withLazy(RegisterPage),
   },
   {
+    id: "authenticated-app",
     path: "/",
     loader: ProtectedRouter,
     element: <AppLayout />,

@@ -26,14 +26,62 @@ import {
   Tooltip,
   type MenuProps,
 } from "antd";
-import { useMemo, useState } from "react";
-import { Outlet, useLocation, useNavigate } from "react-router";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import {
+  Outlet,
+  useLocation,
+  useNavigate,
+  useRouteLoaderData,
+} from "react-router";
 import { BrandMark } from "@/components/common/BrandMark";
-import { MemberAvatar } from "@/components/common/MemberAvatar.tsx";
-import { logout } from "@/services/auth";
+import { getCurrentUser, logout } from "@/services/auth";
+import { clearAccessToken } from "@/services/session";
 import "./AppLayout.css";
+import type { AuthUser } from "@/types/user.ts";
 
 const { Header, Sider, Content } = Layout;
+const MOBILE_LAYOUT_QUERY = "(max-width: 768px)";
+
+function subscribeToMobileLayout(onStoreChange: () => void) {
+  const mediaQuery = window.matchMedia(MOBILE_LAYOUT_QUERY);
+  mediaQuery.addEventListener("change", onStoreChange);
+  return () => mediaQuery.removeEventListener("change", onStoreChange);
+}
+
+function getMobileLayoutSnapshot() {
+  return window.matchMedia(MOBILE_LAYOUT_QUERY).matches;
+}
+
+function getServerMobileLayoutSnapshot() {
+  return false;
+}
+
+function CurrentUserAvatar({
+  user,
+  large = false,
+}: {
+  user: AuthUser;
+  large?: boolean;
+}) {
+  const initial = user.name.trim().slice(0, 1).toUpperCase() || "?";
+
+  return (
+    <Avatar
+      shape="circle"
+      size={large ? 64 : "default"}
+      src={user.avatar}
+      style={{ background: "#0f141d" }}
+    >
+      {initial}
+    </Avatar>
+  );
+}
 
 const navItems: MenuProps["items"] = [
   { key: "/dashboard", icon: <DashboardOutlined />, label: "工作台" },
@@ -55,12 +103,20 @@ const routeLabels: Record<string, string> = {
 export function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const loaderUser = useRouteLoaderData<AuthUser>("authenticated-app");
+  const [recoveredUser, setRecoveredUser] = useState<AuthUser>();
+  const recoveryRequestRef = useRef<Promise<AuthUser> | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
   const rootPath = `/${location.pathname.split("/").filter(Boolean)[0] ?? "dashboard"}`;
-  const isMobile: boolean = false;
+  const isMobile = useSyncExternalStore(
+    subscribeToMobileLayout,
+    getMobileLayoutSnapshot,
+    getServerMobileLayoutSnapshot,
+  );
+
   const breadcrumbItems = useMemo(() => {
     const parts = location.pathname.split("/").filter(Boolean);
     const items = [{ title: "CampusFlow" }];
@@ -68,6 +124,46 @@ export function AppLayout() {
     if (parts[0] === "projects" && parts[1]) items.push({ title: "项目详情" });
     return items;
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (loaderUser || recoveredUser) return;
+
+    let active = true;
+    const request = recoveryRequestRef.current ?? getCurrentUser();
+    recoveryRequestRef.current = request;
+
+    void request
+      .then((currentUser) => {
+        if (active) setRecoveredUser(currentUser);
+      })
+      .catch(() => {
+        recoveryRequestRef.current = null;
+        if (!active) return;
+
+        clearAccessToken();
+        const returnTo = `${location.pathname}${location.search}${location.hash}`;
+        navigate(`/login?redirectTo=${encodeURIComponent(returnTo)}`, {
+          replace: true,
+        });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [
+    loaderUser,
+    location.hash,
+    location.pathname,
+    location.search,
+    navigate,
+    recoveredUser,
+  ]);
+
+  const user = loaderUser ?? recoveredUser;
+
+  if (!user) {
+    return <div className="app-loading">正在加载用户信息...</div>;
+  }
 
   const handleSignOut = async () => {
     try {
@@ -95,10 +191,10 @@ export function AppLayout() {
       />
       <div className="sider-line"></div>
       <div className="sider-footnote">
-        <MemberAvatar />
+        <CurrentUserAvatar user={user} />
         <span className="user-trigger-text">
-          <b>{"张三"}</b>
-          <small>{"管理员"}</small>
+          <b>{user.name}</b>
+          <small>@{user.username}</small>
         </span>
       </div>
     </>
@@ -183,14 +279,10 @@ export function AppLayout() {
               aria-label="打开个人侧栏"
               onClick={() => setProfileOpen(true)}
             >
-              <Avatar
-                shape="circle"
-                src={"@/assets/hero.png"}
-                style={{ background: "#0f141d" }}
-              ></Avatar>
+              <CurrentUserAvatar user={user} />
               <span className="user-trigger-text">
-                <b>{"张三"}</b>
-                <small>{"111@email.com"}</small>
+                <b>{user.name}</b>
+                <small>{user.email}</small>
               </span>
             </button>
           </div>
@@ -204,30 +296,25 @@ export function AppLayout() {
           onClose={() => setProfileOpen(false)}
         >
           <section className="profile-card">
-            <Avatar
-              shape="circle"
-              size={64}
-              src={"@/assets/hero.png"}
-              style={{ background: "#0f141d" }}
-            ></Avatar>
+            <CurrentUserAvatar user={user} large />
             <div>
-              <h2>{"李四"}</h2>
-              <p>{"111@Email.com"}</p>
-              <span>{"CampusFlow 成员"}</span>
+              <h2>{user.name}</h2>
+              <p>{user.email}</p>
+              <span>@{user.username}</span>
             </div>
           </section>
-          <section className="profile-stat-grid" aria-label="个人协作概览">
+          <section className="profile-stat-grid" aria-label="当前账号信息">
             <article>
-              <strong>{3}</strong>
-              <span>参与空间</span>
+              <strong>{user.username}</strong>
+              <span>登录账号</span>
             </article>
             <article>
-              <strong>{2}</strong>
-              <span>待办工作项</span>
+              <strong>{user.memberId}</strong>
+              <span>成员编号</span>
             </article>
             <article>
-              <strong>{1}</strong>
-              <span>待审核</span>
+              <strong>已登录</strong>
+              <span>账号状态</span>
             </article>
           </section>
           <div className="profile-action-list">
