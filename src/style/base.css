@@ -190,6 +190,25 @@ a {
   background: var(--surface);
 }
 
+.page-state-panel,
+.page-empty-panel {
+  min-height: 380px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.page-state-panel .ant-spin {
+  min-height: 76px;
+}
+
+.page-error-panel {
+  border-radius: 8px;
+}
+
 .workspace-summary {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -423,16 +442,5 @@ a {
 
   .section-heading {
     padding-inline: 16px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
   }
 }
