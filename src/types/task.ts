@@ -24,8 +24,6 @@ export interface Task {
   createdAt: string;
   startDate?: string;
   deadline?: string;
-  iteration?: string;
-  effort?: number;
   tags: string[];
   updatedAt: string;
 }
@@ -40,9 +38,7 @@ export type TaskFormValues = Pick<
   | "deadline"
   | "tags"
 > &
-  Partial<
-    Pick<Task, "workItemType" | "stage" | "startDate" | "iteration" | "effort">
-  > & {
+  Partial<Pick<Task, "workItemType" | "stage" | "startDate">> & {
     assigneeId?: EntityId;
   };
 

@@ -238,15 +238,6 @@ const task = (
     deadlineOffset === undefined ? -12 : Math.min(-1, deadlineOffset - 10),
   ),
   deadline: deadlineOffset === undefined ? undefined : date(deadlineOffset),
-  iteration: inferIteration(projectId),
-  effort:
-    priority === "urgent"
-      ? 8
-      : priority === "high"
-        ? 5
-        : priority === "medium"
-          ? 3
-          : 1,
   tags,
   updatedAt: stamp(-2),
 });
@@ -271,18 +262,6 @@ function inferTaskStage(status: Task["status"]): NonNullable<Task["stage"]> {
   if (status === "review") return "acceptance";
   if (status === "done") return "acceptance";
   return "delivery";
-}
-
-function inferIteration(projectId: string): string {
-  const iterations: Record<string, string> = {
-    p1: "交易闭环冲刺",
-    p2: "社团流程冲刺",
-    p3: "题库模型探索",
-    p4: "归档复盘",
-    p5: "导航 MVP",
-    p6: "活动订阅周",
-  };
-  return iterations[projectId] ?? "默认迭代";
 }
 
 const tasks: Task[] = [
