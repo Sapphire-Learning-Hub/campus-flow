@@ -373,6 +373,7 @@ export function createSeedDatabase(): MockDatabase {
         password: "123456",
         name: "张三",
         email: "zhangsan@campus.edu.cn",
+        department: "计算机学院",
       },
       {
         id: "u2",
@@ -381,6 +382,7 @@ export function createSeedDatabase(): MockDatabase {
         password: "123456",
         name: "李四",
         email: "lisi@campus.edu.cn",
+        department: "软件学院",
       },
     ],
     members: structuredClone(members),

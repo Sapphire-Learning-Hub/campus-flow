@@ -6,6 +6,7 @@ export interface AuthUser {
   username: string;
   name: string;
   email: string;
+  department: string;
   avatar?: string;
 }
 export interface AuthSession {

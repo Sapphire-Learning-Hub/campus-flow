@@ -44,6 +44,7 @@ import { getCurrentUser, logout } from "@/services/auth";
 import { clearAccessToken } from "@/services/session";
 import "./AppLayout.css";
 import type { AuthUser } from "@/types/user.ts";
+import type { AppLayoutContext } from "@/hooks/useCurrentUser";
 
 const { Header, Sider, Content } = Layout;
 const MOBILE_LAYOUT_QUERY = "(max-width: 768px)";
@@ -164,7 +165,9 @@ export function AppLayout() {
   if (!user) {
     return <div className="app-loading">正在加载用户信息...</div>;
   }
-
+  const outletContext: AppLayoutContext = {
+    user,
+  };
   const handleSignOut = async () => {
     try {
       await logout();
@@ -359,7 +362,7 @@ export function AppLayout() {
           </div>
         </Drawer>
         <Content className="app-content">
-          <Outlet />
+          <Outlet context={outletContext} />
         </Content>
       </Layout>
     </Layout>
