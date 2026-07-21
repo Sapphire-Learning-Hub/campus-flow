@@ -1,4 +1,5 @@
 import { delay, http } from "msw";
+import { findAuthorizedUser } from "../auth";
 import { mockDatabase } from "../database";
 import { fail, ok } from "../response";
 import { createId } from "@/utils/id";
@@ -18,6 +19,7 @@ function toAuthUser(user: MockUser): AuthUser {
     username: user.username,
     name: user.name,
     email: user.email,
+    department: user.department,
     avatar: user.avatar,
   };
 }
@@ -27,13 +29,6 @@ function createSession(user: MockUser): AuthSession {
     token: `mock-token-${user.id}`,
     user: toAuthUser(user),
   };
-}
-
-function findAuthorizedUser(request: Request): MockUser | undefined {
-  const authorization = request.headers.get("Authorization");
-  const token = authorization?.replace(/^Bearer\s+/i, "");
-  const userId = token?.replace(/^mock-token-/, "");
-  return mockDatabase.users.find((user) => user.id === userId);
 }
 
 export const authHandlers = [
@@ -79,6 +74,7 @@ export const authHandlers = [
       username,
       name: member.name,
       email,
+      department: member.department,
       password: payload.password,
     };
 
