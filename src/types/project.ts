@@ -25,5 +25,5 @@ export type ProjectFormValues = Pick<
 };
 
 export type ProjectPatch = Partial<
-  Omit<Project, "id" | "createdAt" | "members">
+  Omit<Project, "id" | "createdAt" | "leaderId" | "members">
 >;
