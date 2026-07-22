@@ -17,7 +17,7 @@ import type { Project } from "@/types/project";
 import {
   getProjectPermissions,
   PERMISSION_DENIED,
-} from "@/utils/projectPermissions";
+} from "@/utils/Permissions.ts";
 
 const MANAGEABLE_ROLE_OPTIONS = ROLE_OPTIONS.filter(
   (option): option is { label: string; value: ManageableProjectRole } =>

@@ -27,7 +27,7 @@ import { formatShortDate } from "@/utils/date";
 import {
   getProjectPermissions,
   PERMISSION_DENIED,
-} from "@/utils/projectPermissions";
+} from "@/utils/Permissions.ts";
 import "./index.css";
 
 interface MembersPageData {
@@ -362,6 +362,7 @@ export default function MembersPage() {
             setFilters((current) => ({ ...current, projectId }))
           }
         />
+        <Tag>{members.length} 名成员</Tag>
         <Tag>{filteredMemberRows.length} 条成员关系</Tag>
       </div>
 

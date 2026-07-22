@@ -11,7 +11,7 @@ import type {
 import {
   getProjectPermissions,
   PERMISSION_DENIED,
-} from "@/utils/projectPermissions";
+} from "@/utils/Permissions.ts";
 
 const MANAGEABLE_ROLES = new Set<ManageableProjectRole>([
   "admin",
@@ -33,9 +33,7 @@ export const memberHandlers = [
     if (!getProjectPermissions(project, user.memberId).canViewProject) {
       return fail(PERMISSION_DENIED.viewProject, 403);
     }
-    const memberIds = new Set(
-      project.members.map((member) => member.memberId),
-    );
+    const memberIds = new Set(project.members.map((member) => member.memberId));
 
     return ok(
       mockDatabase.members.filter((member) => memberIds.has(member.id)),
