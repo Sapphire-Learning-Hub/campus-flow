@@ -10,6 +10,7 @@ import {
   WarningFilled,
 } from "@ant-design/icons";
 import {
+  App,
   Button,
   Input,
   Segmented,
@@ -34,6 +35,7 @@ import {
 } from "@/constants/options";
 import { getApiErrorMessage } from "@/services/client";
 import { useAsyncPageData } from "@/hooks/useAsyncPageData";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useEntityEditor } from "@/hooks/useEntityEditor";
 import { listMembers } from "@/services/members";
 import { listProjects } from "@/services/projects";
@@ -50,6 +52,11 @@ import type {
 } from "@/types/task";
 import { formatShortDate, isOverdue } from "@/utils/date";
 import { countActiveFilters, indexById } from "@/utils/collection";
+import {
+  canEditTask,
+  getProjectPermissions,
+  PERMISSION_DENIED,
+} from "@/utils/Permissions.ts";
 import { getTaskStage, getTaskType, summarizeTasks } from "@/utils/task";
 import "./index.css";
 
@@ -140,6 +147,7 @@ interface TaskCardProps {
   task: Task;
   project?: Project;
   member?: Member;
+  editable: boolean;
   onEdit: (task: Task) => void;
 }
 
@@ -163,7 +171,7 @@ function StatusTag({ status }: { status: TaskStatus }) {
   return <Tag color={meta.color}>{meta.label}</Tag>;
 }
 
-function TaskCard({ task, project, member, onEdit }: TaskCardProps) {
+function TaskCard({ task, project, member, editable, onEdit }: TaskCardProps) {
   const overdue = isOverdue(task.deadline, task.status === "done");
 
   return (
@@ -177,7 +185,7 @@ function TaskCard({ task, project, member, onEdit }: TaskCardProps) {
           {task.title}
         </button>
         <Button type="link" size="small" onClick={() => onEdit(task)}>
-          编辑
+          {editable ? "编辑" : "查看"}
         </Button>
       </header>
 
@@ -215,6 +223,7 @@ interface TaskBoardProps {
   tasks: Task[];
   projectsById: ReadonlyMap<string, Project>;
   membersById: ReadonlyMap<string, Member>;
+  canEdit: (task: Task) => boolean;
   onEdit: (task: Task) => void;
 }
 
@@ -222,6 +231,7 @@ function TaskBoard({
   tasks,
   projectsById,
   membersById,
+  canEdit,
   onEdit,
 }: TaskBoardProps) {
   return (
@@ -251,6 +261,7 @@ function TaskBoard({
                         ? membersById.get(task.assigneeId)
                         : undefined
                     }
+                    editable={canEdit(task)}
                     onEdit={onEdit}
                   />
                 ))
@@ -266,25 +277,20 @@ function TaskBoard({
 }
 
 export default function TasksWorkspacePage() {
+  const { message } = App.useApp();
+  const currentUser = useCurrentUser();
   const [searchParams, setSearchParams] = useSearchParams();
   const [view, setView] = useState<TaskView>("list");
   const [filters, setFilters] = useState<TaskFilters>(() => ({
     projectId: searchParams.get("projectId") || undefined,
     assigneeId: searchParams.get("assigneeId") || undefined,
   }));
-  const {
-    data,
-    setData,
-    loading,
-    refreshing,
-    error,
-    reload,
-    refresh,
-  } = useAsyncPageData({
-    initialData: INITIAL_TASKS_PAGE_DATA,
-    load: loadTasksPageData,
-    getErrorMessage: getTasksPageErrorMessage,
-  });
+  const { data, setData, loading, refreshing, error, reload, refresh } =
+    useAsyncPageData({
+      initialData: INITIAL_TASKS_PAGE_DATA,
+      load: loadTasksPageData,
+      getErrorMessage: getTasksPageErrorMessage,
+    });
   const { tasks, projects, members } = data;
   const {
     open: drawerOpen,
@@ -294,13 +300,55 @@ export default function TasksWorkspacePage() {
     close: closeEditor,
   } = useEntityEditor<Task>();
 
+  const projectsById = useMemo(() => indexById(projects), [projects]);
+  const membersById = useMemo(() => indexById(members), [members]);
+  const summary = useMemo(() => summarizeTasks(tasks), [tasks]);
+  const creatableProjects = useMemo(
+    () =>
+      projects.filter(
+        (project) =>
+          project.status !== "archived" &&
+          getProjectPermissions(project, currentUser.memberId).canCreateTask,
+      ),
+    [currentUser.memberId, projects],
+  );
+  const isTaskEditable = useCallback(
+    (task: Task) =>
+      canEditTask(projectsById.get(task.projectId), currentUser.memberId, task),
+    [currentUser.memberId, projectsById],
+  );
+  const handleOpenCreate = useCallback(() => {
+    const scopedProject = filters.projectId
+      ? projectsById.get(filters.projectId)
+      : undefined;
+    if (
+      scopedProject &&
+      !getProjectPermissions(scopedProject, currentUser.memberId).canCreateTask
+    ) {
+      message.error(PERMISSION_DENIED.createTask);
+      return;
+    }
+    if (!creatableProjects.length) {
+      message.error(PERMISSION_DENIED.createTask);
+      return;
+    }
+    openCreate();
+  }, [
+    creatableProjects.length,
+    currentUser.memberId,
+    filters.projectId,
+    message,
+    openCreate,
+    projectsById,
+  ]);
+
   useEffect(() => {
-    if (searchParams.get("create") !== "1") return;
+    if (loading || searchParams.get("create") !== "1") return;
 
     let active = true;
     queueMicrotask(() => {
       if (!active) return;
-      openCreate();
+      handleOpenCreate();
       const nextParams = new URLSearchParams(searchParams);
       nextParams.delete("create");
       setSearchParams(nextParams, { replace: true });
@@ -308,17 +356,7 @@ export default function TasksWorkspacePage() {
     return () => {
       active = false;
     };
-  }, [openCreate, searchParams, setSearchParams]);
-
-  const projectsById = useMemo(
-    () => indexById(projects),
-    [projects],
-  );
-  const membersById = useMemo(
-    () => indexById(members),
-    [members],
-  );
-  const summary = useMemo(() => summarizeTasks(tasks), [tasks]);
+  }, [handleOpenCreate, loading, searchParams, setSearchParams]);
 
   const filteredTasks = useMemo(() => {
     const keyword = filters.keyword?.trim().toLowerCase();
@@ -368,26 +406,32 @@ export default function TasksWorkspacePage() {
     [filters],
   );
 
-  const handleTaskSaved = useCallback((savedTask: Task) => {
-    setData((current) => {
-      const taskExists = current.tasks.some(
-        (task) => task.id === savedTask.id,
-      );
-      const tasks = taskExists
-        ? current.tasks.map((task) =>
-            task.id === savedTask.id ? savedTask : task,
-          )
-        : [savedTask, ...current.tasks];
-      return { ...current, tasks };
-    });
-  }, [setData]);
+  const handleTaskSaved = useCallback(
+    (savedTask: Task) => {
+      setData((current) => {
+        const taskExists = current.tasks.some(
+          (task) => task.id === savedTask.id,
+        );
+        const tasks = taskExists
+          ? current.tasks.map((task) =>
+              task.id === savedTask.id ? savedTask : task,
+            )
+          : [savedTask, ...current.tasks];
+        return { ...current, tasks };
+      });
+    },
+    [setData],
+  );
 
-  const handleTaskDeleted = useCallback((taskId: string) => {
-    setData((current) => ({
-      ...current,
-      tasks: current.tasks.filter((task) => task.id !== taskId),
-    }));
-  }, [setData]);
+  const handleTaskDeleted = useCallback(
+    (taskId: string) => {
+      setData((current) => ({
+        ...current,
+        tasks: current.tasks.filter((task) => task.id !== taskId),
+      }));
+    },
+    [setData],
+  );
 
   const columns: TableProps<Task>["columns"] = useMemo(
     () => [
@@ -480,12 +524,12 @@ export default function TasksWorkspacePage() {
         width: 65,
         render: (_, task) => (
           <Button type="link" size="small" onClick={() => openEdit(task)}>
-            编辑
+            {isTaskEditable(task) ? "编辑" : "查看"}
           </Button>
         ),
       },
     ],
-    [membersById, openEdit, projectsById],
+    [isTaskEditable, membersById, openEdit, projectsById],
   );
 
   const taskContent =
@@ -494,6 +538,7 @@ export default function TasksWorkspacePage() {
         tasks={filteredTasks}
         projectsById={projectsById}
         membersById={membersById}
+        canEdit={isTaskEditable}
         onEdit={openEdit}
       />
     ) : (
@@ -536,8 +581,8 @@ export default function TasksWorkspacePage() {
             <Button
               type="primary"
               icon={<PlusOutlined />}
-              disabled={!projects.length && loading}
-              onClick={openCreate}
+              disabled={loading}
+              onClick={handleOpenCreate}
             >
               创建工作项
             </Button>
@@ -723,7 +768,7 @@ export default function TasksWorkspacePage() {
             <Button
               type="primary"
               icon={<PlusOutlined />}
-              onClick={openCreate}
+              onClick={handleOpenCreate}
             >
               创建第一个工作项
             </Button>
@@ -737,7 +782,9 @@ export default function TasksWorkspacePage() {
         open={drawerOpen}
         projects={projects}
         members={members}
+        currentMemberId={currentUser.memberId}
         initial={editingTask}
+        defaultProjectId={filters.projectId}
         onClose={closeEditor}
         onSaved={handleTaskSaved}
         onDeleted={handleTaskDeleted}

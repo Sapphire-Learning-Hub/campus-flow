@@ -1,4 +1,5 @@
 import {
+  Alert,
   App,
   Button,
   DatePicker,
@@ -22,6 +23,12 @@ import type { Member } from "@/types/member";
 import type { Project } from "@/types/project";
 import type { Task, TaskFormValues } from "@/types/task";
 import { DATE_FORMAT } from "@/utils/date";
+import {
+  canDeleteTask,
+  canEditTask,
+  getProjectPermissions,
+  PERMISSION_DENIED,
+} from "@/utils/Permissions.ts";
 import { DEFAULT_TASK_STAGE, DEFAULT_TASK_TYPE } from "@/utils/task";
 
 type TaskFormModel = Omit<TaskFormValues, "deadline" | "startDate"> & {
@@ -33,6 +40,7 @@ interface TaskFormDrawerProps {
   open: boolean;
   projects: Project[];
   members: Member[];
+  currentMemberId: string;
   initial?: Task;
   defaultProjectId?: string;
   onClose: () => void;
@@ -44,6 +52,7 @@ export function TaskFormDrawer({
   open,
   projects,
   members,
+  currentMemberId,
   initial,
   defaultProjectId,
   onClose,
@@ -57,6 +66,23 @@ export function TaskFormDrawer({
   const projectId = Form.useWatch("projectId", form);
   const startDate = Form.useWatch("startDate", form);
   const project = projects.find((item) => item.id === projectId);
+  const permissions = getProjectPermissions(project, currentMemberId);
+  const readOnly = initial
+    ? !canEditTask(project, currentMemberId, initial)
+    : false;
+  const canDeleteCurrentTask = initial
+    ? canDeleteTask(project, currentMemberId)
+    : false;
+
+  const creatableProjects = useMemo(
+    () =>
+      projects.filter(
+        (item) =>
+          item.status !== "archived" &&
+          getProjectPermissions(item, currentMemberId).canCreateTask,
+      ),
+    [currentMemberId, projects],
+  );
 
   const allowedMembers = useMemo(() => {
     const projectMemberIds = new Set(
@@ -66,7 +92,10 @@ export function TaskFormDrawer({
   }, [members, project]);
 
   const assigneeOptions = useMemo(() => {
-    const options = allowedMembers.map((member) => ({
+    const assignableMembers = permissions.canManageAllTasks
+      ? allowedMembers
+      : allowedMembers.filter((member) => member.id === currentMemberId);
+    const options = assignableMembers.map((member) => ({
       label: member.name,
       value: member.id,
     }));
@@ -84,7 +113,13 @@ export function TaskFormDrawer({
       });
     }
     return options;
-  }, [allowedMembers, initial, members]);
+  }, [
+    allowedMembers,
+    currentMemberId,
+    initial,
+    members,
+    permissions.canManageAllTasks,
+  ]);
 
   useEffect(() => {
     if (!open) return;
@@ -101,8 +136,22 @@ export function TaskFormDrawer({
       return;
     }
 
+    const initialProjectId = creatableProjects.some(
+      (item) => item.id === defaultProjectId,
+    )
+      ? defaultProjectId
+      : creatableProjects[0]?.id;
+    const initialProject = creatableProjects.find(
+      (item) => item.id === initialProjectId,
+    );
+    const initialPermissions = getProjectPermissions(
+      initialProject,
+      currentMemberId,
+    );
     form.setFieldsValue({
-      projectId: defaultProjectId,
+      projectId: initialProjectId,
+      assigneeId:
+        initialPermissions.role === "member" ? currentMemberId : undefined,
       workItemType: DEFAULT_TASK_TYPE,
       stage: DEFAULT_TASK_STAGE,
       status: "pending",
@@ -111,7 +160,14 @@ export function TaskFormDrawer({
       startDate: dayjs(),
       deadline: dayjs().add(7, "day"),
     });
-  }, [defaultProjectId, form, initial, open]);
+  }, [
+    creatableProjects,
+    currentMemberId,
+    defaultProjectId,
+    form,
+    initial,
+    open,
+  ]);
 
   const close = () => {
     if (submitting || deleting) return;
@@ -121,10 +177,30 @@ export function TaskFormDrawer({
 
   const handleSubmit = async (values: TaskFormModel) => {
     if (submitting || deleting) return;
+    const selectedProject = projects.find(
+      (item) => item.id === values.projectId,
+    );
+    const selectedPermissions = getProjectPermissions(
+      selectedProject,
+      currentMemberId,
+    );
+    if (
+      (initial && !canEditTask(selectedProject, currentMemberId, initial)) ||
+      (!initial && !selectedPermissions.canCreateTask)
+    ) {
+      message.error(
+        initial ? PERMISSION_DENIED.editTask : PERMISSION_DENIED.createTask,
+      );
+      return;
+    }
     setSubmitting(true);
 
     const formValues: TaskFormValues = {
       ...values,
+      assigneeId:
+        selectedPermissions.role === "member"
+          ? currentMemberId
+          : values.assigneeId,
       startDate: values.startDate?.format(DATE_FORMAT),
       deadline: values.deadline?.format(DATE_FORMAT),
     };
@@ -153,6 +229,10 @@ export function TaskFormDrawer({
 
   const confirmDelete = () => {
     if (!initial || submitting || deleting) return;
+    if (!canDeleteCurrentTask) {
+      message.error(PERMISSION_DENIED.deleteTask);
+      return;
+    }
 
     modal.confirm({
       title: "删除工作项",
@@ -180,15 +260,15 @@ export function TaskFormDrawer({
 
   return (
     <Drawer
-      title={initial ? "编辑工作项" : "创建工作项"}
+      title={initial ? (readOnly ? "查看工作项" : "编辑工作项") : "创建工作项"}
       size={540}
       open={open}
       onClose={close}
       keyboard={!submitting && !deleting}
       footer={
-        <div className="task-form-footer">
+        <div className="entity-form-footer">
           <div>
-            {initial ? (
+            {initial && canDeleteCurrentTask ? (
               <Button
                 danger
                 disabled={submitting}
@@ -199,27 +279,40 @@ export function TaskFormDrawer({
               </Button>
             ) : null}
           </div>
-          <Space>
-            <Button disabled={submitting || deleting} onClick={close}>
-              取消
-            </Button>
-            <Button
-              type="primary"
-              loading={submitting}
-              disabled={deleting}
-              onClick={() => form.submit()}
-            >
-              {initial ? "保存修改" : "创建工作项"}
-            </Button>
-          </Space>
+          {readOnly ? (
+            <Button onClick={close}>关闭</Button>
+          ) : (
+            <Space>
+              <Button disabled={submitting || deleting} onClick={close}>
+                取消
+              </Button>
+              <Button
+                type="primary"
+                loading={submitting}
+                disabled={deleting}
+                onClick={() => form.submit()}
+              >
+                {initial ? "保存修改" : "创建工作项"}
+              </Button>
+            </Space>
+          )}
         </div>
       }
     >
+      {readOnly ? (
+        <Alert
+          showIcon
+          type="warning"
+          title="权限不足，当前工作项为只读模式"
+          description={PERMISSION_DENIED.editTask}
+          style={{ marginBottom: 16 }}
+        />
+      ) : null}
       <Form
         form={form}
         layout="vertical"
         requiredMark="optional"
-        disabled={submitting || deleting}
+        disabled={submitting || deleting || readOnly}
         onFinish={(values) => void handleSubmit(values)}
       >
         <Form.Item
@@ -229,11 +322,24 @@ export function TaskFormDrawer({
         >
           <Select
             placeholder="选择项目"
-            options={projects
-              .filter((item) => item.status !== "archived")
-              .map((item) => ({ label: item.name, value: item.id }))}
+            options={(initial ? projects : creatableProjects).map((item) => ({
+              label: item.name,
+              value: item.id,
+            }))}
             disabled={Boolean(initial) || submitting || deleting}
-            onChange={() => form.setFieldValue("assigneeId", undefined)}
+            onChange={(nextProjectId) => {
+              const nextProject = projects.find(
+                (item) => item.id === nextProjectId,
+              );
+              const nextPermissions = getProjectPermissions(
+                nextProject,
+                currentMemberId,
+              );
+              form.setFieldValue(
+                "assigneeId",
+                nextPermissions.role === "member" ? currentMemberId : undefined,
+              );
+            }}
           />
         </Form.Item>
         <Form.Item
@@ -302,6 +408,7 @@ export function TaskFormDrawer({
             allowClear
             placeholder="暂不分配"
             options={assigneeOptions}
+            disabled={readOnly || permissions.role === "member"}
           />
         </Form.Item>
         <div className="form-grid-2">
