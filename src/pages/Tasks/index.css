@@ -356,18 +356,6 @@
   margin-inline-end: 0;
 }
 
-/* ===== Task form ===== */
-.task-form-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.task-form-footer > div:first-child {
-  min-width: 120px;
-}
-
 @media (max-width: 1480px) {
   .task-filter-grid {
     grid-template-columns: minmax(260px, 2fr) repeat(4, minmax(120px, 1fr));
@@ -425,14 +413,4 @@
     padding: 10px;
   }
 
-  .task-form-footer {
-    align-items: stretch;
-    flex-direction: column-reverse;
-  }
-
-  .task-form-footer .ant-space,
-  .task-form-footer .ant-space-item,
-  .task-form-footer .ant-btn {
-    width: 100%;
-  }
 }

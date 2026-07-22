@@ -209,6 +209,17 @@ a {
   border-radius: 8px;
 }
 
+.entity-form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.entity-form-footer > :first-child {
+  min-width: 120px;
+}
+
 .workspace-summary {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -436,6 +447,17 @@ a {
 }
 
 @media (max-width: 480px) {
+  .entity-form-footer {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .entity-form-footer .ant-space,
+  .entity-form-footer .ant-space-item,
+  .entity-form-footer .ant-btn {
+    width: 100%;
+  }
+
   .workspace-summary {
     grid-template-columns: 1fr;
   }
