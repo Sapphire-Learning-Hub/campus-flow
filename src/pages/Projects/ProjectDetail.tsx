@@ -2,36 +2,164 @@ import {
   ArrowLeftOutlined,
   BranchesOutlined,
   CalendarOutlined,
+  DeleteOutlined,
   EditOutlined,
   FieldTimeOutlined,
   PlusOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
-import { Avatar, Button, Progress, Space, Statistic, Tag } from "antd";
+import { App, Avatar, Button, Progress, Space, Statistic, Tag } from "antd";
+import { useCallback, useState } from "react";
+import { useNavigate, useParams } from "react-router";
+import { PageState } from "@/components/common/PageState";
+import { ProjectFormDrawer } from "@/components/projects/ProjectForm";
+import { useAsyncPageData } from "@/hooks/useAsyncPageData";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { getApiErrorMessage } from "@/services/client";
+import { deleteProject, getProject } from "@/services/projects";
+import type { Project } from "@/types/project";
+import {
+  getProjectPermissions,
+  PERMISSION_DENIED,
+} from "@/utils/Permissions.ts";
 import "./ProjectDetail.css";
 
+function getProjectDetailErrorMessage(error: unknown) {
+  return getApiErrorMessage(error, "项目加载失败，请稍后重试");
+}
+
 export default function ProjectDetailPage() {
+  const { message, modal } = App.useApp();
+  const currentUser = useCurrentUser();
+  const navigate = useNavigate();
+  const { projectId } = useParams();
+  const [editorOpen, setEditorOpen] = useState(false);
+  const loadProject = useCallback(() => {
+    if (!projectId) return Promise.reject(new Error("缺少项目编号"));
+    return getProject(projectId);
+  }, [projectId]);
+  const {
+    data: project,
+    setData,
+    loading,
+    error,
+    reload,
+  } = useAsyncPageData<Project | undefined>({
+    initialData: undefined,
+    load: loadProject,
+    getErrorMessage: getProjectDetailErrorMessage,
+  });
+
+  if (loading || error || !project) {
+    return (
+      <div className="page-container project-detail-page">
+        <PageState
+          loading={loading}
+          error={error}
+          empty={!loading && !error && !project}
+          loadingDescription="正在加载项目..."
+          errorTitle="项目加载失败"
+          emptyDescription="项目不存在或已被删除"
+          onRetry={reload}
+        >
+          {null}
+        </PageState>
+      </div>
+    );
+  }
+
+  const permissions = getProjectPermissions(project, currentUser.memberId);
+  const handleCreateTask = () => {
+    if (!permissions.canCreateTask) {
+      message.error(PERMISSION_DENIED.createTask);
+      return;
+    }
+    navigate(`/tasks?projectId=${encodeURIComponent(project.id)}&create=1`);
+  };
+  const handleEditProject = () => {
+    if (!permissions.canEditProject) {
+      message.error(PERMISSION_DENIED.editProject);
+      return;
+    }
+    setEditorOpen(true);
+  };
+  const handleManageMembers = () => {
+    if (!permissions.canManageMembers) {
+      message.error(PERMISSION_DENIED.manageMembers);
+      return;
+    }
+    navigate(`/members?projectId=${encodeURIComponent(project.id)}`);
+  };
+  const handleDeleteProject = () => {
+    if (!permissions.canDeleteProject) {
+      message.error(PERMISSION_DENIED.deleteProject);
+      return;
+    }
+    modal.confirm({
+      title: "删除项目",
+      content: `确定删除“${project.name}”吗？项目中的任务和动态也会被删除。`,
+      okText: "删除",
+      okButtonProps: { danger: true },
+      cancelText: "取消",
+      async onOk() {
+        try {
+          await deleteProject(project.id);
+          message.success("项目已删除");
+          navigate("/projects", { replace: true });
+        } catch (requestError) {
+          message.error(getApiErrorMessage(requestError, "项目删除失败"));
+          throw requestError;
+        }
+      },
+    });
+  };
+  const handleProjectSaved = (savedProject: Project) => {
+    setData(savedProject);
+    setEditorOpen(false);
+  };
+
   return (
     <div className="page-container project-detail-page">
-      <Button className="back-button" type="text" icon={<ArrowLeftOutlined />}>
+      <Button
+        className="back-button"
+        type="text"
+        icon={<ArrowLeftOutlined />}
+        onClick={() => navigate("/projects")}
+      >
         返回项目列表
       </Button>
 
       <div
         className="project-detail-hero"
-        style={{ "--project-color": "#1677ff" } as React.CSSProperties}
+        style={{ "--project-color": project.color } as React.CSSProperties}
       >
-        <span className="project-detail-symbol">智</span>
+        <span className="project-detail-symbol">
+          {project.name.slice(0, 1)}
+        </span>
 
         <div className="project-detail-heading">
           <div>
-            <h1>智能计划系统</h1>
-            <p>支持任务权重、自动排程、拖拽时间表与休息时间插入的效率工具。</p>
+            <h1>{project.name}</h1>
+            <p>{project.description}</p>
           </div>
 
           <Space wrap>
-            <Button icon={<PlusOutlined />}>创建任务</Button>
-            <Button icon={<EditOutlined />}>编辑项目</Button>
+            <Button icon={<PlusOutlined />} onClick={handleCreateTask}>
+              创建任务
+            </Button>
+            <Button icon={<EditOutlined />} onClick={handleEditProject}>
+              编辑项目
+            </Button>
+            <Button icon={<TeamOutlined />} onClick={handleManageMembers}>
+              管理成员
+            </Button>
+            <Button
+              danger
+              icon={<DeleteOutlined />}
+              onClick={handleDeleteProject}
+            >
+              删除项目
+            </Button>
           </Space>
         </div>
       </div>
@@ -42,7 +170,7 @@ export default function ProjectDetailPage() {
         </button>
         <button type="button">工作项 4</button>
         <button type="button">
-          <TeamOutlined /> 成员 6
+          <TeamOutlined /> 成员 {project.members.length}
         </button>
         <button type="button">动态记录</button>
       </nav>
@@ -60,9 +188,9 @@ export default function ProjectDetailPage() {
           <span>
             <FieldTimeOutlined />
           </span>
-          <small>交付估分</small>
-          <strong>21</strong>
-          <em>团队点数</em>
+          <small>进行中</small>
+          <strong>1</strong>
+          <em>正在推进</em>
         </article>
         <article className="risk">
           <span>
@@ -77,7 +205,7 @@ export default function ProjectDetailPage() {
             <TeamOutlined />
           </span>
           <small>成员覆盖</small>
-          <strong>6</strong>
+          <strong>{project.members.length}</strong>
           <em>协作角色</em>
         </article>
       </section>
@@ -137,7 +265,11 @@ export default function ProjectDetailPage() {
         <article className="surface-panel detail-stats">
           <Statistic title="项目任务" value={4} suffix="个" />
           <Statistic title="已完成" value={0} suffix="个" />
-          <Statistic title="团队成员" value={6} suffix="人" />
+          <Statistic
+            title="团队成员"
+            value={project.members.length}
+            suffix="人"
+          />
           <Statistic title="距离截止" value={36} suffix="天" />
         </article>
 
@@ -203,7 +335,6 @@ export default function ProjectDetailPage() {
                 <th>优先级</th>
                 <th>负责人</th>
                 <th>计划</th>
-                <th>估分</th>
               </tr>
             </thead>
             <tbody>
@@ -230,7 +361,6 @@ export default function ProjectDetailPage() {
                   </span>
                 </td>
                 <td>2026-07-13 - 2026-07-18</td>
-                <td>8 点</td>
               </tr>
               <tr>
                 <td>设计任务权重配置面板</td>
@@ -255,7 +385,6 @@ export default function ProjectDetailPage() {
                   </span>
                 </td>
                 <td>2026-07-11 - 2026-07-16</td>
-                <td>5 点</td>
               </tr>
               <tr>
                 <td>修复跨天任务显示错位</td>
@@ -280,7 +409,6 @@ export default function ProjectDetailPage() {
                   </span>
                 </td>
                 <td>2026-07-15 - 2026-07-15</td>
-                <td>3 点</td>
               </tr>
               <tr>
                 <td>任务完成后插入休息时间</td>
@@ -305,7 +433,6 @@ export default function ProjectDetailPage() {
                   </span>
                 </td>
                 <td>2026-07-16 - 2026-07-20</td>
-                <td>5 点</td>
               </tr>
             </tbody>
           </table>
@@ -433,6 +560,14 @@ export default function ProjectDetailPage() {
           </article>
         </div>
       </section>
+
+      <ProjectFormDrawer
+        open={editorOpen}
+        project={project}
+        currentMemberId={currentUser.memberId}
+        onClose={() => setEditorOpen(false)}
+        onSaved={handleProjectSaved}
+      />
     </div>
   );
 }
