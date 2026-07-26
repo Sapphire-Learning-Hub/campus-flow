@@ -31,3 +31,15 @@ export interface RegisterPayload {
   password: string;
   remember: boolean;
 }
+
+export interface UpdateProfilePayload {
+  username: string;
+  email: string;
+  department: string;
+  avatar?: string;
+}
+
+export interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+}

@@ -15,6 +15,7 @@ import { MemberFormDrawer } from "@/components/members/MemberForm";
 import { useAsyncPageData } from "@/hooks/useAsyncPageData";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useEntityEditor } from "@/hooks/useEntityEditor";
+import { useSettings } from "@/hooks/useSettings";
 import { getApiErrorMessage } from "@/services/client";
 import { listMembers } from "@/services/members";
 import { listProjects } from "@/services/projects";
@@ -86,6 +87,7 @@ function getMembersPageErrorMessage(error: unknown) {
 export default function MembersPage() {
   const { message } = App.useApp();
   const currentUser = useCurrentUser();
+  const { settings: appSettings } = useSettings();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useState<MemberFilters>(() => ({
@@ -422,7 +424,7 @@ export default function MembersPage() {
           dataSource={filteredMemberRows}
           scroll={{ x: 1030 }}
           pagination={{
-            pageSize: 10,
+            pageSize: appSettings.pageSize,
             showSizeChanger: false,
             showTotal: (total) => `共 ${total} 条成员关系`,
           }}

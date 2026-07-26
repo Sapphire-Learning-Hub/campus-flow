@@ -2,6 +2,9 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./style/base.css";
+import { initializeAppSettings } from "@/services/preferences";
+
+initializeAppSettings();
 
 async function enableMocking() {
   if (import.meta.env.DEV && import.meta.env.VITE_USE_MOCK === "true") {

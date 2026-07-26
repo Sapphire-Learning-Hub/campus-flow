@@ -40,6 +40,7 @@ import { PROJECT_STATUS_OPTIONS } from "@/constants/options";
 import { useAsyncPageData } from "@/hooks/useAsyncPageData";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useEntityEditor } from "@/hooks/useEntityEditor";
+import { useSettings } from "@/hooks/useSettings";
 import { getApiErrorMessage } from "@/services/client";
 import { listMembers } from "@/services/members";
 import { listProjects, updateProject } from "@/services/projects";
@@ -310,9 +311,12 @@ function ProjectBoard({
 export default function ProjectsWorkspacePage() {
   const { message } = App.useApp();
   const currentUser = useCurrentUser();
+  const { settings: appSettings } = useSettings();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [view, setView] = useState<ProjectView>("list");
+  const [view, setView] = useState<ProjectView>(
+    appSettings.defaultProjectView,
+  );
   const [filters, setFilters] = useState<ProjectFilters>(() => ({
     leaderId: searchParams.get("leaderId") || undefined,
   }));
@@ -639,7 +643,7 @@ export default function ProjectsWorkspacePage() {
             isProjectOverdue(project) ? "project-table-row-overdue" : ""
           }
           pagination={{
-            pageSize: 10,
+            pageSize: appSettings.pageSize,
             showSizeChanger: false,
             showTotal: (total) => `共 ${total} 个项目`,
           }}

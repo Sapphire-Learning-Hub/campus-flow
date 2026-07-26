@@ -37,6 +37,7 @@ import { getApiErrorMessage } from "@/services/client";
 import { useAsyncPageData } from "@/hooks/useAsyncPageData";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useEntityEditor } from "@/hooks/useEntityEditor";
+import { useSettings } from "@/hooks/useSettings";
 import { listMembers } from "@/services/members";
 import { listProjects } from "@/services/projects";
 import { listTasks } from "@/services/tasks";
@@ -279,8 +280,9 @@ function TaskBoard({
 export default function TasksWorkspacePage() {
   const { message } = App.useApp();
   const currentUser = useCurrentUser();
+  const { settings: appSettings } = useSettings();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [view, setView] = useState<TaskView>("list");
+  const [view, setView] = useState<TaskView>(appSettings.defaultTaskView);
   const [filters, setFilters] = useState<TaskFilters>(() => ({
     projectId: searchParams.get("projectId") || undefined,
     assigneeId: searchParams.get("assigneeId") || undefined,
@@ -554,7 +556,7 @@ export default function TasksWorkspacePage() {
               : ""
           }
           pagination={{
-            pageSize: 10,
+            pageSize: appSettings.pageSize,
             showSizeChanger: false,
             showTotal: (total) => `共 ${total} 个工作项`,
           }}

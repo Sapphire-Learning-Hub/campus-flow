@@ -8,8 +8,10 @@ import type { ApiResponse } from "@/types/common";
 import type {
   AuthSession,
   AuthUser,
+  ChangePasswordPayload,
   LoginPayload,
   RegisterPayload,
+  UpdateProfilePayload,
 } from "@/types/user";
 
 export async function login(payload: LoginPayload): Promise<AuthSession> {
@@ -32,6 +34,18 @@ export async function register(
 
 export function getCurrentUser(): Promise<AuthUser> {
   return unwrap(http.get<ApiResponse<AuthUser>>("/auth/me"));
+}
+
+export function updateProfile(
+  payload: UpdateProfilePayload,
+): Promise<AuthUser> {
+  return unwrap(http.patch<ApiResponse<AuthUser>>("/auth/profile", payload));
+}
+
+export async function changePassword(
+  payload: ChangePasswordPayload,
+): Promise<void> {
+  await unwrap(http.post<ApiResponse<null>>("/auth/change-password", payload));
 }
 
 export async function logout(): Promise<void> {
