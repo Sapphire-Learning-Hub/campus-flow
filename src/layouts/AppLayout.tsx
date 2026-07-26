@@ -1,21 +1,21 @@
 import {
-  BellOutlined,
   DashboardOutlined,
   FolderOpenOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
   MenuOutlined,
   MenuUnfoldOutlined,
+  MoonOutlined,
   PlusOutlined,
   SearchOutlined,
   SettingOutlined,
+  SunOutlined,
   TeamOutlined,
   UnorderedListOutlined,
   UserOutlined,
 } from "@ant-design/icons";
 import {
   Avatar,
-  Badge,
   Breadcrumb,
   Button,
   Drawer,
@@ -25,6 +25,8 @@ import {
   Space,
   Tooltip,
   type MenuProps,
+  Switch,
+  Flex,
 } from "antd";
 import {
   useEffect,
@@ -45,7 +47,7 @@ import { clearAccessToken } from "@/services/session";
 import "./AppLayout.css";
 import type { AuthUser } from "@/types/user.ts";
 import type { AppLayoutContext } from "@/hooks/useCurrentUser";
-
+import { useSettings } from "@/hooks/useSettings.ts";
 const { Header, Sider, Content } = Layout;
 const MOBILE_LAYOUT_QUERY = "(max-width: 768px)";
 
@@ -110,14 +112,14 @@ export function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-
+  const { settings, updateSettings } = useSettings();
   const rootPath = `/${location.pathname.split("/").filter(Boolean)[0] ?? "dashboard"}`;
   const isMobile = useSyncExternalStore(
     subscribeToMobileLayout,
     getMobileLayoutSnapshot,
     getServerMobileLayoutSnapshot,
   );
-
+  const isLight = settings.themeMode === "light";
   const breadcrumbItems = useMemo(() => {
     const parts = location.pathname.split("/").filter(Boolean);
     const items = [{ title: "CampusFlow" }];
@@ -266,16 +268,26 @@ export function AppLayout() {
                 onClick={() => navigate("/tasks?create=1")}
               />
             </Tooltip>
-            <Tooltip title="通知中心">
-              <Badge dot offset={[-5, 6]}>
-                <Button
-                  className="header-icon-btn"
-                  type="text"
-                  icon={<BellOutlined />}
-                  aria-label="通知中心"
-                />
-              </Badge>
-            </Tooltip>
+
+            <Switch
+              checked={isLight}
+              checkedChildren={
+                <Flex gap={4} justify="flex-start" align="center">
+                  <SunOutlined />
+                </Flex>
+              }
+              unCheckedChildren={
+                <Flex gap={4} justify="flex-start" align="center">
+                  <MoonOutlined />
+                </Flex>
+              }
+              onClick={(checked) => {
+                updateSettings({
+                  themeMode: checked ? "light" : "dark",
+                });
+              }}
+            />
+
             <button
               className="user-trigger"
               type="button"
@@ -312,8 +324,8 @@ export function AppLayout() {
               <span>登录账号</span>
             </article>
             <article>
-              <strong>{user.memberId}</strong>
-              <span>成员编号</span>
+              <strong>{user.department}</strong>
+              <span>学院/部门</span>
             </article>
             <article>
               <strong>已登录</strong>
