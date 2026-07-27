@@ -2,149 +2,205 @@
 
 > 基于 React、TypeScript、Vite 与 Ant Design 的校园项目协作管理平台。
 
-CampusFlow 面向课程项目、学生团队与社团活动，提供项目空间、工作项、成员协作、动态记录和个人设置等功能。项目当前处于前端功能联调阶段：主要业务页面已经完成静态实现，登录与注册已接入本地 Mock 接口，项目、任务、成员和动态的 API/service 仍未完成。
+CampusFlow 面向课程项目、学生团队和社团活动，提供工作台、项目空间、工作项、成员协作与个人设置等功能。当前版本是一个可独立运行的前端演示应用：开发环境通过 MSW 提供内存 Mock API，主要业务页面已经完成数据接入、操作反馈、权限控制和中英文国际化。
 
-## 项目完成情况
+## 当前能力
 
-> 盘点日期：2026-07-17。`已完成` 表示当前范围内可用，`部分完成` 表示界面或基础链路可用但仍缺少关键联动。
-
-| 模块 | 状态 | 当前实现 | 尚未完成 |
-| --- | --- | --- | --- |
-| 工程基础 | 已完成 | Vite 8、React 19、TypeScript 6、ESLint、代码分包、`@/*` 路径别名 | 可按 Vite 8 提示迁移原生 tsconfig paths 配置 |
-| 路由 | 已完成 | 登录、注册、工作台、项目列表、项目详情、工作项、成员、设置和 404 路由；业务页面懒加载 | 暂无登录态路由守卫 |
-| 公共布局 | 部分完成 | 侧边导航、顶栏、面包屑、个人抽屉、折叠导航及响应式样式 | 顶栏用户信息仍为静态数据；移动端抽屉判断尚未接入真实媒体查询 |
-| 登录 / 注册 | 部分完成 | 表单校验、提交状态、错误提示、MSW 认证接口、Token 本地/会话存储 | 缺少全局认证上下文、登录态恢复、路由守卫；退出按钮尚未调用退出接口 |
-| 工作台 | 静态完成 | 指标、项目进展、截止任务和最近动态布局 | 数据和操作按钮均未接入 service |
-| 项目空间 | 静态完成 | 项目概览、卡片/列表切换、项目详情及成员/工作项/动态展示 | 筛选、收藏、创建、编辑、删除和详情参数尚未接入数据层 |
-| 工作项 | 静态完成 | 指标、表格/看板切换、状态/阶段/优先级展示 | 搜索筛选、创建编辑、状态流转和 API 数据接入 |
-| 成员 | 静态完成 | 项目选择、成员表格、角色和任务数展示 | 查询筛选、添加、删除、权限管理和 API 数据接入 |
-| 个人设置 | 部分完成 | 资料、外观、偏好设置表单；设置页具备桌面/移动布局 | 保存目前只做前端校验与成功提示，主题和偏好未持久化 |
-| Mock API / service | 未完成 | 认证链路可用；项目、任务、成员和动态已有初步 handler 与 service 代码 | 仍需补齐并验收业务接口、异常处理和页面接入；Mock 数据仅保存在内存中 |
-| 测试与构建 | 部分完成 | `npm run build` 通过；`npm run lint` 无错误 | 暂无单元、集成或端到端测试脚本；Lint 有 1 条 MSW 生成文件警告 |
-
-## 当前可用功能
-
-- 登录和注册表单可通过 MSW 完成请求，并按“保持登录状态”选择 `localStorage` 或 `sessionStorage` 保存 Token。
-- 项目空间支持卡片与列表两种静态视图，项目详情页已完成概览、工作项、成员和动态区域。
-- 工作项页面支持表格与看板两种静态视图。
-- 设置页支持个人资料校验、主题模式/主题色选择以及响应式移动端折叠布局。
-- 开发环境已搭建 MSW、统一响应结构和 Axios 请求基础；项目、任务、成员和动态的 handler/service 仍按未完成处理。
-
-## 页面与数据接入状态
-
-| 地址 | 页面能力 | 数据来源 |
-| --- | --- | --- |
-| `/login` | 登录校验、请求状态、错误反馈、登录后跳转 | 已接入 Mock API |
-| `/register` | 注册校验、服务条款弹窗、注册后跳转 | 已接入 Mock API |
-| `/dashboard` | 指标、项目进度、截止任务、最近动态 | 组件内静态数据 |
-| `/projects` | 项目汇总、卡片/列表切换、筛选区 | 组件内静态数据 |
-| `/projects/:projectId` | 项目概览、任务、成员、动态 | 固定静态数据，暂未读取 `projectId` |
-| `/tasks` | 工作项汇总、表格/看板切换、筛选区 | 组件内静态数据 |
-| `/members` | 项目成员表格与角色展示 | 组件内静态数据 |
-| `/settings` | 资料、外观、偏好设置 | 组件本地状态，刷新后重置 |
-| 其他地址 | 404 页面 | — |
-
-## Mock API
-
-开发环境通过 MSW 拦截 `/api` 请求：
-
-| 领域 | 状态 | 当前情况 |
-| --- | --- | --- |
-| 认证 | 部分完成 | 登录/注册已接入；当前用户与退出登录待接入 |
-| 项目 API/service | 未完成 | 已有查询和 CRUD 初步代码，尚未完成页面联调与功能验收 |
-| 任务 API/service | 未完成 | 已有条件查询和 CRUD 初步代码，尚未完成页面联调与功能验收 |
-| 成员 API/service | 未完成 | 已有成员查询初步代码，尚未完成接口能力、页面联调与功能验收 |
-| 动态 API/service | 未完成 | 已有动态查询初步代码，尚未完成接口能力、页面联调与功能验收 |
-
-Mock 数据来自 `src/api/mock/database.ts` 的内存种子数据，刷新页面后新增或修改的数据会重置。Token 会根据登录选项保存在浏览器本地存储或会话存储中。
+| 模块 | 已实现能力 |
+| --- | --- |
+| 认证与会话 | 登录、注册、当前用户恢复、退出登录、受保护路由、登录后返回原访问地址 |
+| 工作台 | 项目与任务指标、项目进度、近期工作项、最近动态、快捷创建入口 |
+| 项目空间 | 关键字与状态筛选、卡片/列表视图、分页、收藏、创建、编辑、详情与删除 |
+| 工作项 | 关键字、项目、状态、优先级和负责人筛选，表格/看板视图，创建、编辑与删除 |
+| 成员管理 | 按项目、角色和关键字筛选，添加成员、调整角色、移除成员、关联任务跳转 |
+| 个人设置 | 资料更新、密码修改、头像预览、明暗/跟随系统主题、主题色、分页与默认视图偏好 |
+| 权限 | 按 `owner`、`admin`、`member`、`readonly` 角色限制项目、任务与成员操作 |
+| 国际化 | 简体中文与英文切换，语言持久化，Ant Design、Day.js、页面标题和 HTML 语言属性联动 |
+| 页面状态 | 加载、后台刷新、空数据、请求错误、重试、操作成功/失败反馈 |
+| 响应式布局 | 可折叠侧边栏、移动端导航、顶栏搜索、个人信息抽屉 |
 
 ## 技术栈
 
 - React 19 + TypeScript 6
 - Vite 8
-- React Router 8
+- React Router 8（Data Router、路由 Loader、页面懒加载）
 - Ant Design 6 + Ant Design Icons
 - Axios
 - MSW 2
+- i18next + react-i18next
 - Day.js
 - ESLint + Prettier
 
-## 本地运行
+## 快速开始
 
-建议使用 Node.js 22 LTS 或更新版本。
+### 环境要求
+
+- Node.js `^20.19.0` 或 `>=22.12.0`
+- npm
+
+### 安装与启动
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-Vite 默认会在终端输出访问地址，通常为 `http://localhost:5173`。
+启动后按终端提示访问应用，Vite 默认地址通常为：
 
-开发环境的 `.env.development` 已默认启用 Mock：
-
-```env
-VITE_API_BASE_URL=/api
-VITE_USE_MOCK=true
+```text
+http://localhost:5173
 ```
 
-可使用以下演示账号：
+演示账号：
 
 ```text
 用户名：admin
 密码：123456
 ```
 
-也可以在注册页创建临时账号。由于 Mock 数据只保存在内存中，新注册账号会在页面刷新后丢失。
+也可以在注册页创建临时账号。Mock 数据只在当前页面会话中保存，完整刷新后新账号及业务数据变更会被重置。
 
-生产环境的 `.env.production` 默认设置 `VITE_USE_MOCK=false`，部署时需要提供与 `/api` 约定匹配的真实后端服务；如仅进行本地演示，请使用开发模式。
+### 环境变量
+
+开发环境 `.env.development`：
+
+```env
+VITE_API_BASE_URL=/api
+VITE_USE_MOCK=true
+```
+
+生产环境 `.env.production` 默认关闭 Mock：
+
+```env
+VITE_API_BASE_URL=/api
+VITE_USE_MOCK=false
+```
+
+关闭 Mock 后需要提供遵循当前 `/api` 数据约定的后端服务。若只需本地功能演示，请使用开发模式。
 
 ## 可用命令
 
 ```bash
 npm run dev      # 启动开发服务器
-npm run build    # TypeScript 检查并生成生产构建
+npm run build    # 执行 TypeScript 项目构建并生成生产产物
 npm run lint     # 运行 ESLint
-npm run preview  # 预览生产构建
+npm run preview  # 本地预览生产构建
+```
+## 页面与路由
+
+| 地址 | 页面 |
+| --- | --- |
+| `/login` | 登录 |
+| `/register` | 注册与服务条款 |
+| `/dashboard` | 工作台 |
+| `/projects` | 项目空间 |
+| `/projects/:projectId` | 项目详情 |
+| `/tasks` | 工作项管理 |
+| `/members` | 成员管理 |
+| `/settings` | 个人设置 |
+| 其他地址 | 404 页面 |
+
+除登录、注册和 404 外，其余页面均位于受保护路由下。访问受保护地址时，父路由 Loader 会校验本地 Token 并请求当前用户；会话无效时跳转到登录页，并保留原访问地址。
+
+## Mock API
+
+开发模式下，MSW 会拦截 `/api` 请求。页面只通过 `src/services/` 访问数据，因此关闭 Mock 后可以在不改页面组件的前提下对接真实后端。
+
+| 领域 | 接口能力 |
+| --- | --- |
+| 认证 | 登录、注册、当前用户、资料更新、修改密码、退出登录 |
+| 项目 | 分页查询、详情、创建、更新、删除 |
+| 工作项 | 条件查询、详情、创建、更新、删除 |
+| 成员 | 查询项目成员、添加成员、修改角色、移除成员 |
+| 动态 | 按项目查询、限制返回数量 |
+
+接口统一返回以下结构：
+
+```ts
+interface ApiResponse<T> {
+  data: T;
+  message: string;
+  requestId: string;
+  timestamp: string;
+}
 ```
 
-最近一次检查结果（2026-07-17）：
+Mock handler 会同时验证登录身份、项目成员关系和角色权限。前端也会提前隐藏、禁用或拦截无权限操作，但最终权限判断仍应由真实后端负责。
 
-- `npm run build`：通过。
-- `npm run lint`：0 个错误，1 个来自 `public/mockServiceWorker.js` 的生成文件警告。
-- 自动化测试：尚未配置。
+## 权限模型
 
-## 目录说明
+| 角色 | 项目能力 | 工作项能力 | 成员能力 |
+| --- | --- | --- | --- |
+| `owner` | 编辑、删除 | 创建、编辑、删除、分配 | 添加、改角色、移除 |
+| `admin` | 编辑 | 创建、编辑、删除、分配 | 只读 |
+| `member` | 只读 | 创建；编辑分配给自己的工作项 | 只读 |
+| `readonly` | 只读 | 只读 | 只读 |
+
+项目所有者角色不可在成员管理页被直接修改或移除。
+
+## 国际化与本地偏好
+
+应用支持 `zh-CN` 与 `en`，首次访问时按以下顺序确定语言：
+
+1. URL 查询参数，例如 `?lng=en`。
+2. `localStorage` 中保存的用户选择。
+3. 浏览器首选语言。
+4. HTML 默认语言。
+
+语言资源位于 `public/locales/{language}/common.json`。切换语言时，业务界面、Ant Design 内置文案、Day.js locale、`<html lang>`、页面标题和描述会同步更新。
+
+以下偏好保存在 `localStorage` 的 `campus-flow:settings` 中：
+
+- 浅色、深色或跟随系统的主题模式；
+- 主题色；
+- 默认分页大小；
+- 项目默认视图；
+- 工作项默认视图。
+
+## 项目结构
 
 ```text
-src/
-├─ api/mock/            # MSW Worker、种子数据库、响应工具与接口 handlers
-├─ assets/              # 图片等静态资源
-├─ components/common/   # 品牌、头像、页面标题等公共组件
-├─ contexts/            # 全局上下文预留目录
-├─ layouts/             # 后台公共布局
-├─ pages/               # 路由页面
-├─ routes/              # 路由配置
-├─ services/            # 认证及各业务领域的请求封装
-├─ style/               # 全局样式、设计令牌和响应式规则
-├─ types/               # 领域模型与接口响应类型
-└─ utils/               # Axios 实例、ID 等通用工具
+campus-flow/
+├─ docs/                     # 实现说明、问题复盘与 QA 记录
+├─ public/
+│  ├─ locales/              # 中英文运行时语言包
+│  └─ mockServiceWorker.js   # MSW 生成的 Service Worker
+└─ src/
+   ├─ api/mock/              # 内存数据库、鉴权工具与 Mock handlers
+   ├─ components/            # 公共组件和实体编辑抽屉
+   ├─ constants/             # 状态、角色、优先级等选项
+   ├─ contexts/              # 全局设置上下文
+   ├─ hooks/                 # 页面数据、当前用户、设置等复用逻辑
+   ├─ i18n/                  # i18next 初始化与语言同步
+   ├─ layouts/               # 应用公共布局
+   ├─ pages/                 # 路由页面
+   ├─ routes/                # 路由定义与登录守卫
+   ├─ services/              # 认证及业务 API 封装
+   ├─ style/                 # 全局样式
+   ├─ types/                 # 领域模型与接口类型
+   └─ utils/                 # 请求、权限、日期、集合与 ID 工具
 ```
 
-## 下一步计划
+主要数据流：
 
-1. 增加认证上下文和路由守卫，恢复当前用户信息，并让公共布局接入真实登录态与退出逻辑。
-2. 完成项目、任务、成员和动态 API/service，并补齐接口异常处理和功能验收。
-3. 将项目、任务、成员和动态页面接入 service，补齐加载、空数据和错误状态。
-4. 实现项目/任务的创建、编辑、删除、筛选和状态流转，并让项目详情读取路由参数。
-5. 持久化个人设置，完成全局主题和默认视图联动。
-6. 修正公共布局的移动端导航判断，完成多尺寸交互验收。
-7. 引入单元测试与端到端测试，并清理生成文件的 Lint 警告。
+```text
+页面 / 表单
+    ↓
+services + Axios
+    ↓
+/api
+    ↓
+MSW handlers（开发环境）或真实后端
+    ↓
+统一 ApiResponse
+```
 
 ## 参考资料
 
-- [React 文档](https://react.dev/)
-- [TypeScript 文档](https://www.typescriptlang.org/)
-- [Vite 文档](https://vite.dev/)
-- [React Router 文档](https://reactrouter.com/)
-- [Ant Design 中文文档](https://ant.design/docs/react/introduce-cn)
-- [MSW 文档](https://mswjs.io/docs/)
+- [React](https://react.dev/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Vite](https://vite.dev/)
+- [React Router](https://reactrouter.com/)
+- [Ant Design](https://ant.design/)
+- [Mock Service Worker](https://mswjs.io/)
+- [i18next](https://www.i18next.com/)
