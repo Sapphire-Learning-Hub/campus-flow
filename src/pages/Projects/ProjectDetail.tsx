@@ -8,23 +8,39 @@ import {
   PlusOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
-import { App, Avatar, Button, Progress, Space, Statistic, Tag } from "antd";
-import { useCallback, useState } from "react";
+import { App, Button, Progress, Space, Statistic, Tag } from "antd";
+import dayjs from "dayjs";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router";
+import { MemberAvatar } from "@/components/common/MemberAvatar";
 import { PageState } from "@/components/common/PageState";
 import { ProjectFormDrawer } from "@/components/projects/ProjectForm";
 import { useAsyncPageData } from "@/hooks/useAsyncPageData";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { getApiErrorMessage } from "@/services/client";
 import { deleteProject, getProject } from "@/services/projects";
+import { listTasks } from "@/services/tasks";
+import { listMembers } from "@/services/members";
+import { listActivities } from "@/services/activities";
+import type { Activity } from "@/types/activity";
+import type { Member } from "@/types/member";
 import type { Project } from "@/types/project";
+import type { Task } from "@/types/task";
+import { indexById } from "@/utils/collection";
+import { formatDate, isOverdue } from "@/utils/date";
 import {
   getProjectPermissions,
   PERMISSION_DENIED,
 } from "@/utils/Permissions.ts";
-import { formatDate } from "@/utils/date";
 import "./ProjectDetail.css";
+
+interface ProjectDetailData {
+  project: Project;
+  tasks: Task[];
+  members: Member[];
+  activities: Activity[];
+}
 
 export default function ProjectDetailPage() {
   const { t } = useTranslation();
@@ -33,28 +49,56 @@ export default function ProjectDetailPage() {
   const navigate = useNavigate();
   const { projectId } = useParams();
   const [editorOpen, setEditorOpen] = useState(false);
-  const loadProject = useCallback(() => {
+  const [activeTab, setActiveTab] = useState("overview");
+
+  const handleTabClick = useCallback((tab: string, id: string) => {
+    setActiveTab(tab);
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
+  const loadProjectDetail = useCallback(() => {
     if (!projectId) {
       return Promise.reject(new Error(t("projectDetail.missingProjectId")));
     }
-    return getProject(projectId);
+    return Promise.all([
+      getProject(projectId),
+      listTasks({ projectId, pageSize: 100 }),
+      listMembers({ projectId }),
+      listActivities({ projectId, limit: 10 }),
+    ]).then(([project, taskResult, members, activities]) => ({
+      project,
+      tasks: taskResult.items,
+      members,
+      activities,
+    }));
   }, [projectId, t]);
+
   const getProjectDetailErrorMessage = useCallback(
     (requestError: unknown) =>
       getApiErrorMessage(requestError, t("projectDetail.loadError")),
     [t],
   );
+
   const {
-    data: project,
+    data,
     setData,
     loading,
     error,
     reload,
-  } = useAsyncPageData<Project | undefined>({
+  } = useAsyncPageData<ProjectDetailData | undefined>({
     initialData: undefined,
-    load: loadProject,
+    load: loadProjectDetail,
     getErrorMessage: getProjectDetailErrorMessage,
   });
+
+  const project = data?.project;
+  const tasks = data?.tasks ?? [];
+  const activities = data?.activities ?? [];
+  const membersById = useMemo(
+    () => indexById(data?.members ?? []),
+    [data?.members],
+  );
 
   if (loading || error || !project) {
     return (
@@ -125,9 +169,52 @@ export default function ProjectDetailPage() {
     });
   };
   const handleProjectSaved = (savedProject: Project) => {
-    setData(savedProject);
+    setData((current) =>
+      current ? { ...current, project: savedProject } : current,
+    );
     setEditorOpen(false);
   };
+
+  const openTasks = tasks.filter((task) => task.status !== "done").length;
+  const totalTasks = tasks.length;
+  const inProgressTasks = tasks.filter(
+    (task) => task.status === "in_progress",
+  ).length;
+  const overdueTasks = tasks.filter((task) =>
+    isOverdue(task.deadline, task.status === "done"),
+  ).length;
+  const completedTasks = tasks.filter((task) => task.status === "done").length;
+  const progress = totalTasks
+    ? Math.round((completedTasks / totalTasks) * 100)
+    : project.status === "completed" || project.status === "archived"
+      ? 100
+      : 0;
+  const daysRemaining = project.deadline
+    ? dayjs(project.deadline).startOf("day").diff(dayjs().startOf("day"), "day")
+    : 0;
+
+  const priorityColor: Record<string, string> = {
+    urgent: "red",
+    high: "orange",
+    medium: "blue",
+    low: "default",
+  };
+
+  const statusColor: Record<string, string> = {
+    pending: "default",
+    in_progress: "processing",
+    review: "warning",
+    done: "success",
+  };
+
+  const stageColor: Record<string, string> = {
+    discovery: "purple",
+    design: "cyan",
+    delivery: "blue",
+    acceptance: "gold",
+  };
+
+  const leader = membersById.get(project.leaderId);
 
   return (
     <div className="page-container project-detail-page">
@@ -176,36 +263,54 @@ export default function ProjectDetailPage() {
       </div>
 
       <nav className="detail-tab-bar">
-        <button type="button" className="active">
+        <button
+          type="button"
+          className={activeTab === "overview" ? "active" : ""}
+          onClick={() => handleTabClick("overview", "project-detail-top")}
+        >
           {t("projectDetail.tabs.overview")}
         </button>
-        <button type="button">
-          {t("projectDetail.tabs.tasks", { count: 4 })}
+        <button
+          type="button"
+          className={activeTab === "tasks" ? "active" : ""}
+          onClick={() => handleTabClick("tasks", "project-detail-tasks")}
+        >
+          {t("projectDetail.tabs.tasks", { count: totalTasks })}
         </button>
-        <button type="button">
+        <button
+          type="button"
+          className={activeTab === "members" ? "active" : ""}
+          onClick={() => handleTabClick("members", "project-detail-members")}
+        >
           <TeamOutlined />{" "}
           {t("projectDetail.tabs.members", {
             count: project.members.length,
           })}
         </button>
-        <button type="button">{t("projectDetail.tabs.activity")}</button>
+        <button
+          type="button"
+          className={activeTab === "activity" ? "active" : ""}
+          onClick={() => handleTabClick("activity", "project-detail-activity")}
+        >
+          {t("projectDetail.tabs.activity")}
+        </button>
       </nav>
 
-      <section className="workspace-summary">
+      <section className="workspace-summary" id="project-detail-top">
         <article>
           <span>
             <BranchesOutlined />
           </span>
           <small>{t("projectDetail.summary.openTasks")}</small>
-          <strong>4</strong>
-          <em>{t("projectDetail.summary.totalTasks", { count: 4 })}</em>
+          <strong>{openTasks}</strong>
+          <em>{t("projectDetail.summary.totalTasks", { count: totalTasks })}</em>
         </article>
         <article>
           <span>
             <FieldTimeOutlined />
           </span>
           <small>{t("projectDetail.summary.inProgress")}</small>
-          <strong>1</strong>
+          <strong>{inProgressTasks}</strong>
           <em>{t("projectDetail.summary.inProgressNote")}</em>
         </article>
         <article className="risk">
@@ -213,7 +318,7 @@ export default function ProjectDetailPage() {
             <CalendarOutlined />
           </span>
           <small>{t("projectDetail.summary.overdue")}</small>
-          <strong>1</strong>
+          <strong>{overdueTasks}</strong>
           <em>{t("projectDetail.summary.overdueNote")}</em>
         </article>
         <article>
@@ -247,12 +352,7 @@ export default function ProjectDetailPage() {
             <div>
               <dt>{t("projectDetail.overview.owner")}</dt>
               <dd>
-                <span className="detail-member-inline">
-                  <Avatar size={24} style={{ background: "#1677ff" }}>
-                    张
-                  </Avatar>
-                  张伟
-                </span>
+                <MemberAvatar member={leader} size={24} showName />
               </dd>
             </div>
             <div>
@@ -272,21 +372,21 @@ export default function ProjectDetailPage() {
           <div className="detail-progress">
             <div>
               <span>{t("projectDetail.overview.progress")}</span>
-              <b>38%</b>
+              <b>{progress}%</b>
             </div>
-            <Progress percent={38} strokeColor="#1677ff" />
+            <Progress percent={progress} strokeColor="#1677ff" />
           </div>
         </article>
 
         <article className="surface-panel detail-stats">
           <Statistic
             title={t("projectDetail.statistics.tasks")}
-            value={4}
+            value={totalTasks}
             suffix={t("projectDetail.units.items")}
           />
           <Statistic
             title={t("projectDetail.statistics.completed")}
-            value={0}
+            value={completedTasks}
             suffix={t("projectDetail.units.items")}
           />
           <Statistic
@@ -296,7 +396,7 @@ export default function ProjectDetailPage() {
           />
           <Statistic
             title={t("projectDetail.statistics.daysRemaining")}
-            value={36}
+            value={daysRemaining >= 0 ? daysRemaining : 0}
             suffix={t("projectDetail.units.days")}
           />
         </article>
@@ -309,42 +409,46 @@ export default function ProjectDetailPage() {
             </div>
           </div>
 
-          <div>
-            <CalendarOutlined />
-            <span>
-              <b>修复跨天任务显示错位</b>
-              <small>王强</small>
-            </span>
-            <time className="danger-text">2026-07-15</time>
-          </div>
-          <div>
-            <CalendarOutlined />
-            <span>
-              <b>设计任务权重配置面板</b>
-              <small>李明</small>
-            </span>
-            <time>2026-07-16</time>
-          </div>
-          <div>
-            <CalendarOutlined />
-            <span>
-              <b>完成时间轴页面</b>
-              <small>张伟</small>
-            </span>
-            <time>2026-07-18</time>
-          </div>
-          <div>
-            <CalendarOutlined />
-            <span>
-              <b>任务完成后插入休息时间</b>
-              <small>张伟</small>
-            </span>
-            <time>2026-07-20</time>
-          </div>
+          {(() => {
+            const upcoming = [...tasks]
+              .filter((task) => task.deadline && task.status !== "done")
+              .sort(
+                (a, b) =>
+                  dayjs(a.deadline).valueOf() - dayjs(b.deadline).valueOf(),
+              )
+              .slice(0, 4);
+            return upcoming.length > 0 ? (
+              upcoming.map((task) => {
+                const assignee = task.assigneeId
+                  ? membersById.get(task.assigneeId)
+                  : undefined;
+                return (
+                  <div key={task.id}>
+                    <CalendarOutlined />
+                    <span>
+                      <b>{task.title}</b>
+                      <small>{assignee?.name ?? t("common.unassigned")}</small>
+                    </span>
+                    <time
+                      className={
+                        isOverdue(task.deadline) ? "danger-text" : ""
+                      }
+                    >
+                      {formatDate(task.deadline)}
+                    </time>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="detail-empty-state">
+                <span>{t("projectDetail.upcoming.empty")}</span>
+              </div>
+            );
+          })()}
         </article>
       </section>
 
-      <section className="static-detail-section">
+      <section className="static-detail-section" id="project-detail-tasks">
         <div className="section-heading outside">
           <div>
             <h2>{t("projectDetail.tasks.title")}</h2>
@@ -366,110 +470,68 @@ export default function ProjectDetailPage() {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>完成时间轴页面</td>
-                <td>
-                  <Tag>{t("options.taskType.development")}</Tag>
-                </td>
-                <td>
-                  <Tag color="processing">
-                    {t("options.taskStatus.in_progress")}
-                  </Tag>
-                </td>
-                <td>
-                  <Tag color="blue">{t("options.taskStage.delivery")}</Tag>
-                </td>
-                <td>
-                  <Tag color="orange">{t("options.priority.high")}</Tag>
-                </td>
-                <td>
-                  <span className="detail-member-inline">
-                    <Avatar size={24} style={{ background: "#1677ff" }}>
-                      张
-                    </Avatar>
-                    张伟
-                  </span>
-                </td>
-                <td>2026-07-13 - 2026-07-18</td>
-              </tr>
-              <tr>
-                <td>设计任务权重配置面板</td>
-                <td>
-                  <Tag>{t("options.taskType.design")}</Tag>
-                </td>
-                <td>
-                  <Tag color="warning">{t("options.taskStatus.review")}</Tag>
-                </td>
-                <td>
-                  <Tag color="cyan">{t("options.taskStage.design")}</Tag>
-                </td>
-                <td>
-                  <Tag color="blue">{t("options.priority.medium")}</Tag>
-                </td>
-                <td>
-                  <span className="detail-member-inline">
-                    <Avatar size={24} style={{ background: "#7c3aed" }}>
-                      李
-                    </Avatar>
-                    李明
-                  </span>
-                </td>
-                <td>2026-07-11 - 2026-07-16</td>
-              </tr>
-              <tr>
-                <td>修复跨天任务显示错位</td>
-                <td>
-                  <Tag color="red">{t("options.taskType.bug")}</Tag>
-                </td>
-                <td>
-                  <Tag>{t("options.taskStatus.pending")}</Tag>
-                </td>
-                <td>
-                  <Tag color="gold">{t("options.taskStage.acceptance")}</Tag>
-                </td>
-                <td>
-                  <Tag color="red">{t("options.priority.urgent")}</Tag>
-                </td>
-                <td>
-                  <span className="detail-member-inline">
-                    <Avatar size={24} style={{ background: "#0891b2" }}>
-                      王
-                    </Avatar>
-                    王强
-                  </span>
-                </td>
-                <td>2026-07-15 - 2026-07-15</td>
-              </tr>
-              <tr>
-                <td>任务完成后插入休息时间</td>
-                <td>
-                  <Tag>{t("options.taskType.test")}</Tag>
-                </td>
-                <td>
-                  <Tag color="warning">{t("options.taskStatus.review")}</Tag>
-                </td>
-                <td>
-                  <Tag color="gold">{t("options.taskStage.acceptance")}</Tag>
-                </td>
-                <td>
-                  <Tag color="orange">{t("options.priority.high")}</Tag>
-                </td>
-                <td>
-                  <span className="detail-member-inline">
-                    <Avatar size={24} style={{ background: "#1677ff" }}>
-                      张
-                    </Avatar>
-                    张伟
-                  </span>
-                </td>
-                <td>2026-07-16 - 2026-07-20</td>
-              </tr>
+              {tasks.length > 0 ? (
+                tasks.map((task) => {
+                  const assignee = task.assigneeId
+                    ? membersById.get(task.assigneeId)
+                    : undefined;
+                  return (
+                    <tr key={task.id}>
+                      <td>{task.title}</td>
+                      <td>
+                        {task.workItemType ? (
+                          <Tag>{t(`options.taskType.${task.workItemType}`)}</Tag>
+                        ) : (
+                          <Tag>{t("common.unknown")}</Tag>
+                        )}
+                      </td>
+                      <td>
+                        <Tag color={statusColor[task.status] ?? "default"}>
+                          {t(`options.taskStatus.${task.status}`)}
+                        </Tag>
+                      </td>
+                      <td>
+                        {task.stage ? (
+                          <Tag color={stageColor[task.stage] ?? "blue"}>
+                            {t(`options.taskStage.${task.stage}`)}
+                          </Tag>
+                        ) : (
+                          <Tag>{t("common.unknown")}</Tag>
+                        )}
+                      </td>
+                      <td>
+                        <Tag color={priorityColor[task.priority] ?? "default"}>
+                          {t(`options.priority.${task.priority}`)}
+                        </Tag>
+                      </td>
+                      <td>
+                        <MemberAvatar member={assignee} size={24} showName />
+                      </td>
+                      <td>
+                        {task.startDate && task.deadline
+                          ? `${dayjs(task.startDate).format("YYYY-MM-DD")} - ${dayjs(task.deadline).format("YYYY-MM-DD")}`
+                          : task.deadline
+                            ? `${t("projectDetail.tasks.due")} ${dayjs(task.deadline).format("YYYY-MM-DD")}`
+                            : t("common.notSet")}
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={7}>
+                    <div className="detail-empty-state">
+                      <span>{t("projectDetail.tasks.empty")}</span>
+                    </div>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
       </section>
 
-      <section className="static-detail-section">
+      <section className="static-detail-section" id="project-detail-members">
         <div className="section-heading outside">
           <div>
             <h2>{t("projectDetail.members.title")}</h2>
@@ -478,64 +540,47 @@ export default function ProjectDetailPage() {
         </div>
 
         <div className="detail-member-grid">
-          <article>
-            <Avatar size={56} style={{ background: "#1677ff" }}>
-              张
-            </Avatar>
-            <h3>张伟</h3>
-            <p>计算机学院</p>
-            <Tag color="purple">{t("options.role.owner")}</Tag>
-            <small>{t("projectDetail.members.taskCount", { count: 2 })}</small>
-          </article>
-          <article>
-            <Avatar size={56} style={{ background: "#7c3aed" }}>
-              李
-            </Avatar>
-            <h3>李明</h3>
-            <p>软件工程系</p>
-            <Tag color="blue">{t("options.role.admin")}</Tag>
-            <small>{t("projectDetail.members.taskCount", { count: 1 })}</small>
-          </article>
-          <article>
-            <Avatar size={56} style={{ background: "#0891b2" }}>
-              王
-            </Avatar>
-            <h3>王强</h3>
-            <p>人工智能学院</p>
-            <Tag color="green">{t("options.role.member")}</Tag>
-            <small>{t("projectDetail.members.taskCount", { count: 1 })}</small>
-          </article>
-          <article>
-            <Avatar size={56} style={{ background: "#ea580c" }}>
-              赵
-            </Avatar>
-            <h3>赵敏</h3>
-            <p>自动化学院</p>
-            <Tag color="green">{t("options.role.member")}</Tag>
-            <small>{t("projectDetail.members.taskCount", { count: 0 })}</small>
-          </article>
-          <article>
-            <Avatar size={56} style={{ background: "#16a34a" }}>
-              陈
-            </Avatar>
-            <h3>陈晨</h3>
-            <p>管理学院</p>
-            <Tag>{t("options.role.readonly")}</Tag>
-            <small>{t("projectDetail.members.taskCount", { count: 0 })}</small>
-          </article>
-          <article>
-            <Avatar size={56} style={{ background: "#db2777" }}>
-              周
-            </Avatar>
-            <h3>周宁</h3>
-            <p>计算机学院</p>
-            <Tag color="green">{t("options.role.member")}</Tag>
-            <small>{t("projectDetail.members.taskCount", { count: 0 })}</small>
-          </article>
+          {project.members.length > 0 ? (
+            project.members.map((pm) => {
+              const member = membersById.get(pm.memberId);
+              const memberTaskCount = tasks.filter(
+                (task) => task.assigneeId === pm.memberId,
+              ).length;
+              return (
+                <article key={pm.memberId}>
+                  <MemberAvatar member={member} size={56} />
+                  <h3>{member?.name ?? t("common.unknown")}</h3>
+                  <p>{member?.department ?? ""}</p>
+                  <Tag
+                    color={
+                      pm.role === "owner"
+                        ? "purple"
+                        : pm.role === "admin"
+                          ? "blue"
+                          : pm.role === "readonly"
+                            ? "default"
+                            : "green"
+                    }
+                  >
+                    {t(`options.role.${pm.role}`)}
+                  </Tag>
+                  <small>
+                    {t("projectDetail.members.taskCount", {
+                      count: memberTaskCount,
+                    })}
+                  </small>
+                </article>
+              );
+            })
+          ) : (
+            <div className="detail-empty-state">
+              <span>{t("projectDetail.members.empty")}</span>
+            </div>
+          )}
         </div>
       </section>
 
-      <section className="static-detail-section">
+      <section className="static-detail-section" id="project-detail-activity">
         <div className="section-heading outside">
           <div>
             <h2>{t("projectDetail.activity.title")}</h2>
@@ -544,50 +589,27 @@ export default function ProjectDetailPage() {
         </div>
 
         <div className="surface-panel activity-list">
-          <article>
-            <Avatar size={30} style={{ background: "#1677ff" }}>
-              张
-            </Avatar>
-            <div>
-              <p>
-                <b>张伟</b> 更新了项目整体进度
-              </p>
-              <small>2026-07-15 20:30</small>
+          {activities.length > 0 ? (
+            activities.map((activity) => {
+              const actor = membersById.get(activity.actorId);
+              return (
+                <article key={activity.id}>
+                  <MemberAvatar member={actor} size={30} />
+                  <div>
+                    <p>
+                      <b>{actor?.name ?? t("common.unknown")}</b>{" "}
+                      {activity.content}
+                    </p>
+                    <small>{formatDate(activity.createdAt)}</small>
+                  </div>
+                </article>
+              );
+            })
+          ) : (
+            <div className="detail-empty-state">
+              <span>{t("projectDetail.activity.empty")}</span>
             </div>
-          </article>
-          <article>
-            <Avatar size={30} style={{ background: "#7c3aed" }}>
-              李
-            </Avatar>
-            <div>
-              <p>
-                <b>李明</b> 将“设计任务权重配置面板”提交审核
-              </p>
-              <small>2026-07-15 16:20</small>
-            </div>
-          </article>
-          <article>
-            <Avatar size={30} style={{ background: "#0891b2" }}>
-              王
-            </Avatar>
-            <div>
-              <p>
-                <b>王强</b> 新增了缺陷“修复跨天任务显示错位”
-              </p>
-              <small>2026-07-15 11:05</small>
-            </div>
-          </article>
-          <article>
-            <Avatar size={30} style={{ background: "#16a34a" }}>
-              陈
-            </Avatar>
-            <div>
-              <p>
-                <b>陈晨</b> 完成了“整理链接解析规则”
-              </p>
-              <small>2026-07-14 18:45</small>
-            </div>
-          </article>
+          )}
         </div>
       </section>
 

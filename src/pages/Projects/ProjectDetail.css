@@ -312,6 +312,20 @@
   font-size: 11px;
 }
 
+/* ===== Empty state ===== */
+.detail-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px 16px;
+  color: var(--text-tertiary);
+  font-size: 13px;
+}
+.static-table .detail-empty-state {
+  padding: 32px 0;
+}
+
 @media (max-width: 980px) {
   .detail-grid {
     grid-template-columns: 1fr;
