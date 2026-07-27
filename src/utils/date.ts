@@ -1,13 +1,20 @@
 import dayjs, { type Dayjs } from "dayjs";
+import i18n, { normalizeLanguage } from "@/i18n";
 
 export const DATE_FORMAT = "YYYY-MM-DD";
 
-export function formatDate(value?: string, fallback = "未设置"): string {
-  return value ? dayjs(value).format("YYYY年M月D日") : fallback;
+function isChinese() {
+  return normalizeLanguage(i18n.resolvedLanguage) === "zh-CN";
+}
+
+export function formatDate(value?: string, fallback?: string): string {
+  if (!value) return fallback ?? i18n.t("common.notSet");
+  return dayjs(value).format(isChinese() ? "YYYY年M月D日" : "MMM D, YYYY");
 }
 
 export function formatShortDate(value?: string): string {
-  return value ? dayjs(value).format("MM月DD日") : "无期限";
+  if (!value) return i18n.t("common.noDeadline");
+  return dayjs(value).format(isChinese() ? "MM月DD日" : "MMM D");
 }
 
 export function isOverdue(deadline?: string, completed = false): boolean {

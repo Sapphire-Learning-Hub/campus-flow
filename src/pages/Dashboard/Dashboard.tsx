@@ -12,7 +12,9 @@ import {
 } from "@ant-design/icons";
 import { App, Button, Progress, Space } from "antd";
 import dayjs from "dayjs";
+import type { TFunction } from "i18next";
 import { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import { MemberAvatar } from "@/components/common/MemberAvatar";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -29,10 +31,15 @@ import { listProjects } from "@/services/projects";
 import { listTasks } from "@/services/tasks";
 import type { Activity, ActivityKind } from "@/types/activity";
 import type { Member } from "@/types/member";
-import type { Project, ProjectStatus } from "@/types/project";
-import type { Task, TaskPriority, TaskStatus } from "@/types/task";
+import type { Project } from "@/types/project";
+import type { Task } from "@/types/task";
 import { indexById } from "@/utils/collection";
-import { daysUntil, formatShortDate, isOverdue } from "@/utils/date";
+import {
+  daysUntil,
+  formatDate,
+  formatShortDate,
+  isOverdue,
+} from "@/utils/date";
 import { getProjectPermissions, PERMISSION_DENIED } from "@/utils/Permissions";
 import "./index.css";
 
@@ -56,27 +63,6 @@ const INITIAL_DATA: DashboardData = {
   projects: [],
   members: [],
   activities: [],
-};
-
-const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
-  planning: "规划中",
-  active: "进行中",
-  completed: "已完成",
-  archived: "已归档",
-};
-
-const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
-  pending: "待处理",
-  in_progress: "进行中",
-  review: "待审核",
-  done: "已完成",
-};
-
-const PRIORITY_LABELS: Record<TaskPriority, string> = {
-  low: "低",
-  medium: "中",
-  high: "高",
-  urgent: "紧急",
 };
 
 const ACTIVITY_ICONS: Record<ActivityKind, React.ReactNode> = {
@@ -103,44 +89,58 @@ async function loadDashboardData(): Promise<DashboardData> {
   };
 }
 
-function getDashboardErrorMessage(error: unknown) {
-  return getApiErrorMessage(error, "工作台数据加载失败，请稍后重试");
-}
-
-function getGreeting() {
+function getGreeting(t: TFunction) {
   const hour = dayjs().hour();
-  if (hour < 6) return "夜深了";
-  if (hour < 12) return "上午好";
-  if (hour < 18) return "下午好";
-  return "晚上好";
+  if (hour < 6) return t("dashboard.greeting.night");
+  if (hour < 12) return t("dashboard.greeting.morning");
+  if (hour < 18) return t("dashboard.greeting.afternoon");
+  return t("dashboard.greeting.evening");
 }
 
-function getDeadlineLabel(deadline?: string) {
+function getDeadlineLabel(t: TFunction, deadline?: string) {
   const remainingDays = daysUntil(deadline);
-  if (remainingDays === null) return "无截止日期";
-  if (remainingDays < 0) return `已逾期 ${Math.abs(remainingDays)} 天`;
-  if (remainingDays === 0) return "今天截止";
-  if (remainingDays === 1) return "明天截止";
-  if (remainingDays <= 7) return `${remainingDays} 天后截止`;
+  if (remainingDays === null) return t("dashboard.deadline.none");
+  if (remainingDays < 0) {
+    return t("dashboard.deadline.overdue", {
+      count: Math.abs(remainingDays),
+    });
+  }
+  if (remainingDays === 0) return t("dashboard.deadline.today");
+  if (remainingDays === 1) return t("dashboard.deadline.tomorrow");
+  if (remainingDays <= 7) {
+    return t("dashboard.deadline.days", { count: remainingDays });
+  }
   return formatShortDate(deadline);
 }
 
-function getRelativeTime(value: string) {
+function getRelativeTime(t: TFunction, value: string) {
   const createdAt = dayjs(value);
   const minuteDiff = dayjs().diff(createdAt, "minute");
-  if (minuteDiff < 1) return "刚刚";
-  if (minuteDiff < 60) return `${minuteDiff} 分钟前`;
+  if (minuteDiff < 1) return t("dashboard.relativeTime.justNow");
+  if (minuteDiff < 60) {
+    return t("dashboard.relativeTime.minutes", { count: minuteDiff });
+  }
   const hourDiff = dayjs().diff(createdAt, "hour");
-  if (hourDiff < 24) return `${hourDiff} 小时前`;
+  if (hourDiff < 24) {
+    return t("dashboard.relativeTime.hours", { count: hourDiff });
+  }
   const dayDiff = dayjs().diff(createdAt, "day");
-  if (dayDiff < 7) return `${dayDiff} 天前`;
-  return createdAt.format("M月D日");
+  if (dayDiff < 7) {
+    return t("dashboard.relativeTime.days", { count: dayDiff });
+  }
+  return formatShortDate(value);
 }
 
 export default function DashboardPage() {
+  const { t } = useTranslation();
   const { message } = App.useApp();
   const currentUser = useCurrentUser();
   const navigate = useNavigate();
+  const getDashboardErrorMessage = useCallback(
+    (requestError: unknown) =>
+      getApiErrorMessage(requestError, t("dashboard.loadError")),
+    [t],
+  );
   const { data, setData, loading, refreshing, error, reload, refresh } =
     useAsyncPageData({
       initialData: INITIAL_DATA,
@@ -259,47 +259,49 @@ export default function DashboardPage() {
   const metricItems = useMemo(
     () => [
       {
-        label: "进行中项目",
+        label: t("dashboard.metrics.activeProjects"),
         value: summary.activeProjects,
-        note: `共 ${projects.length} 个项目`,
+        note: t("dashboard.metrics.projectTotal", { count: projects.length }),
         icon: <FolderOpenOutlined />,
         tone: "blue",
         onClick: () => navigate("/projects"),
       },
       {
-        label: "流转中工作项",
+        label: t("dashboard.metrics.openTasks"),
         value: summary.openTasks,
-        note: `${tasks.length} 个工作项总计`,
+        note: t("dashboard.metrics.taskTotal", { count: tasks.length }),
         icon: <ClockCircleOutlined />,
         tone: "cyan",
         onClick: () => navigate("/tasks"),
       },
       {
-        label: "七天内到期",
+        label: t("dashboard.metrics.dueSoon"),
         value: summary.dueSoon,
-        note: "需要优先安排",
+        note: t("dashboard.metrics.dueSoonNote"),
         icon: <CalendarOutlined />,
         tone: "amber",
         onClick: () => navigate("/tasks"),
       },
       {
-        label: "逾期工作项",
+        label: t("dashboard.metrics.overdue"),
         value: summary.overdueTasks,
-        note: summary.overdueTasks ? "建议今天处理" : "当前节奏健康",
+        note: summary.overdueTasks
+          ? t("dashboard.metrics.overdueAction")
+          : t("dashboard.metrics.healthy"),
         icon: <WarningFilled />,
         tone: "red",
         onClick: () => navigate("/tasks"),
       },
       {
-        label: "协作成员",
+        label: t("dashboard.metrics.members"),
         value: summary.members,
-        note: "当前可见范围",
+        note: t("dashboard.metrics.visibleScope"),
         icon: <TeamOutlined />,
         tone: "violet",
         onClick: () => navigate("/members"),
       },
     ],
-    [navigate, projects.length, summary, tasks.length],
+    [navigate, projects.length, summary, t, tasks.length],
   );
 
   const handleOpenTaskCreate = useCallback(() => {
@@ -367,12 +369,17 @@ export default function DashboardPage() {
   return (
     <div className="page-container dashboard-page">
       <PageHeader
-        title={`${getGreeting()}，${currentUser.name}`}
-        description={`${dayjs().format("YYYY年M月D日")} · 聚焦进度、截止与团队协作`}
+        title={t("dashboard.header.title", {
+          greeting: getGreeting(t),
+          name: currentUser.name,
+        })}
+        description={t("dashboard.header.description", {
+          date: formatDate(dayjs().toISOString()),
+        })}
         actions={
           <Space wrap>
             <Button
-              aria-label="刷新工作台"
+              aria-label={t("dashboard.actions.refresh")}
               icon={<ReloadOutlined />}
               loading={refreshing}
               disabled={loading}
@@ -383,7 +390,7 @@ export default function DashboardPage() {
               disabled={loading}
               onClick={handleOpenTaskCreate}
             >
-              创建工作项
+              {t("dashboard.actions.createTask")}
             </Button>
             <Button
               type="primary"
@@ -391,7 +398,7 @@ export default function DashboardPage() {
               disabled={loading}
               onClick={openProjectCreate}
             >
-              创建项目
+              {t("dashboard.actions.createProject")}
             </Button>
           </Space>
         }
@@ -401,9 +408,9 @@ export default function DashboardPage() {
         loading={loading}
         error={error}
         empty={!projects.length}
-        loadingDescription="正在汇总工作台..."
-        errorTitle="工作台加载失败"
-        emptyDescription="还没有可展示的项目，先创建一个项目开始协作"
+        loadingDescription={t("dashboard.states.loading")}
+        errorTitle={t("dashboard.states.errorTitle")}
+        emptyDescription={t("dashboard.states.empty")}
         onRetry={reload}
         emptyAction={
           <Button
@@ -411,11 +418,14 @@ export default function DashboardPage() {
             icon={<PlusOutlined />}
             onClick={openProjectCreate}
           >
-            创建项目
+            {t("dashboard.actions.createProject")}
           </Button>
         }
       >
-        <section className="metric-band" aria-label="工作台数据概览">
+        <section
+          className="metric-band"
+          aria-label={t("dashboard.metrics.regionLabel")}
+        >
           {metricItems.map((item) => (
             <button
               className="metric-item"
@@ -439,21 +449,21 @@ export default function DashboardPage() {
           <section className="surface-panel project-progress-panel">
             <div className="section-heading">
               <div>
-                <h2>项目进展</h2>
-                <p>按最近更新时间汇总关键项目</p>
+                <h2>{t("dashboard.projects.title")}</h2>
+                <p>{t("dashboard.projects.description")}</p>
               </div>
               <Button type="link" onClick={() => navigate("/projects")}>
-                查看全部
+                {t("dashboard.actions.viewAll")}
                 <ArrowRightOutlined />
               </Button>
             </div>
 
             <div className="project-progress-header" aria-hidden="true">
               <span />
-              <span>项目</span>
-              <span>负责人</span>
-              <span>进度</span>
-              <span>截止 / 状态</span>
+              <span>{t("dashboard.projects.columns.project")}</span>
+              <span>{t("dashboard.projects.columns.owner")}</span>
+              <span>{t("dashboard.projects.columns.progress")}</span>
+              <span>{t("dashboard.projects.columns.deadlineStatus")}</span>
             </div>
 
             <div className="project-progress-list">
@@ -480,8 +490,10 @@ export default function DashboardPage() {
                     <span className="project-progress-name">
                       <b>{project.name}</b>
                       <small>
-                        {project.members.length} 人协作 · {metrics?.total ?? 0}{" "}
-                        个工作项
+                        {t("dashboard.projects.collaborationSummary", {
+                          members: project.members.length,
+                          tasks: metrics?.total ?? 0,
+                        })}
                       </small>
                     </span>
                     <span className="project-progress-owner">
@@ -498,10 +510,12 @@ export default function DashboardPage() {
                     </span>
                     <span className="project-progress-state">
                       <time className={overdue ? "is-overdue" : ""}>
-                        {overdue ? "已逾期" : formatShortDate(project.deadline)}
+                        {overdue
+                          ? t("dashboard.deadline.overdueShort")
+                          : formatShortDate(project.deadline)}
                       </time>
                       <small className={`status-${project.status}`}>
-                        {PROJECT_STATUS_LABELS[project.status]}
+                        {t(`options.projectStatus.${project.status}`)}
                       </small>
                     </span>
                   </button>
@@ -513,8 +527,8 @@ export default function DashboardPage() {
           <section className="surface-panel focus-panel">
             <div className="section-heading">
               <div>
-                <h2>我的近期任务</h2>
-                <p>先处理离截止时间最近的工作</p>
+                <h2>{t("dashboard.tasks.title")}</h2>
+                <p>{t("dashboard.tasks.description")}</p>
               </div>
               <Button
                 type="link"
@@ -522,7 +536,7 @@ export default function DashboardPage() {
                   navigate(`/tasks?assigneeId=${currentUser.memberId}`)
                 }
               >
-                全部
+                {t("dashboard.actions.all")}
                 <ArrowRightOutlined />
               </Button>
             </div>
@@ -545,19 +559,21 @@ export default function DashboardPage() {
                       <span className="focus-task-copy">
                         <b>{task.title}</b>
                         <small>
-                          {project?.name ?? "未知项目"}
+                          {project?.name ?? t("dashboard.unknownProject")}
                           <span aria-hidden="true">·</span>
-                          {TASK_STATUS_LABELS[task.status]}
+                          {t(`options.taskStatus.${task.status}`)}
                         </small>
                       </span>
                       <span className="focus-task-meta">
                         <small
                           className={`priority-text priority-${task.priority}`}
                         >
-                          {PRIORITY_LABELS[task.priority]}优先级
+                          {t("dashboard.tasks.priority", {
+                            priority: t(`options.priority.${task.priority}`),
+                          })}
                         </small>
                         <time className={overdue ? "is-overdue" : ""}>
-                          {getDeadlineLabel(task.deadline)}
+                          {getDeadlineLabel(t, task.deadline)}
                         </time>
                       </span>
                       <RightOutlined />
@@ -567,8 +583,8 @@ export default function DashboardPage() {
               ) : (
                 <div className="dashboard-compact-empty">
                   <CheckCircleOutlined />
-                  <b>近期任务已清空</b>
-                  <span>可以开始规划下一项工作</span>
+                  <b>{t("dashboard.tasks.emptyTitle")}</b>
+                  <span>{t("dashboard.tasks.emptyDescription")}</span>
                 </div>
               )}
             </div>
@@ -578,8 +594,8 @@ export default function DashboardPage() {
         <section className="surface-panel activity-panel">
           <div className="section-heading">
             <div>
-              <h2>最近动态</h2>
-              <p>你可见项目中的最新协作记录</p>
+              <h2>{t("dashboard.activities.title")}</h2>
+              <p>{t("dashboard.activities.description")}</p>
             </div>
           </div>
 
@@ -600,12 +616,12 @@ export default function DashboardPage() {
                     <MemberAvatar member={actor} size={30} />
                     <span className="activity-copy">
                       <span>
-                        <b>{actor?.name ?? "未知成员"}</b>
+                        <b>{actor?.name ?? t("dashboard.unknownMember")}</b>
                         {activity.content}
                       </span>
                       <small>
-                        {project?.name ?? "未知项目"} ·{" "}
-                        {getRelativeTime(activity.createdAt)}
+                        {project?.name ?? t("dashboard.unknownProject")} ·{" "}
+                        {getRelativeTime(t, activity.createdAt)}
                       </small>
                     </span>
                     <RightOutlined />
@@ -615,8 +631,8 @@ export default function DashboardPage() {
             ) : (
               <div className="dashboard-compact-empty dashboard-activity-empty">
                 <ClockCircleOutlined />
-                <b>暂无团队动态</b>
-                <span>创建或更新工作项后，动态会显示在这里</span>
+                <b>{t("dashboard.activities.emptyTitle")}</b>
+                <span>{t("dashboard.activities.emptyDescription")}</span>
               </div>
             )}
           </div>

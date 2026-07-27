@@ -1,28 +1,19 @@
 import { Alert, App, Button, Drawer, Form, Select, Space } from "antd";
 import { useEffect, useMemo, useState } from "react";
-import { ROLE_OPTIONS } from "@/constants/options";
+import { useTranslation } from "react-i18next";
+import { useLocalizedOptions } from "@/hooks/useLocalizedOptions";
 import { getApiErrorMessage } from "@/services/client";
 import {
   addProjectMember,
   removeProjectMember,
   updateProjectMember,
 } from "@/services/members";
-import type {
-  ManageableProjectRole,
-  Member,
-  ProjectMember,
-  ProjectMemberInput,
-} from "@/types/member";
+import type { Member, ProjectMember, ProjectMemberInput } from "@/types/member";
 import type { Project } from "@/types/project";
 import {
   getProjectPermissions,
   PERMISSION_DENIED,
 } from "@/utils/Permissions.ts";
-
-const MANAGEABLE_ROLE_OPTIONS = ROLE_OPTIONS.filter(
-  (option): option is { label: string; value: ManageableProjectRole } =>
-    option.value !== "owner",
-);
 
 interface MemberFormDrawerProps {
   open: boolean;
@@ -43,7 +34,13 @@ export function MemberFormDrawer({
   onClose,
   onSaved,
 }: MemberFormDrawerProps) {
+  const { t } = useTranslation();
   const { message, modal } = App.useApp();
+  const { roleOptions } = useLocalizedOptions();
+  const manageableRoleOptions = useMemo(
+    () => roleOptions.filter((option) => option.value !== "owner"),
+    [roleOptions],
+  );
   const [form] = Form.useForm<ProjectMemberInput>();
   const [submitting, setSubmitting] = useState(false);
   const [removing, setRemoving] = useState(false);
@@ -96,11 +93,17 @@ export function MemberFormDrawer({
             role: values.role,
           })
         : await addProjectMember(project.id, values);
-      message.success(initial ? "成员角色已更新" : "成员已添加");
+      message.success(
+        initial
+          ? t("memberForm.messages.roleUpdated")
+          : t("memberForm.messages.added"),
+      );
       onSaved(savedProject);
       close();
     } catch (requestError) {
-      message.error(getApiErrorMessage(requestError, "成员保存失败"));
+      message.error(
+        getApiErrorMessage(requestError, t("memberForm.messages.saveFailed")),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -115,13 +118,16 @@ export function MemberFormDrawer({
 
     const memberName =
       members.find((member) => member.id === initial.memberId)?.name ??
-      "该成员";
+      t("memberForm.fallbackMember");
     modal.confirm({
-      title: "移除项目成员",
-      content: `确定将“${memberName}”移出“${project.name}”吗？其负责任务会变为未分配。`,
-      okText: "移除",
+      title: t("memberForm.remove.title"),
+      content: t("memberForm.remove.confirm", {
+        member: memberName,
+        project: project.name,
+      }),
+      okText: t("memberForm.actions.remove"),
       okButtonProps: { danger: true },
-      cancelText: "取消",
+      cancelText: t("common.cancel"),
       async onOk() {
         setRemoving(true);
         try {
@@ -129,12 +135,17 @@ export function MemberFormDrawer({
             project.id,
             initial.memberId,
           );
-          message.success("成员已移出项目");
+          message.success(t("memberForm.messages.removed"));
           onSaved(savedProject);
           form.resetFields();
           onClose();
         } catch (requestError) {
-          message.error(getApiErrorMessage(requestError, "移除成员失败"));
+          message.error(
+            getApiErrorMessage(
+              requestError,
+              t("memberForm.messages.removeFailed"),
+            ),
+          );
           throw requestError;
         } finally {
           setRemoving(false);
@@ -144,12 +155,14 @@ export function MemberFormDrawer({
   };
 
   const permissionDescription = !project
-    ? "请先选择需要管理成员的项目"
+    ? t("memberForm.selectProjectFirst")
     : PERMISSION_DENIED.manageMembers;
 
   return (
     <Drawer
-      title={initial ? "管理项目成员" : "添加项目成员"}
+      title={
+        initial ? t("memberForm.title.manage") : t("memberForm.title.add")
+      }
       size={440}
       open={open}
       onClose={close}
@@ -163,13 +176,13 @@ export function MemberFormDrawer({
                 disabled={submitting}
                 onClick={confirmRemove}
               >
-                移出项目
+                {t("memberForm.actions.remove")}
               </Button>
             ) : null}
           </div>
           <Space>
             <Button disabled={submitting || removing} onClick={close}>
-              取消
+              {t("common.cancel")}
             </Button>
             <Button
               type="primary"
@@ -177,7 +190,9 @@ export function MemberFormDrawer({
               disabled={!project || !canManageMembers || removing}
               onClick={() => form.submit()}
             >
-              {initial ? "保存角色" : "添加成员"}
+              {initial
+                ? t("memberForm.actions.saveRole")
+                : t("memberForm.actions.add")}
             </Button>
           </Space>
         </div>
@@ -187,7 +202,11 @@ export function MemberFormDrawer({
         <Alert
           showIcon
           type="warning"
-          title={!project ? "未选择项目" : "权限不足"}
+          title={
+            !project
+              ? t("memberForm.noProject")
+              : t("common.permissionDenied")
+          }
           description={permissionDescription}
           style={{ marginBottom: 16 }}
         />
@@ -200,23 +219,33 @@ export function MemberFormDrawer({
       >
         <Form.Item
           name="memberId"
-          label="成员"
-          rules={[{ required: true, message: "请选择成员" }]}
+          label={t("memberForm.fields.member")}
+          rules={[
+            {
+              required: true,
+              message: t("memberForm.validation.memberRequired"),
+            },
+          ]}
         >
           <Select
             showSearch={{ optionFilterProp: "label" }}
 
-            placeholder="选择要加入项目的成员"
+            placeholder={t("memberForm.placeholders.member")}
             options={memberOptions}
             disabled={Boolean(initial)}
           />
         </Form.Item>
         <Form.Item
           name="role"
-          label="项目角色"
-          rules={[{ required: true, message: "请选择项目角色" }]}
+          label={t("memberForm.fields.role")}
+          rules={[
+            {
+              required: true,
+              message: t("memberForm.validation.roleRequired"),
+            },
+          ]}
         >
-          <Select options={MANAGEABLE_ROLE_OPTIONS} />
+          <Select options={manageableRoleOptions} />
         </Form.Item>
       </Form>
     </Drawer>

@@ -1,5 +1,6 @@
 import { Alert, Button, Empty, Spin } from "antd";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 interface PageStateProps {
   loading: boolean;
@@ -24,6 +25,8 @@ export function PageState({
   emptyAction,
   children,
 }: PageStateProps) {
+  const { t } = useTranslation();
+
   if (loading) {
     return (
       <div className="page-state-panel">
@@ -42,7 +45,7 @@ export function PageState({
         description={error}
         action={
           <Button size="small" onClick={() => void onRetry()}>
-            重新加载
+            {t("common.reload")}
           </Button>
         }
       />

@@ -1,4 +1,5 @@
 import { Suspense, lazy } from "react";
+import { useTranslation } from "react-i18next";
 import { createBrowserRouter, Navigate } from "react-router";
 import { RouterProvider } from "react-router/dom";
 import AppLayout from "@/layouts/AppLayout";
@@ -17,10 +18,18 @@ const SettingsPage = lazy(() => import("@/pages/Settings/Setting.tsx"));
 const ErrorPage = lazy(() => import("@/pages/Error/Error"));
 
 // ---------- 2. 统一懒加载包装（消除重复代码） ----------
+function LazyRoute({ Component }: { Component: React.LazyExoticComponent<React.FC> }) {
+  const { t } = useTranslation();
+
+  return (
+    <Suspense fallback={<div>{t("loading.page")}</div>}>
+      <Component />
+    </Suspense>
+  );
+}
+
 const withLazy = (Component: React.LazyExoticComponent<React.FC>) => (
-  <Suspense fallback={<div>Loading...</div>}>
-    <Component />
-  </Suspense>
+  <LazyRoute Component={Component} />
 );
 
 // ---------- 3. 创建路由实例 ----------

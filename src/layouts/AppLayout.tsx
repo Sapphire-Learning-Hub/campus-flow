@@ -35,6 +35,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Outlet,
   useLocation,
@@ -42,6 +43,7 @@ import {
   useRouteLoaderData,
 } from "react-router";
 import { BrandMark } from "@/components/common/BrandMark";
+import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import { getCurrentUser, logout } from "@/services/auth";
 import { clearAccessToken } from "@/services/session";
 import "./AppLayout.css";
@@ -86,24 +88,8 @@ function CurrentUserAvatar({
   );
 }
 
-const navItems: MenuProps["items"] = [
-  { key: "/dashboard", icon: <DashboardOutlined />, label: "工作台" },
-  { key: "/projects", icon: <FolderOpenOutlined />, label: "项目空间" },
-  { key: "/tasks", icon: <UnorderedListOutlined />, label: "工作项" },
-  { key: "/members", icon: <TeamOutlined />, label: "成员" },
-  { type: "divider" },
-  { key: "/settings", icon: <SettingOutlined />, label: "个人设置" },
-];
-
-const routeLabels: Record<string, string> = {
-  dashboard: "工作台",
-  projects: "项目空间",
-  tasks: "工作项",
-  members: "成员",
-  settings: "个人设置",
-};
-
 export function AppLayout() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const loaderUser = useRouteLoaderData<AuthUser>("authenticated-app");
@@ -120,13 +106,55 @@ export function AppLayout() {
     getServerMobileLayoutSnapshot,
   );
   const isLight = settings.themeMode === "light";
+  const navItems = useMemo<MenuProps["items"]>(
+    () => [
+      {
+        key: "/dashboard",
+        icon: <DashboardOutlined />,
+        label: t("navigation.dashboard"),
+      },
+      {
+        key: "/projects",
+        icon: <FolderOpenOutlined />,
+        label: t("navigation.projects"),
+      },
+      {
+        key: "/tasks",
+        icon: <UnorderedListOutlined />,
+        label: t("navigation.tasks"),
+      },
+      {
+        key: "/members",
+        icon: <TeamOutlined />,
+        label: t("navigation.members"),
+      },
+      { type: "divider" },
+      {
+        key: "/settings",
+        icon: <SettingOutlined />,
+        label: t("navigation.settings"),
+      },
+    ],
+    [t],
+  );
   const breadcrumbItems = useMemo(() => {
     const parts = location.pathname.split("/").filter(Boolean);
+    const routeLabels: Record<string, string> = {
+      dashboard: t("navigation.dashboard"),
+      projects: t("navigation.projects"),
+      tasks: t("navigation.tasks"),
+      members: t("navigation.members"),
+      settings: t("navigation.settings"),
+    };
     const items = [{ title: "CampusFlow" }];
-    if (parts[0]) items.push({ title: routeLabels[parts[0]] ?? "页面" });
-    if (parts[0] === "projects" && parts[1]) items.push({ title: "项目详情" });
+    if (parts[0]) {
+      items.push({ title: routeLabels[parts[0]] ?? t("navigation.page") });
+    }
+    if (parts[0] === "projects" && parts[1]) {
+      items.push({ title: t("navigation.projectDetail") });
+    }
     return items;
-  }, [location.pathname]);
+  }, [location.pathname, t]);
 
   useEffect(() => {
     if (loaderUser || recoveredUser) return;
@@ -165,7 +193,7 @@ export function AppLayout() {
   const user = loaderUser ?? recoveredUser;
 
   if (!user) {
-    return <div className="app-loading">正在加载用户信息...</div>;
+    return <div className="app-loading">{t("loading.user")}</div>;
   }
   const outletContext: AppLayoutContext = {
     user,
@@ -247,7 +275,7 @@ export function AppLayout() {
               onClick={() =>
                 isMobile ? setMobileOpen(true) : setCollapsed((value) => !value)
               }
-              aria-label="切换导航"
+              aria-label={t("navigation.toggle")}
             />
             <Breadcrumb className="header-breadcrumb" items={breadcrumbItems} />
           </Space>
@@ -256,15 +284,15 @@ export function AppLayout() {
               className="global-search"
               prefix={<SearchOutlined />}
               suffix={<span className="search-shortcut">Ctrl K</span>}
-              placeholder="搜索项目空间、工作项或成员"
-              aria-label="全局搜索"
+              placeholder={t("header.searchPlaceholder")}
+              aria-label={t("header.globalSearch")}
             />
-            <Tooltip title="快速新建">
+            <Tooltip title={t("header.quickCreate")}>
               <Button
                 className="header-icon-btn header-create-btn"
                 type="text"
                 icon={<PlusOutlined />}
-                aria-label="快速新建"
+                aria-label={t("header.quickCreate")}
                 onClick={() => navigate("/tasks?create=1")}
               />
             </Tooltip>
@@ -281,17 +309,19 @@ export function AppLayout() {
                   <MoonOutlined />
                 </Flex>
               }
+              aria-label={t("header.themeToggle")}
               onClick={(checked) => {
                 updateSettings({
                   themeMode: checked ? "light" : "dark",
                 });
               }}
             />
+            <LanguageSwitcher />
 
             <button
               className="user-trigger"
               type="button"
-              aria-label="打开个人侧栏"
+              aria-label={t("profile.open")}
               onClick={() => setProfileOpen(true)}
             >
               <CurrentUserAvatar user={user} />
@@ -304,7 +334,7 @@ export function AppLayout() {
         </Header>
         <Drawer
           className="profile-drawer"
-          title="个人中心"
+          title={t("profile.title")}
           placement="right"
           size={360}
           open={profileOpen}
@@ -318,18 +348,21 @@ export function AppLayout() {
               <span>@{user.username}</span>
             </div>
           </section>
-          <section className="profile-stat-grid" aria-label="当前账号信息">
+          <section
+            className="profile-stat-grid"
+            aria-label={t("profile.accountInformation")}
+          >
             <article>
               <strong>{user.username}</strong>
-              <span>登录账号</span>
+              <span>{t("profile.username")}</span>
             </article>
             <article>
               <strong>{user.department}</strong>
-              <span>学院/部门</span>
+              <span>{t("profile.department")}</span>
             </article>
             <article>
-              <strong>已登录</strong>
-              <span>账号状态</span>
+              <strong>{t("profile.signedIn")}</strong>
+              <span>{t("profile.accountStatus")}</span>
             </article>
           </section>
           <div className="profile-action-list">
@@ -341,7 +374,7 @@ export function AppLayout() {
               }}
             >
               <UserOutlined />
-              <span>个人设置</span>
+              <span>{t("profile.settings")}</span>
             </button>
             <button
               type="button"
@@ -351,7 +384,7 @@ export function AppLayout() {
               }}
             >
               <UnorderedListOutlined />
-              <span>我的工作项</span>
+              <span>{t("profile.myTasks")}</span>
             </button>
             <button
               type="button"
@@ -361,7 +394,7 @@ export function AppLayout() {
               }}
             >
               <FolderOpenOutlined />
-              <span>项目空间</span>
+              <span>{t("profile.projects")}</span>
             </button>
             <button
               className="danger"
@@ -369,7 +402,7 @@ export function AppLayout() {
               onClick={() => void handleSignOut()}
             >
               <LogoutOutlined />
-              <span>退出登录</span>
+              <span>{t("profile.signOut")}</span>
             </button>
           </div>
         </Drawer>

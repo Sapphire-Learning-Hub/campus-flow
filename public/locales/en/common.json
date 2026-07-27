@@ -1,0 +1,835 @@
+{
+  "meta": {
+    "title": "CampusFlow - Campus Project Collaboration",
+    "description": "Manage projects, work items, and team collaboration for campus organizations"
+  },
+  "language": {
+    "simplifiedChinese": "简体中文",
+    "english": "English",
+    "switchToChinese": "Switch to Simplified Chinese",
+    "switchToEnglish": "Switch to English",
+    "switchFailed": "Unable to switch languages. Please try again."
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "projects": "Projects",
+    "tasks": "Work Items",
+    "members": "Members",
+    "settings": "Settings",
+    "page": "Page",
+    "projectDetail": "Project Details",
+    "toggle": "Toggle navigation"
+  },
+  "header": {
+    "searchPlaceholder": "Search projects, work items, or members",
+    "globalSearch": "Global search",
+    "quickCreate": "Quick create",
+    "themeToggle": "Toggle light or dark theme"
+  },
+  "profile": {
+    "open": "Open profile panel",
+    "title": "Profile",
+    "accountInformation": "Current account information",
+    "username": "Username",
+    "department": "School / Department",
+    "signedIn": "Signed in",
+    "accountStatus": "Account status",
+    "settings": "Settings",
+    "myTasks": "My Work Items",
+    "projects": "Projects",
+    "signOut": "Sign out"
+  },
+  "loading": {
+    "user": "Loading user information...",
+    "page": "Loading page..."
+  },
+  "common": {
+    "reload": "Reload",
+    "cancel": "Cancel",
+    "close": "Close",
+    "permissionDenied": "Permission denied",
+    "unassigned": "Unassigned",
+    "notSet": "Not set",
+    "unknown": "Unknown",
+    "noDeadline": "No deadline"
+  },
+  "projectForm": {
+    "title": {
+      "create": "Create Project",
+      "edit": "Edit Project",
+      "view": "View Project"
+    },
+    "messages": {
+      "updated": "Project updated",
+      "created": "Project created",
+      "updateFailed": "Unable to update project",
+      "createFailed": "Unable to create project"
+    },
+    "actions": {
+      "save": "Save changes",
+      "create": "Create project"
+    },
+    "fields": {
+      "name": "Project name",
+      "description": "Description",
+      "status": "Project status",
+      "deadline": "Deadline",
+      "color": "Project color",
+      "initialMembers": "Initial members"
+    },
+    "validation": {
+      "nameRequired": "Enter a project name",
+      "nameLength": "Project name must be 2–50 characters",
+      "descriptionRequired": "Enter a project description",
+      "descriptionLength": "Description cannot exceed 300 characters",
+      "statusRequired": "Select a project status",
+      "deadlineRequired": "Select a deadline",
+      "colorRequired": "Choose a project color"
+    },
+    "placeholders": {
+      "initialMembers": "Optional; more members can be added later"
+    }
+  },
+  "memberForm": {
+    "title": {
+      "manage": "Manage Project Member",
+      "add": "Add Project Member"
+    },
+    "messages": {
+      "roleUpdated": "Member role updated",
+      "added": "Member added",
+      "saveFailed": "Unable to save member",
+      "removed": "Member removed from project",
+      "removeFailed": "Unable to remove member"
+    },
+    "fallbackMember": "this member",
+    "selectProjectFirst": "Select a project before managing its members",
+    "noProject": "No project selected",
+    "remove": {
+      "title": "Remove project member",
+      "confirm": "Remove “{{member}}” from “{{project}}”? Their assigned work items will become unassigned."
+    },
+    "actions": {
+      "remove": "Remove from project",
+      "saveRole": "Save role",
+      "add": "Add member"
+    },
+    "fields": {
+      "member": "Member",
+      "role": "Project role"
+    },
+    "validation": {
+      "memberRequired": "Select a member",
+      "roleRequired": "Select a project role"
+    },
+    "placeholders": {
+      "member": "Select a member to add to the project"
+    }
+  },
+  "taskForm": {
+    "title": {
+      "create": "Create Work Item",
+      "edit": "Edit Work Item",
+      "view": "View Work Item"
+    },
+    "messages": {
+      "updated": "Work item updated",
+      "created": "Work item created",
+      "saveFailed": "Unable to save work item",
+      "deleted": "Work item deleted",
+      "deleteFailed": "Unable to delete work item"
+    },
+    "actions": {
+      "create": "Create work item",
+      "save": "Save changes",
+      "delete": "Delete work item"
+    },
+    "delete": {
+      "title": "Delete work item",
+      "confirm": "Delete “{{title}}”? This action cannot be undone."
+    },
+    "readOnlyTitle": "You have read-only access to this work item",
+    "previousAssignee": "Previous assignee",
+    "removedAssignee": "{{name}} (removed from project)",
+    "fields": {
+      "project": "Project",
+      "title": "Title",
+      "description": "Description",
+      "type": "Work item type",
+      "stage": "Project stage",
+      "status": "Status",
+      "priority": "Priority",
+      "assignee": "Assignee",
+      "startDate": "Start date",
+      "deadline": "Deadline",
+      "tags": "Tags"
+    },
+    "validation": {
+      "projectRequired": "Select a project",
+      "titleRequired": "Enter a work item title",
+      "titleLength": "Title must be 2–80 characters",
+      "descriptionRequired": "Enter a work item description",
+      "descriptionLength": "Description cannot exceed 500 characters",
+      "typeRequired": "Select a work item type",
+      "stageRequired": "Select a project stage",
+      "statusRequired": "Select a status",
+      "priorityRequired": "Select a priority",
+      "deadlineOrder": "Deadline cannot be earlier than the start date"
+    },
+    "placeholders": {
+      "project": "Select a project",
+      "title": "Describe a clear, deliverable work item",
+      "description": "Add context, acceptance criteria, and relevant details",
+      "assignee": "Leave unassigned",
+      "tags": "Type a tag and press Enter"
+    }
+  },
+  "membersPage": {
+    "loadError": "Unable to load members. Please try again later.",
+    "header": {
+      "title": "Members",
+      "description": "Manage project roles, access, and work ownership"
+    },
+    "messages": {
+      "selectProject": "Select a project before managing its members",
+      "ownerImmutable": "The project owner role cannot be changed here"
+    },
+    "actions": {
+      "refreshData": "Refresh data",
+      "refresh": "Refresh",
+      "add": "Add member",
+      "owner": "Owner",
+      "manage": "Manage",
+      "clear": "Clear",
+      "clearFilters": "Clear filters"
+    },
+    "columns": {
+      "member": "Member",
+      "project": "Project",
+      "department": "School / Department",
+      "role": "Project role",
+      "tasks": "Assigned work",
+      "joined": "Joined",
+      "actions": "Actions"
+    },
+    "currentProject": "Current project",
+    "taskCount_one": "{{count}} work item",
+    "taskCount_other": "{{count}} work items",
+    "memberCount_one": "{{count}} member",
+    "memberCount_other": "{{count}} members",
+    "relationshipCount_one": "{{count}} membership",
+    "relationshipCount_other": "{{count}} memberships",
+    "resultSummary": "Showing {{filtered}} / {{total}}",
+    "paginationTotal_one": "{{count}} membership",
+    "paginationTotal_other": "{{count}} memberships",
+    "filters": {
+      "byProject": "Filter by project",
+      "allProjects": "All projects",
+      "searchLabel": "Search members",
+      "searchPlaceholder": "Search name, email, department, or project",
+      "byRole": "Filter by role",
+      "allRoles": "All roles"
+    },
+    "states": {
+      "loading": "Loading members...",
+      "errorTitle": "Unable to load members",
+      "noMatch": "No members match the current filters",
+      "empty": "There are no project members yet"
+    }
+  },
+  "projectsPage": {
+    "loadError": "Unable to load projects. Please try again later.",
+    "header": {
+      "title": "Projects",
+      "description": "Manage course projects, team collaboration, and campus activities"
+    },
+    "boardLabel": "Project board",
+    "memberCount_one": "{{count}} member",
+    "memberCount_other": "{{count}} members",
+    "personCount_one": "{{count}} person",
+    "personCount_other": "{{count}} people",
+    "reviewCount_one": "{{count}} in review",
+    "reviewCount_other": "{{count}} in review",
+    "favoriteCount_one": "{{count}} favorite",
+    "favoriteCount_other": "{{count}} favorites",
+    "paginationTotal_one": "{{count}} project",
+    "paginationTotal_other": "{{count}} projects",
+    "resultSummary": "Showing {{filtered}} / {{total}} projects",
+    "messages": {
+      "favorited": "Project added to favorites",
+      "unfavorited": "Project removed from favorites",
+      "favoriteFailed": "Unable to update favorite"
+    },
+    "actions": {
+      "toggleFavorite": "Toggle favorite",
+      "favorite": "Add project to favorites",
+      "unfavorite": "Remove project from favorites",
+      "viewDetails": "View details",
+      "details": "Details",
+      "edit": "Edit",
+      "view": "View",
+      "refreshData": "Refresh data",
+      "refresh": "Refresh",
+      "create": "Create project",
+      "clear": "Clear",
+      "clearFilters": "Clear filters",
+      "createFirst": "Create your first project"
+    },
+    "card": {
+      "workItems": "work items",
+      "incomplete": "incomplete",
+      "overdue": "overdue",
+      "progress": "Project progress",
+      "projectOverdue": "This project is overdue"
+    },
+    "columns": {
+      "project": "Project",
+      "status": "Status",
+      "owner": "Owner",
+      "progress": "Progress",
+      "workItems": "Work items",
+      "members": "Members",
+      "deadline": "Deadline",
+      "actions": "Actions"
+    },
+    "summary": {
+      "label": "Project summary",
+      "allProjects": "All projects",
+      "activeCount_one": "{{count}} active",
+      "activeCount_other": "{{count}} active",
+      "favorites": "Favorite projects",
+      "favoritesNote": "Spaces to follow first",
+      "allTasks": "All work items",
+      "allTasksNote": "Across all projects",
+      "overdue": "Overdue projects",
+      "riskNote": "Needs attention",
+      "healthyNote": "Progress is healthy"
+    },
+    "filters": {
+      "label": "Project filters",
+      "search": "Search project, owner, or department",
+      "byStatus": "Filter by status",
+      "allStatuses": "All statuses",
+      "sort": "Sort by date",
+      "byOwner": "Filter by owner",
+      "allOwners": "All owners",
+      "favoritesOnly": "Favorites only",
+      "overdueOnly": "Overdue only"
+    },
+    "sort": {
+      "updatedAt": "Recently updated",
+      "createdAt": "Created date",
+      "deadline": "Deadline"
+    },
+    "views": {
+      "list": "List",
+      "board": "Board"
+    },
+    "states": {
+      "loading": "Loading projects...",
+      "errorTitle": "Unable to load projects",
+      "noMatch": "No projects match the current filters",
+      "empty": "There are no projects yet",
+      "columnEmpty": "No projects"
+    }
+  },
+  "tasksPage": {
+    "loadError": "Unable to load work items. Please try again later.",
+    "header": {
+      "title": "Work Items",
+      "description": "Plan, track, and deliver work across projects"
+    },
+    "boardLabel": "Work item board",
+    "unknownProject": "Unknown project",
+    "paginationTotal_one": "{{count}} work item",
+    "paginationTotal_other": "{{count}} work items",
+    "resultSummary": "Showing {{filtered}} / {{total}} work items",
+    "overdueCount_one": "{{count}} overdue",
+    "overdueCount_other": "{{count}} overdue",
+    "actions": {
+      "edit": "Edit",
+      "view": "View",
+      "refreshData": "Refresh data",
+      "refresh": "Refresh",
+      "create": "Create work item",
+      "clear": "Clear",
+      "clearFilters": "Clear filters",
+      "createFirst": "Create your first work item"
+    },
+    "card": {
+      "overdue": "This work item is overdue"
+    },
+    "columns": {
+      "task": "Work item",
+      "project": "Project",
+      "type": "Type",
+      "status": "Status",
+      "stage": "Stage",
+      "priority": "Priority",
+      "assignee": "Assignee",
+      "schedule": "Schedule",
+      "actions": "Actions"
+    },
+    "summary": {
+      "label": "Work item summary",
+      "all": "All work items",
+      "completedPercent": "{{percent}}% completed",
+      "open": "Open",
+      "openNote": "Waiting to move forward",
+      "review": "In review",
+      "reviewNote": "Waiting for acceptance",
+      "overdue": "Overdue risk",
+      "riskNote": "Needs attention",
+      "healthyNote": "Progress is healthy"
+    },
+    "filters": {
+      "label": "Work item filters",
+      "search": "Search title, project, assignee, or tag",
+      "byProject": "Filter by project",
+      "allProjects": "All projects",
+      "byType": "Filter by type",
+      "allTypes": "All types",
+      "byStage": "Filter by stage",
+      "allStages": "All stages",
+      "byStatus": "Filter by status",
+      "allStatuses": "All statuses",
+      "byPriority": "Filter by priority",
+      "allPriorities": "All priorities",
+      "byAssignee": "Filter by assignee",
+      "allAssignees": "All assignees",
+      "overdueOnly": "Overdue only"
+    },
+    "views": {
+      "list": "List",
+      "board": "Board"
+    },
+    "states": {
+      "loading": "Loading work items...",
+      "errorTitle": "Unable to load work items",
+      "noMatch": "No work items match the current filters",
+      "empty": "There are no work items yet",
+      "columnEmpty": "No work items"
+    }
+  },
+  "settings": {
+    "header": {
+      "title": "Settings",
+      "description": "Manage your profile, security, appearance, and defaults"
+    },
+    "sections": {
+      "profile": {
+        "label": "Profile",
+        "description": "Manage your avatar and profile details"
+      },
+      "security": {
+        "label": "Account Security",
+        "description": "Change your sign-in password"
+      },
+      "appearance": {
+        "label": "Appearance",
+        "description": "Theme changes apply immediately"
+      },
+      "preferences": {
+        "label": "Preferences",
+        "description": "Choose default views and page size"
+      }
+    },
+    "profile": {
+      "changeAvatar": "Change avatar",
+      "removeAvatar": "Remove",
+      "avatarHelp": "JPG or PNG, up to 2 MB",
+      "nameReadOnly": "Name (read only)",
+      "username": "Username",
+      "department": "School / Department",
+      "email": "Email",
+      "syncNote": "Changes will also update your member profile",
+      "save": "Save profile",
+      "validation": {
+        "usernameRequired": "Enter your username",
+        "usernamePattern": "Username must be 3–20 letters, numbers, or underscores",
+        "departmentRequired": "Enter your school or department",
+        "departmentLength": "School or department cannot exceed 30 characters",
+        "emailRequired": "Enter your email",
+        "emailInvalid": "Enter a valid email address"
+      },
+      "placeholders": {
+        "username": "Enter your username",
+        "department": "Enter your school or department",
+        "email": "Enter your email"
+      },
+      "messages": {
+        "fileType": "Avatar must be a JPG or PNG image",
+        "fileSize": "Avatar cannot exceed 2 MB",
+        "saved": "Profile updated",
+        "saveFailed": "Unable to save profile"
+      }
+    },
+    "security": {
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "save": "Change password",
+      "validation": {
+        "currentRequired": "Enter your current password",
+        "newRequired": "Enter a new password",
+        "newLength": "New password must be 6–32 characters",
+        "samePassword": "New password must differ from the current password",
+        "confirmRequired": "Enter the new password again",
+        "mismatch": "The passwords do not match"
+      },
+      "placeholders": {
+        "current": "Used to verify your identity",
+        "new": "Combine letters, numbers, and symbols",
+        "confirm": "Enter the new password again"
+      },
+      "strength": {
+        "label": "Password strength",
+        "empty": "Not entered",
+        "weak": "Weak",
+        "fair": "Fair",
+        "good": "Good",
+        "strong": "Strong"
+      },
+      "guidance": {
+        "length": "Use 6–32 characters",
+        "avoidWeak": "Avoid sequences and repeated characters",
+        "session": "This device remains signed in after the change"
+      },
+      "messages": {
+        "saved": "Password changed",
+        "saveFailed": "Unable to change password"
+      }
+    },
+    "appearance": {
+      "themeMode": "Theme mode",
+      "themeModeDescription": "Choose the light level that fits your environment",
+      "autoSave": "Saved automatically",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "Use system setting",
+      "themeColor": "Accent color",
+      "themeColorDescription": "Used for primary actions, selected navigation, and highlights",
+      "recommendedColors": "Recommended accent colors",
+      "selectColor": "Select accent color {{color}}"
+    },
+    "preferences": {
+      "rowsPerPage": "{{count}} rows/page",
+      "cardView": "Card view",
+      "listView": "List view",
+      "defaultPageSize": "Default rows per page",
+      "defaultProjectView": "Default project view",
+      "defaultTaskView": "Default work item view",
+      "save": "Save preferences",
+      "saved": "Preferences saved"
+    }
+  },
+  "projectDetail": {
+    "loadError": "Unable to load the project. Please try again later.",
+    "missingProjectId": "Project ID is missing",
+    "states": {
+      "loading": "Loading project...",
+      "errorTitle": "Unable to load project",
+      "empty": "This project does not exist or has been deleted"
+    },
+    "messages": {
+      "deleted": "Project deleted",
+      "deleteFailed": "Unable to delete project"
+    },
+    "delete": {
+      "title": "Delete project",
+      "confirm": "Delete “{{name}}”? Its work items and activity will also be deleted."
+    },
+    "actions": {
+      "back": "Back to projects",
+      "createTask": "Create work item",
+      "edit": "Edit project",
+      "manageMembers": "Manage members",
+      "delete": "Delete project"
+    },
+    "tabs": {
+      "overview": "Overview",
+      "tasks": "Work items {{count}}",
+      "members": "Members {{count}}",
+      "activity": "Activity"
+    },
+    "summary": {
+      "openTasks": "Open work items",
+      "totalTasks_one": "{{count}} item total",
+      "totalTasks_other": "{{count}} items total",
+      "inProgress": "In progress",
+      "inProgressNote": "Moving forward",
+      "overdue": "Overdue risk",
+      "overdueNote": "Needs attention",
+      "members": "Member coverage",
+      "membersNote": "Collaboration roles"
+    },
+    "overview": {
+      "title": "Project Overview",
+      "description": "Key goals and timeline",
+      "status": "Project status",
+      "owner": "Project owner",
+      "createdAt": "Created",
+      "deadline": "Deadline",
+      "projectDescription": "Description",
+      "progress": "Overall progress"
+    },
+    "statistics": {
+      "tasks": "Project work items",
+      "completed": "Completed",
+      "members": "Team members",
+      "daysRemaining": "Days remaining"
+    },
+    "units": {
+      "items": "items",
+      "people": "people",
+      "days": "days"
+    },
+    "upcoming": {
+      "title": "Upcoming Work",
+      "description": "Ordered by nearest deadline",
+      "empty": "No upcoming work items"
+    },
+    "tasks": {
+      "title": "Work Items",
+      "description": "Tasks and ownership within this project",
+      "empty": "No work items yet",
+      "due": "Due",
+      "columns": {
+        "task": "Work item",
+        "type": "Type",
+        "status": "Status",
+        "stage": "Stage",
+        "priority": "Priority",
+        "assignee": "Assignee",
+        "schedule": "Schedule"
+      }
+    },
+    "members": {
+      "title": "Project Members",
+      "description": "Project roles and work ownership",
+      "empty": "No members yet",
+      "taskCount_one": "{{count}} assigned work item",
+      "taskCount_other": "{{count}} assigned work items"
+    },
+    "activity": {
+      "title": "Activity",
+      "description": "Recent changes in this project",
+      "empty": "No recent activity"
+    }
+  },
+  "options": {
+    "projectStatus": {
+      "planning": "Planning",
+      "active": "In progress",
+      "completed": "Completed",
+      "archived": "Archived"
+    },
+    "taskStatus": {
+      "pending": "To do",
+      "in_progress": "In progress",
+      "review": "In review",
+      "done": "Completed"
+    },
+    "taskType": {
+      "requirement": "Requirement",
+      "design": "Design",
+      "development": "Development",
+      "test": "Testing",
+      "bug": "Bug",
+      "operation": "Operations"
+    },
+    "taskStage": {
+      "discovery": "Discovery",
+      "design": "Design",
+      "delivery": "Delivery",
+      "acceptance": "Acceptance"
+    },
+    "priority": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "role": {
+      "owner": "Project owner",
+      "admin": "Project admin",
+      "member": "Member",
+      "readonly": "Read-only member"
+    }
+  },
+  "dashboard": {
+    "loadError": "Unable to load dashboard data. Please try again later.",
+    "greeting": {
+      "night": "Working late",
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "deadline": {
+      "none": "No deadline",
+      "overdue_one": "{{count}} day overdue",
+      "overdue_other": "{{count}} days overdue",
+      "overdueShort": "Overdue",
+      "today": "Due today",
+      "tomorrow": "Due tomorrow",
+      "days_one": "Due in {{count}} day",
+      "days_other": "Due in {{count}} days"
+    },
+    "relativeTime": {
+      "justNow": "Just now",
+      "minutes_one": "{{count}} minute ago",
+      "minutes_other": "{{count}} minutes ago",
+      "hours_one": "{{count}} hour ago",
+      "hours_other": "{{count}} hours ago",
+      "days_one": "{{count}} day ago",
+      "days_other": "{{count}} days ago"
+    },
+    "header": {
+      "title": "{{greeting}}, {{name}}",
+      "description": "{{date}} · Focus on progress, deadlines, and teamwork"
+    },
+    "actions": {
+      "refresh": "Refresh dashboard",
+      "createTask": "New work item",
+      "createProject": "New project",
+      "viewAll": "View all",
+      "all": "All"
+    },
+    "states": {
+      "loading": "Preparing your dashboard...",
+      "errorTitle": "Unable to load dashboard",
+      "empty": "There are no projects to show. Create one to start collaborating."
+    },
+    "metrics": {
+      "regionLabel": "Dashboard summary",
+      "activeProjects": "Active projects",
+      "projectTotal_one": "{{count}} project total",
+      "projectTotal_other": "{{count}} projects total",
+      "openTasks": "Open work items",
+      "taskTotal_one": "{{count}} work item total",
+      "taskTotal_other": "{{count}} work items total",
+      "dueSoon": "Due within 7 days",
+      "dueSoonNote": "Plan these first",
+      "overdue": "Overdue work items",
+      "overdueAction": "Review today",
+      "healthy": "On a healthy pace",
+      "members": "Collaborators",
+      "visibleScope": "Within your access"
+    },
+    "projects": {
+      "title": "Project Progress",
+      "description": "Key projects ordered by their latest update",
+      "collaborationSummary": "{{members}} collaborators · {{tasks}} work items",
+      "columns": {
+        "project": "Project",
+        "owner": "Owner",
+        "progress": "Progress",
+        "deadlineStatus": "Deadline / Status"
+      }
+    },
+    "tasks": {
+      "title": "My Upcoming Work",
+      "description": "Start with the work items due soonest",
+      "priority": "{{priority}} priority",
+      "emptyTitle": "Your upcoming work is clear",
+      "emptyDescription": "You can start planning the next work item"
+    },
+    "activities": {
+      "title": "Recent Activity",
+      "description": "Latest collaboration across projects you can access",
+      "emptyTitle": "No team activity yet",
+      "emptyDescription": "New and updated work items will appear here"
+    },
+    "unknownProject": "Unknown project",
+    "unknownMember": "Unknown member"
+  },
+  "auth": {
+    "remember": "Keep me signed in",
+    "fields": {
+      "name": "Full name",
+      "username": "Username",
+      "email": "Campus email",
+      "department": "School / Department",
+      "password": "Password",
+      "confirmPassword": "Confirm password"
+    },
+    "placeholders": {
+      "name": "Enter your full name",
+      "username": "Enter your username",
+      "usernameRegister": "Used to sign in",
+      "password": "Enter your password",
+      "passwordNew": "At least 6 characters",
+      "confirmPassword": "Enter your password again",
+      "department": "For example: School of Computing"
+    },
+    "validation": {
+      "nameRequired": "Enter your name",
+      "nameLength": "Name must be 2–20 characters",
+      "usernameRequired": "Enter your username",
+      "usernameLength": "Username must be 3–20 characters",
+      "usernamePattern": "Use letters, numbers, and underscores only",
+      "emailRequired": "Enter your email address",
+      "emailInvalid": "Enter a valid email address",
+      "departmentRequired": "Enter your school or department",
+      "departmentLength": "School or department cannot exceed 40 characters",
+      "passwordRequired": "Enter your password",
+      "passwordMin": "Password must be at least 6 characters",
+      "passwordLength": "Password must be 6–32 characters",
+      "confirmPasswordRequired": "Enter your password again",
+      "passwordMismatch": "The passwords do not match",
+      "agreementRequired": "Read and accept the platform terms first"
+    },
+    "login": {
+      "success": "Signed in successfully",
+      "failure": "Unable to sign in",
+      "submit": "Sign in to CampusFlow",
+      "registerLink": "New to CampusFlow? Create an account"
+    },
+    "register": {
+      "success": "Account created successfully",
+      "failure": "Unable to create account",
+      "title": "Create an account",
+      "description": "Join CampusFlow and start managing campus projects",
+      "agreement": "I have read and agree to",
+      "termsLink": "Platform Terms of Service",
+      "submit": "Create account and enter CampusFlow",
+      "hasAccount": "Already have an account?",
+      "backToLogin": "Back to sign in"
+    },
+    "terms": {
+      "title": "Platform Terms of Service",
+      "close": "Close",
+      "agree": "Agree and close",
+      "version": "Terms version: July 2026",
+      "sections": {
+        "serviceTitle": "1. Service overview",
+        "serviceBody": "Welcome to CampusFlow. Please read these terms before registering or using the platform. By creating an account and using the service, you acknowledge and accept these terms.",
+        "accountTitle": "2. Account registration",
+        "accountBody": "You must provide accurate and complete registration information and keep your account credentials secure. You are responsible for losses caused by failing to protect your account.",
+        "conductTitle": "3. Acceptable use",
+        "conductBody": "You may not publish unlawful content, attack the platform, or infringe the rights of other users or third parties.",
+        "privacyTitle": "4. Privacy",
+        "privacyBody": "The platform processes user information under its privacy policy and uses reasonable technical safeguards to protect user data.",
+        "changesTitle": "5. Changes to these terms",
+        "changesBody": "The platform may update these terms as the service evolves or laws change. Updated terms will be published within the platform."
+      }
+    }
+  },
+  "notFound": {
+    "description": "The page you requested does not exist or may have been moved.",
+    "back": "Back to dashboard"
+  },
+  "permissions": {
+    "viewProject": "You do not have access to this project.",
+    "editProject": "Only the project owner or an admin can edit project details.",
+    "deleteProject": "Only the project owner can delete this project.",
+    "manageMembers": "Only the project owner can manage members.",
+    "createTask": "Your current project role cannot create work items.",
+    "editTask": "Only the project owner, an admin, or the assignee can edit this work item.",
+    "deleteTask": "Only the project owner or an admin can delete work items.",
+    "assignTask": "Members can only create work items assigned to themselves."
+  },
+  "brand": {
+    "dashboard": "CampusFlow dashboard"
+  }
+}

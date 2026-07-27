@@ -107,6 +107,14 @@
     transparent
   ) !important;
 }
+.header-language-btn {
+  min-width: 52px !important;
+  width: auto !important;
+  padding-inline: 9px !important;
+  gap: 5px;
+  font-size: 12px !important;
+  font-weight: 650;
+}
 .header-breadcrumb {
   font-size: 13px;
 }

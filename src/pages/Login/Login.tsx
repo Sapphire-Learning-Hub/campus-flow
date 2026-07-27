@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { App, Form, Checkbox, Button, Input, Card } from "antd";
+import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router";
 import type { FormProps } from "antd";
 import { BrandMark } from "@/components/common/BrandMark.tsx";
@@ -15,6 +16,7 @@ function getInternalPath(value: unknown): string | undefined {
 }
 
 const Login: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { message } = App.useApp();
@@ -27,10 +29,10 @@ const Login: React.FC = () => {
     setSubmitted(true);
     try {
       await login(values);
-      message.success("登录成功");
+      message.success(t("auth.login.success"));
       navigate(from, { replace: true });
     } catch (error) {
-      message.error(getApiErrorMessage(error, "登陆失败"));
+      message.error(getApiErrorMessage(error, t("auth.login.failure")));
     } finally {
       setSubmitted(false);
     }
@@ -53,31 +55,31 @@ const Login: React.FC = () => {
       >
         <Form.Item
           name="username"
-          label="用户名"
-          rules={[{ required: true, message: "请输入用户名" }]}
+          label={t("auth.fields.username")}
+          rules={[{ required: true, message: t("auth.validation.usernameRequired") }]}
         >
           <Input
             size="large"
-            placeholder="请输入用户名"
+            placeholder={t("auth.placeholders.username")}
             autoComplete="username"
           />
         </Form.Item>
         <Form.Item
           name="password"
-          label="密码"
+          label={t("auth.fields.password")}
           rules={[
-            { required: true, message: "请输入密码" },
-            { min: 6, message: "密码至少需要 6 位" },
+            { required: true, message: t("auth.validation.passwordRequired") },
+            { min: 6, message: t("auth.validation.passwordMin") },
           ]}
         >
           <Input.Password
             size="large"
-            placeholder="请输入密码"
+            placeholder={t("auth.placeholders.password")}
             autoComplete="current-password"
           />
         </Form.Item>
         <Form.Item name="remember" valuePropName="checked">
-          <Checkbox>保持登录状态</Checkbox>
+          <Checkbox>{t("auth.remember")}</Checkbox>
         </Form.Item>
         <Button
           type="primary"
@@ -86,12 +88,12 @@ const Login: React.FC = () => {
           loading={submitted}
           block
         >
-          登录 CampusFlow
+          {t("auth.login.submit")}
         </Button>
         <p className="autu-switch">
           <Link to="/register" state={{ from }}>
             {" "}
-            没有账号,去注册
+            {t("auth.login.registerLink")}
           </Link>
         </p>
       </Form>

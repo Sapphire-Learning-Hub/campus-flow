@@ -28,14 +28,15 @@ import {
   type MenuProps,
   type UploadProps,
 } from "antd";
+import type { TFunction } from "i18next";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { useRevalidator } from "react-router";
 import { PageHeader } from "@/components/common/PageHeader";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useSettings } from "@/hooks/useSettings";
 import { changePassword, updateProfile } from "@/services/auth";
 import { getApiErrorMessage } from "@/services/client";
-import type { SelectOption } from "@/types/common";
 import type {
   PageSize,
   ProjectView,
@@ -66,54 +67,6 @@ interface PasswordFormValues {
 
 const MOBILE_SETTINGS_QUERY = "(max-width: 768px)";
 
-const SETTINGS_SECTIONS: SettingsSection[] = [
-  {
-    key: "profile",
-    icon: <UserOutlined />,
-    label: "个人信息",
-    description: "管理头像和基础资料",
-  },
-  {
-    key: "security",
-    icon: <LockOutlined />,
-    label: "账号安全",
-    description: "修改登录密码",
-  },
-  {
-    key: "appearance",
-    icon: <BgColorsOutlined />,
-    label: "外观设置",
-    description: "主题更改会立即生效",
-  },
-  {
-    key: "preferences",
-    icon: <SettingOutlined />,
-    label: "使用偏好",
-    description: "设置常用的默认视图",
-  },
-];
-
-const MENU_ITEMS: MenuProps["items"] = SETTINGS_SECTIONS.map(
-  ({ key, icon, label }) => ({ key, icon, label }),
-);
-
-const PAGE_SIZE_OPTIONS = [
-  { label: "5 条/页", value: 5 },
-  { label: "10 条/页", value: 10 },
-  { label: "20 条/页", value: 20 },
-  { label: "50 条/页", value: 50 },
-] satisfies Array<{ label: string; value: PageSize }>;
-
-const PROJECT_VIEW_OPTIONS = [
-  { label: "卡片视图", value: "card" },
-  { label: "列表视图", value: "list" },
-] satisfies SelectOption<ProjectView>[];
-
-const TASK_VIEW_OPTIONS = [
-  { label: "卡片视图", value: "card" },
-  { label: "列表视图", value: "list" },
-] satisfies SelectOption<TaskView>[];
-
 const THEME_COLORS = [
   "#1d5eff",
   "#722ed1",
@@ -142,9 +95,13 @@ function useMediaQuery(query: string) {
   return matches;
 }
 
-function getPasswordStrength(password: string) {
+function getPasswordStrength(password: string, t: TFunction) {
   if (!password)
-    return { percent: 0, label: "尚未输入", tone: "normal" as const };
+    return {
+      percent: 0,
+      label: t("settings.security.strength.empty"),
+      tone: "normal" as const,
+    };
 
   let score = 0;
   if (password.length >= 6) score += 1;
@@ -153,12 +110,28 @@ function getPasswordStrength(password: string) {
   if (/\d/.test(password) && /[^a-zA-Z0-9]/.test(password)) score += 1;
 
   if (score <= 1)
-    return { percent: 25, label: "较弱", tone: "exception" as const };
+    return {
+      percent: 25,
+      label: t("settings.security.strength.weak"),
+      tone: "exception" as const,
+    };
   if (score === 2)
-    return { percent: 50, label: "一般", tone: "normal" as const };
+    return {
+      percent: 50,
+      label: t("settings.security.strength.fair"),
+      tone: "normal" as const,
+    };
   if (score === 3)
-    return { percent: 75, label: "良好", tone: "normal" as const };
-  return { percent: 100, label: "强", tone: "success" as const };
+    return {
+      percent: 75,
+      label: t("settings.security.strength.good"),
+      tone: "normal" as const,
+    };
+  return {
+    percent: 100,
+    label: t("settings.security.strength.strong"),
+    tone: "success" as const,
+  };
 }
 
 function ProfileSettingsContent({
@@ -176,6 +149,7 @@ function ProfileSettingsContent({
   onAvatarRemove: () => void;
   onSave: (values: SettingsFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const [form] = Form.useForm<SettingsFormValues>();
 
   useEffect(() => {
@@ -216,7 +190,7 @@ function ProfileSettingsContent({
               beforeUpload={onAvatarSelect}
             >
               <Button size="small" icon={<UploadOutlined />}>
-                更换头像
+                {t("settings.profile.changeAvatar")}
               </Button>
             </Upload>
             {avatar ? (
@@ -227,57 +201,82 @@ function ProfileSettingsContent({
                 icon={<DeleteOutlined />}
                 onClick={onAvatarRemove}
               >
-                移除
+                {t("settings.profile.removeAvatar")}
               </Button>
             ) : null}
           </Space>
-          <small>支持 JPG、PNG，文件不超过 2 MB</small>
+          <small>{t("settings.profile.avatarHelp")}</small>
         </div>
       </section>
 
       <div className="settings-form-grid">
-        <Form.Item label="姓名（不可修改）">
-          <Input value={user.name} disabled aria-label="姓名（不可修改）" />
+        <Form.Item label={t("settings.profile.nameReadOnly")}>
+          <Input
+            value={user.name}
+            disabled
+            aria-label={t("settings.profile.nameReadOnly")}
+          />
         </Form.Item>
         <Form.Item
-          label="用户名"
+          label={t("settings.profile.username")}
           name="username"
           rules={[
-            { required: true, message: "请输入用户名" },
+            {
+              required: true,
+              message: t("settings.profile.validation.usernameRequired"),
+            },
             {
               pattern: /^[a-zA-Z0-9_]{3,20}$/,
-              message: "用户名应为 3–20 位字母、数字或下划线",
+              message: t("settings.profile.validation.usernamePattern"),
             },
           ]}
         >
-          <Input placeholder="请输入用户名" maxLength={20} />
+          <Input
+            placeholder={t("settings.profile.placeholders.username")}
+            maxLength={20}
+          />
         </Form.Item>
         <Form.Item
-          label="学院 / 部门"
+          label={t("settings.profile.department")}
           name="department"
           rules={[
-            { required: true, message: "请输入学院或部门" },
-            { max: 30, message: "学院或部门不能超过 30 个字符" },
+            {
+              required: true,
+              message: t("settings.profile.validation.departmentRequired"),
+            },
+            {
+              max: 30,
+              message: t("settings.profile.validation.departmentLength"),
+            },
           ]}
         >
-          <Input placeholder="请输入学院或部门" maxLength={30} />
+          <Input
+            placeholder={t("settings.profile.placeholders.department")}
+            maxLength={30}
+          />
         </Form.Item>
         <Form.Item
-          label="邮箱"
+          label={t("settings.profile.email")}
           name="email"
           rules={[
-            { required: true, message: "请输入邮箱" },
-            { type: "email", message: "请输入正确的邮箱格式" },
+            {
+              required: true,
+              message: t("settings.profile.validation.emailRequired"),
+            },
+            {
+              type: "email",
+              message: t("settings.profile.validation.emailInvalid"),
+            },
           ]}
         >
-          <Input placeholder="请输入邮箱" />
+          <Input placeholder={t("settings.profile.placeholders.email")} />
         </Form.Item>
       </div>
 
       <div className="settings-actions">
-        <Text type="secondary">修改后将同步更新成员资料</Text>
+        <Text type="secondary">{t("settings.profile.syncNote")}</Text>
         <Button type="primary" htmlType="submit" loading={submitting}>
-          保存个人信息
+          {t("settings.profile.save")}
         </Button>
       </div>
     </Form>
@@ -291,11 +290,12 @@ function SecuritySettingsContent({
   submitting: boolean;
   onSave: (values: PasswordFormValues) => Promise<boolean>;
 }) {
+  const { t } = useTranslation();
   const [form] = Form.useForm<PasswordFormValues>();
   const newPassword = Form.useWatch("newPassword", form) ?? "";
   const strength = useMemo(
-    () => getPasswordStrength(newPassword),
-    [newPassword],
+    () => getPasswordStrength(newPassword, t),
+    [newPassword, t],
   );
 
   return (
@@ -311,40 +311,54 @@ function SecuritySettingsContent({
       }}
     >
       <Form.Item
-        label="当前密码"
+        label={t("settings.security.currentPassword")}
         name="currentPassword"
-        rules={[{ required: true, message: "请输入当前密码" }]}
+        rules={[
+          {
+            required: true,
+            message: t("settings.security.validation.currentRequired"),
+          },
+        ]}
       >
         <Input.Password
           autoComplete="current-password"
-          placeholder="用于验证当前身份"
+          placeholder={t("settings.security.placeholders.current")}
         />
       </Form.Item>
       <Form.Item
-        label="新密码"
+        label={t("settings.security.newPassword")}
         name="newPassword"
         dependencies={["currentPassword"]}
         rules={[
-          { required: true, message: "请输入新密码" },
-          { min: 6, max: 32, message: "新密码应为 6–32 位" },
+          {
+            required: true,
+            message: t("settings.security.validation.newRequired"),
+          },
+          {
+            min: 6,
+            max: 32,
+            message: t("settings.security.validation.newLength"),
+          },
           ({ getFieldValue }) => ({
             validator(_, value?: string) {
               if (!value || value !== getFieldValue("currentPassword")) {
                 return Promise.resolve();
               }
-              return Promise.reject(new Error("新密码不能与当前密码相同"));
+              return Promise.reject(
+                new Error(t("settings.security.validation.samePassword")),
+              );
             },
           }),
         ]}
       >
         <Input.Password
           autoComplete="new-password"
-          placeholder="建议组合使用字母、数字和符号"
+          placeholder={t("settings.security.placeholders.new")}
         />
       </Form.Item>
       <div className="password-strength" aria-live="polite">
         <div>
-          <span>密码强度</span>
+          <span>{t("settings.security.strength.label")}</span>
           <b>{strength.label}</b>
         </div>
         <Progress
@@ -355,36 +369,41 @@ function SecuritySettingsContent({
         />
       </div>
       <Form.Item
-        label="确认新密码"
+        label={t("settings.security.confirmPassword")}
         name="confirmPassword"
         dependencies={["newPassword"]}
         rules={[
-          { required: true, message: "请再次输入新密码" },
+          {
+            required: true,
+            message: t("settings.security.validation.confirmRequired"),
+          },
           ({ getFieldValue }) => ({
             validator(_, value?: string) {
               if (!value || value === getFieldValue("newPassword")) {
                 return Promise.resolve();
               }
-              return Promise.reject(new Error("两次输入的密码不一致"));
+              return Promise.reject(
+                new Error(t("settings.security.validation.mismatch")),
+              );
             },
           }),
         ]}
       >
         <Input.Password
           autoComplete="new-password"
-          placeholder="再次输入新密码"
+          placeholder={t("settings.security.placeholders.confirm")}
         />
       </Form.Item>
 
       <div className="password-guidance">
-        <span>至少 6 位，最长 32 位</span>
-        <span>避免使用连续数字或重复字符</span>
-        <span>修改成功后当前设备仍保持登录</span>
+        <span>{t("settings.security.guidance.length")}</span>
+        <span>{t("settings.security.guidance.avoidWeak")}</span>
+        <span>{t("settings.security.guidance.session")}</span>
       </div>
 
       <div className="settings-actions settings-actions-end">
         <Button type="primary" htmlType="submit" loading={submitting}>
-          修改密码
+          {t("settings.security.save")}
         </Button>
       </div>
     </Form>
@@ -402,15 +421,17 @@ function AppearanceSettingsContent({
   onThemeModeChange: (mode: ThemeMode) => void;
   onThemeColorChange: (color: string) => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <>
       <section className="settings-section-block">
         <div className="settings-field-heading">
           <div>
-            <b>主题模式</b>
-            <span>选择最适合当前环境的界面明暗</span>
+            <b>{t("settings.appearance.themeMode")}</b>
+            <span>{t("settings.appearance.themeModeDescription")}</span>
           </div>
-          <small>自动保存</small>
+          <small>{t("settings.appearance.autoSave")}</small>
         </div>
         <Radio.Group
           className="theme-mode-group"
@@ -425,7 +446,7 @@ function AppearanceSettingsContent({
                 <i />
                 <span />
               </div>
-              <b>浅色模式</b>
+              <b>{t("settings.appearance.light")}</b>
             </div>
           </Radio.Button>
           <Radio.Button value="dark">
@@ -434,7 +455,7 @@ function AppearanceSettingsContent({
                 <i />
                 <span />
               </div>
-              <b>深色模式</b>
+              <b>{t("settings.appearance.dark")}</b>
             </div>
           </Radio.Button>
           <Radio.Button value="system">
@@ -443,7 +464,7 @@ function AppearanceSettingsContent({
                 <i />
                 <span />
               </div>
-              <b>跟随系统</b>
+              <b>{t("settings.appearance.system")}</b>
             </div>
           </Radio.Button>
         </Radio.Group>
@@ -452,8 +473,8 @@ function AppearanceSettingsContent({
       <section className="settings-section-block settings-section-block-last">
         <div className="settings-field-heading">
           <div>
-            <b>主题色</b>
-            <span>用于主要按钮、导航选中态和强调信息</span>
+            <b>{t("settings.appearance.themeColor")}</b>
+            <span>{t("settings.appearance.themeColorDescription")}</span>
           </div>
           <ColorPicker
             value={themeColor}
@@ -463,13 +484,16 @@ function AppearanceSettingsContent({
             }
           />
         </div>
-        <div className="color-options" aria-label="推荐主题色">
+        <div
+          className="color-options"
+          aria-label={t("settings.appearance.recommendedColors")}
+        >
           {THEME_COLORS.map((color) => (
             <button
               key={color}
               type="button"
               className={`color-item ${themeColor === color ? "active" : ""}`}
-              aria-label={`选择主题色 ${color}`}
+              aria-label={t("settings.appearance.selectColor", { color })}
               title={color}
               style={{ backgroundColor: color }}
               onClick={() => onThemeColorChange(color)}
@@ -493,8 +517,26 @@ function PreferencesSettingsContent({
   >;
   onSave: (values: SettingsFormValues) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const [form] = Form.useForm<SettingsFormValues>();
   const { pageSize, defaultProjectView, defaultTaskView } = initialValues;
+  const pageSizeOptions = useMemo(
+    () =>
+      ([5, 10, 20, 50] as PageSize[]).map((value) => ({
+        label: t("settings.preferences.rowsPerPage", { count: value }),
+        value,
+      })),
+    [t],
+  );
+  const viewOptions = useMemo<
+    Array<{ label: string; value: ProjectView | TaskView }>
+  >(
+    () => [
+      { label: t("settings.preferences.cardView"), value: "card" },
+      { label: t("settings.preferences.listView"), value: "list" },
+    ],
+    [t],
+  );
 
   useEffect(() => {
     form.setFieldsValue({ pageSize, defaultProjectView, defaultTaskView });
@@ -509,19 +551,28 @@ function PreferencesSettingsContent({
       onFinish={(values) => void onSave(values)}
     >
       <div className="settings-form-grid">
-        <Form.Item label="默认每页显示条数" name="pageSize">
-          <Select options={PAGE_SIZE_OPTIONS} />
+        <Form.Item
+          label={t("settings.preferences.defaultPageSize")}
+          name="pageSize"
+        >
+          <Select options={pageSizeOptions} />
         </Form.Item>
-        <Form.Item label="默认项目视图" name="defaultProjectView">
-          <Select options={PROJECT_VIEW_OPTIONS} />
+        <Form.Item
+          label={t("settings.preferences.defaultProjectView")}
+          name="defaultProjectView"
+        >
+          <Select options={viewOptions} />
         </Form.Item>
-        <Form.Item label="默认任务视图" name="defaultTaskView">
-          <Select options={TASK_VIEW_OPTIONS} />
+        <Form.Item
+          label={t("settings.preferences.defaultTaskView")}
+          name="defaultTaskView"
+        >
+          <Select options={viewOptions} />
         </Form.Item>
       </div>
       <div className="settings-actions settings-actions-end">
         <Button type="primary" htmlType="submit">
-          保存使用偏好
+          {t("settings.preferences.save")}
         </Button>
       </div>
     </Form>
@@ -529,6 +580,7 @@ function PreferencesSettingsContent({
 }
 
 export default function SettingsPage() {
+  const { t } = useTranslation();
   const { message } = App.useApp();
   const user = useCurrentUser();
   const { settings: appSettings, updateSettings } = useSettings();
@@ -541,16 +593,50 @@ export default function SettingsPage() {
   const [avatar, setAvatar] = useState(user.avatar);
   const [profileSubmitting, setProfileSubmitting] = useState(false);
   const [passwordSubmitting, setPasswordSubmitting] = useState(false);
+  const settingsSections = useMemo<SettingsSection[]>(
+    () => [
+      {
+        key: "profile",
+        icon: <UserOutlined />,
+        label: t("settings.sections.profile.label"),
+        description: t("settings.sections.profile.description"),
+      },
+      {
+        key: "security",
+        icon: <LockOutlined />,
+        label: t("settings.sections.security.label"),
+        description: t("settings.sections.security.description"),
+      },
+      {
+        key: "appearance",
+        icon: <BgColorsOutlined />,
+        label: t("settings.sections.appearance.label"),
+        description: t("settings.sections.appearance.description"),
+      },
+      {
+        key: "preferences",
+        icon: <SettingOutlined />,
+        label: t("settings.sections.preferences.label"),
+        description: t("settings.sections.preferences.description"),
+      },
+    ],
+    [t],
+  );
+  const menuItems = useMemo<MenuProps["items"]>(
+    () =>
+      settingsSections.map(({ key, icon, label }) => ({ key, icon, label })),
+    [settingsSections],
+  );
 
   const handleAvatarSelect: NonNullable<UploadProps["beforeUpload"]> = (
     file,
   ) => {
     if (!["image/jpeg", "image/png"].includes(file.type)) {
-      message.error("仅支持 JPG、PNG 格式的头像");
+      message.error(t("settings.profile.messages.fileType"));
       return Upload.LIST_IGNORE;
     }
     if (file.size > 2 * 1024 * 1024) {
-      message.error("头像文件不能超过 2 MB");
+      message.error(t("settings.profile.messages.fileSize"));
       return Upload.LIST_IGNORE;
     }
 
@@ -572,9 +658,11 @@ export default function SettingsPage() {
       });
       setAvatar(savedUser.avatar);
       await revalidator.revalidate();
-      message.success("个人信息已更新");
+      message.success(t("settings.profile.messages.saved"));
     } catch (error) {
-      message.error(getApiErrorMessage(error, "个人信息保存失败"));
+      message.error(
+        getApiErrorMessage(error, t("settings.profile.messages.saveFailed")),
+      );
     } finally {
       setProfileSubmitting(false);
     }
@@ -588,10 +676,12 @@ export default function SettingsPage() {
         currentPassword: values.currentPassword,
         newPassword: values.newPassword,
       });
-      message.success("密码修改成功");
+      message.success(t("settings.security.messages.saved"));
       return true;
     } catch (error) {
-      message.error(getApiErrorMessage(error, "密码修改失败"));
+      message.error(
+        getApiErrorMessage(error, t("settings.security.messages.saveFailed")),
+      );
       return false;
     } finally {
       setPasswordSubmitting(false);
@@ -604,7 +694,7 @@ export default function SettingsPage() {
       defaultProjectView: values.defaultProjectView,
       defaultTaskView: values.defaultTaskView,
     });
-    message.success("使用偏好已保存");
+    message.success(t("settings.preferences.saved"));
   };
 
   const panelContent: Record<TabKey, ReactNode> = {
@@ -644,7 +734,7 @@ export default function SettingsPage() {
     ),
   };
 
-  const mobileItems: CollapseProps["items"] = SETTINGS_SECTIONS.map(
+  const mobileItems: CollapseProps["items"] = settingsSections.map(
     ({ key, icon, label, description }) => ({
       key,
       label: (
@@ -660,15 +750,15 @@ export default function SettingsPage() {
     }),
   );
 
-  const activeSection = SETTINGS_SECTIONS.find(
+  const activeSection = settingsSections.find(
     (section) => section.key === activeTab,
   )!;
 
   return (
     <div className="page-container settings-page">
       <PageHeader
-        title="个人设置"
-        description="管理账号资料、安全设置、外观和使用偏好"
+        title={t("settings.header.title")}
+        description={t("settings.header.description")}
       />
 
       {isMobile ? (
@@ -690,7 +780,7 @@ export default function SettingsPage() {
             <Menu
               mode="inline"
               selectedKeys={[activeTab]}
-              items={MENU_ITEMS}
+              items={menuItems}
               onClick={({ key }) => setActiveTab(key as TabKey)}
             />
           </Sider>

@@ -11,7 +11,8 @@ import {
 } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import { useEffect, useState } from "react";
-import { PROJECT_STATUS_OPTIONS } from "@/constants/options";
+import { useTranslation } from "react-i18next";
+import { useLocalizedOptions } from "@/hooks/useLocalizedOptions";
 import { getApiErrorMessage } from "@/services/client";
 import { createProject, updateProject } from "@/services/projects";
 import type { Member } from "@/types/member";
@@ -47,7 +48,9 @@ export function ProjectFormDrawer({
   onClose,
   onSaved,
 }: ProjectFormDrawerProps) {
+  const { t } = useTranslation();
   const { message } = App.useApp();
+  const { projectStatusOptions } = useLocalizedOptions();
   const [form] = Form.useForm<ProjectFormModel>();
   const [submitting, setSubmitting] = useState(false);
   const canEditProject = project
@@ -99,14 +102,14 @@ export function ProjectFormDrawer({
           color: baseValues.color,
         };
         savedProject = await updateProject(project.id, patch);
-        message.success("项目信息已更新");
+        message.success(t("projectForm.messages.updated"));
       } else {
         savedProject = await createProject({
           ...baseValues,
           leaderId: currentMemberId,
           memberIds: values.memberIds ?? [],
         } as ProjectFormValues);
-        message.success("项目已创建");
+        message.success(t("projectForm.messages.created"));
       }
       onSaved(savedProject);
       form.resetFields();
@@ -115,7 +118,9 @@ export function ProjectFormDrawer({
       message.error(
         getApiErrorMessage(
           requestError,
-          project ? "项目更新失败" : "项目创建失败",
+          project
+            ? t("projectForm.messages.updateFailed")
+            : t("projectForm.messages.createFailed"),
         ),
       );
     } finally {
@@ -125,7 +130,13 @@ export function ProjectFormDrawer({
 
   return (
     <Drawer
-      title={project ? (canEditProject ? "编辑项目" : "查看项目") : "创建项目"}
+      title={
+        project
+          ? canEditProject
+            ? t("projectForm.title.edit")
+            : t("projectForm.title.view")
+          : t("projectForm.title.create")
+      }
       size={500}
       open={open}
       onClose={close}
@@ -134,7 +145,7 @@ export function ProjectFormDrawer({
           <span />
           <Space>
             <Button disabled={submitting} onClick={close}>
-              取消
+              {t("common.cancel")}
             </Button>
             <Button
               type="primary"
@@ -142,7 +153,9 @@ export function ProjectFormDrawer({
               disabled={!canEditProject}
               onClick={() => form.submit()}
             >
-              {project ? "保存修改" : "创建项目"}
+              {project
+                ? t("projectForm.actions.save")
+                : t("projectForm.actions.create")}
             </Button>
           </Space>
         </div>
@@ -152,7 +165,7 @@ export function ProjectFormDrawer({
         <Alert
           showIcon
           type="warning"
-          title="权限不足"
+          title={t("common.permissionDenied")}
           description={PERMISSION_DENIED.editProject}
           style={{ marginBottom: 16 }}
         />
@@ -165,51 +178,82 @@ export function ProjectFormDrawer({
       >
         <Form.Item
           name="name"
-          label="项目名称"
+          label={t("projectForm.fields.name")}
           rules={[
-            { required: true, message: "请输入项目名称" },
-            { min: 2, max: 50, message: "项目名称应为 2–50 个字符" },
+            {
+              required: true,
+              message: t("projectForm.validation.nameRequired"),
+            },
+            {
+              min: 2,
+              max: 50,
+              message: t("projectForm.validation.nameLength"),
+            },
           ]}
         >
           <Input maxLength={50} showCount />
         </Form.Item>
         <Form.Item
           name="description"
-          label="项目描述"
+          label={t("projectForm.fields.description")}
           rules={[
-            { required: true, message: "请输入项目描述" },
-            { max: 300, message: "项目描述不能超过 300 个字符" },
+            {
+              required: true,
+              message: t("projectForm.validation.descriptionRequired"),
+            },
+            {
+              max: 300,
+              message: t("projectForm.validation.descriptionLength"),
+            },
           ]}
         >
           <Input.TextArea rows={4} maxLength={300} showCount />
         </Form.Item>
         <Form.Item
           name="status"
-          label="项目状态"
-          rules={[{ required: true, message: "请选择项目状态" }]}
+          label={t("projectForm.fields.status")}
+          rules={[
+            {
+              required: true,
+              message: t("projectForm.validation.statusRequired"),
+            },
+          ]}
         >
-          <Select options={[...PROJECT_STATUS_OPTIONS]} />
+          <Select options={projectStatusOptions} />
         </Form.Item>
         <Form.Item
           name="deadline"
-          label="截止日期"
-          rules={[{ required: true, message: "请选择截止日期" }]}
+          label={t("projectForm.fields.deadline")}
+          rules={[
+            {
+              required: true,
+              message: t("projectForm.validation.deadlineRequired"),
+            },
+          ]}
         >
           <DatePicker style={{ width: "100%" }} />
         </Form.Item>
         <Form.Item
           name="color"
-          label="项目颜色"
-          rules={[{ required: true, message: "请输入项目颜色" }]}
+          label={t("projectForm.fields.color")}
+          rules={[
+            {
+              required: true,
+              message: t("projectForm.validation.colorRequired"),
+            },
+          ]}
         >
           <Input type="color" style={{ width: 72 }} />
         </Form.Item>
         {!project ? (
-          <Form.Item name="memberIds" label="初始成员">
+          <Form.Item
+            name="memberIds"
+            label={t("projectForm.fields.initialMembers")}
+          >
             <Select
               mode="multiple"
               allowClear
-              placeholder="可选，创建后仍可继续添加"
+              placeholder={t("projectForm.placeholders.initialMembers")}
               options={members
                 .filter((member) => member.id !== currentMemberId)
                 .map((member) => ({

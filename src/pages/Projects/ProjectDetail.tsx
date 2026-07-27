@@ -10,6 +10,7 @@ import {
 } from "@ant-design/icons";
 import { App, Avatar, Button, Progress, Space, Statistic, Tag } from "antd";
 import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router";
 import { PageState } from "@/components/common/PageState";
 import { ProjectFormDrawer } from "@/components/projects/ProjectForm";
@@ -22,22 +23,27 @@ import {
   getProjectPermissions,
   PERMISSION_DENIED,
 } from "@/utils/Permissions.ts";
+import { formatDate } from "@/utils/date";
 import "./ProjectDetail.css";
 
-function getProjectDetailErrorMessage(error: unknown) {
-  return getApiErrorMessage(error, "项目加载失败，请稍后重试");
-}
-
 export default function ProjectDetailPage() {
+  const { t } = useTranslation();
   const { message, modal } = App.useApp();
   const currentUser = useCurrentUser();
   const navigate = useNavigate();
   const { projectId } = useParams();
   const [editorOpen, setEditorOpen] = useState(false);
   const loadProject = useCallback(() => {
-    if (!projectId) return Promise.reject(new Error("缺少项目编号"));
+    if (!projectId) {
+      return Promise.reject(new Error(t("projectDetail.missingProjectId")));
+    }
     return getProject(projectId);
-  }, [projectId]);
+  }, [projectId, t]);
+  const getProjectDetailErrorMessage = useCallback(
+    (requestError: unknown) =>
+      getApiErrorMessage(requestError, t("projectDetail.loadError")),
+    [t],
+  );
   const {
     data: project,
     setData,
@@ -57,9 +63,9 @@ export default function ProjectDetailPage() {
           loading={loading}
           error={error}
           empty={!loading && !error && !project}
-          loadingDescription="正在加载项目..."
-          errorTitle="项目加载失败"
-          emptyDescription="项目不存在或已被删除"
+          loadingDescription={t("projectDetail.states.loading")}
+          errorTitle={t("projectDetail.states.errorTitle")}
+          emptyDescription={t("projectDetail.states.empty")}
           onRetry={reload}
         >
           {null}
@@ -96,18 +102,23 @@ export default function ProjectDetailPage() {
       return;
     }
     modal.confirm({
-      title: "删除项目",
-      content: `确定删除“${project.name}”吗？项目中的任务和动态也会被删除。`,
-      okText: "删除",
+      title: t("projectDetail.delete.title"),
+      content: t("projectDetail.delete.confirm", { name: project.name }),
+      okText: t("projectDetail.actions.delete"),
       okButtonProps: { danger: true },
-      cancelText: "取消",
+      cancelText: t("common.cancel"),
       async onOk() {
         try {
           await deleteProject(project.id);
-          message.success("项目已删除");
+          message.success(t("projectDetail.messages.deleted"));
           navigate("/projects", { replace: true });
         } catch (requestError) {
-          message.error(getApiErrorMessage(requestError, "项目删除失败"));
+          message.error(
+            getApiErrorMessage(
+              requestError,
+              t("projectDetail.messages.deleteFailed"),
+            ),
+          );
           throw requestError;
         }
       },
@@ -126,7 +137,7 @@ export default function ProjectDetailPage() {
         icon={<ArrowLeftOutlined />}
         onClick={() => navigate("/projects")}
       >
-        返回项目列表
+        {t("projectDetail.actions.back")}
       </Button>
 
       <div
@@ -145,20 +156,20 @@ export default function ProjectDetailPage() {
 
           <Space wrap>
             <Button icon={<PlusOutlined />} onClick={handleCreateTask}>
-              创建任务
+              {t("projectDetail.actions.createTask")}
             </Button>
             <Button icon={<EditOutlined />} onClick={handleEditProject}>
-              编辑项目
+              {t("projectDetail.actions.edit")}
             </Button>
             <Button icon={<TeamOutlined />} onClick={handleManageMembers}>
-              管理成员
+              {t("projectDetail.actions.manageMembers")}
             </Button>
             <Button
               danger
               icon={<DeleteOutlined />}
               onClick={handleDeleteProject}
             >
-              删除项目
+              {t("projectDetail.actions.delete")}
             </Button>
           </Space>
         </div>
@@ -166,13 +177,18 @@ export default function ProjectDetailPage() {
 
       <nav className="detail-tab-bar">
         <button type="button" className="active">
-          概览
+          {t("projectDetail.tabs.overview")}
         </button>
-        <button type="button">工作项 4</button>
         <button type="button">
-          <TeamOutlined /> 成员 {project.members.length}
+          {t("projectDetail.tabs.tasks", { count: 4 })}
         </button>
-        <button type="button">动态记录</button>
+        <button type="button">
+          <TeamOutlined />{" "}
+          {t("projectDetail.tabs.members", {
+            count: project.members.length,
+          })}
+        </button>
+        <button type="button">{t("projectDetail.tabs.activity")}</button>
       </nav>
 
       <section className="workspace-summary">
@@ -180,33 +196,33 @@ export default function ProjectDetailPage() {
           <span>
             <BranchesOutlined />
           </span>
-          <small>开放工作项</small>
+          <small>{t("projectDetail.summary.openTasks")}</small>
           <strong>4</strong>
-          <em>4 项总计</em>
+          <em>{t("projectDetail.summary.totalTasks", { count: 4 })}</em>
         </article>
         <article>
           <span>
             <FieldTimeOutlined />
           </span>
-          <small>进行中</small>
+          <small>{t("projectDetail.summary.inProgress")}</small>
           <strong>1</strong>
-          <em>正在推进</em>
+          <em>{t("projectDetail.summary.inProgressNote")}</em>
         </article>
         <article className="risk">
           <span>
             <CalendarOutlined />
           </span>
-          <small>逾期风险</small>
+          <small>{t("projectDetail.summary.overdue")}</small>
           <strong>1</strong>
-          <em>需要处理</em>
+          <em>{t("projectDetail.summary.overdueNote")}</em>
         </article>
         <article>
           <span>
             <TeamOutlined />
           </span>
-          <small>成员覆盖</small>
+          <small>{t("projectDetail.summary.members")}</small>
           <strong>{project.members.length}</strong>
-          <em>协作角色</em>
+          <em>{t("projectDetail.summary.membersNote")}</em>
         </article>
       </section>
 
@@ -214,20 +230,22 @@ export default function ProjectDetailPage() {
         <article className="surface-panel detail-summary">
           <div className="section-heading">
             <div>
-              <h2>项目概览</h2>
-              <p>关键目标与时间信息</p>
+              <h2>{t("projectDetail.overview.title")}</h2>
+              <p>{t("projectDetail.overview.description")}</p>
             </div>
           </div>
 
           <dl className="detail-description-grid">
             <div>
-              <dt>项目状态</dt>
+              <dt>{t("projectDetail.overview.status")}</dt>
               <dd>
-                <Tag color="processing">进行中</Tag>
+                <Tag color="processing">
+                  {t(`options.projectStatus.${project.status}`)}
+                </Tag>
               </dd>
             </div>
             <div>
-              <dt>项目负责人</dt>
+              <dt>{t("projectDetail.overview.owner")}</dt>
               <dd>
                 <span className="detail-member-inline">
                   <Avatar size={24} style={{ background: "#1677ff" }}>
@@ -238,24 +256,22 @@ export default function ProjectDetailPage() {
               </dd>
             </div>
             <div>
-              <dt>创建日期</dt>
-              <dd>2026-06-10</dd>
+              <dt>{t("projectDetail.overview.createdAt")}</dt>
+              <dd>{formatDate(project.createdAt)}</dd>
             </div>
             <div>
-              <dt>截止日期</dt>
-              <dd>2026-08-20</dd>
+              <dt>{t("projectDetail.overview.deadline")}</dt>
+              <dd>{formatDate(project.deadline)}</dd>
             </div>
             <div className="full">
-              <dt>项目描述</dt>
-              <dd>
-                支持任务权重、自动排程、拖拽时间表与休息时间插入的效率工具。
-              </dd>
+              <dt>{t("projectDetail.overview.projectDescription")}</dt>
+              <dd>{project.description}</dd>
             </div>
           </dl>
 
           <div className="detail-progress">
             <div>
-              <span>整体完成度</span>
+              <span>{t("projectDetail.overview.progress")}</span>
               <b>38%</b>
             </div>
             <Progress percent={38} strokeColor="#1677ff" />
@@ -263,21 +279,33 @@ export default function ProjectDetailPage() {
         </article>
 
         <article className="surface-panel detail-stats">
-          <Statistic title="项目任务" value={4} suffix="个" />
-          <Statistic title="已完成" value={0} suffix="个" />
           <Statistic
-            title="团队成员"
-            value={project.members.length}
-            suffix="人"
+            title={t("projectDetail.statistics.tasks")}
+            value={4}
+            suffix={t("projectDetail.units.items")}
           />
-          <Statistic title="距离截止" value={36} suffix="天" />
+          <Statistic
+            title={t("projectDetail.statistics.completed")}
+            value={0}
+            suffix={t("projectDetail.units.items")}
+          />
+          <Statistic
+            title={t("projectDetail.statistics.members")}
+            value={project.members.length}
+            suffix={t("projectDetail.units.people")}
+          />
+          <Statistic
+            title={t("projectDetail.statistics.daysRemaining")}
+            value={36}
+            suffix={t("projectDetail.units.days")}
+          />
         </article>
 
         <article className="surface-panel detail-upcoming">
           <div className="section-heading">
             <div>
-              <h2>临近任务</h2>
-              <p>按截止日期优先显示</p>
+              <h2>{t("projectDetail.upcoming.title")}</h2>
+              <p>{t("projectDetail.upcoming.description")}</p>
             </div>
           </div>
 
@@ -319,8 +347,8 @@ export default function ProjectDetailPage() {
       <section className="static-detail-section">
         <div className="section-heading outside">
           <div>
-            <h2>工作项</h2>
-            <p>项目中的任务与责任信息</p>
+            <h2>{t("projectDetail.tasks.title")}</h2>
+            <p>{t("projectDetail.tasks.description")}</p>
           </div>
         </div>
 
@@ -328,29 +356,31 @@ export default function ProjectDetailPage() {
           <table className="static-table">
             <thead>
               <tr>
-                <th>工作项</th>
-                <th>类型</th>
-                <th>状态</th>
-                <th>阶段</th>
-                <th>优先级</th>
-                <th>负责人</th>
-                <th>计划</th>
+                <th>{t("projectDetail.tasks.columns.task")}</th>
+                <th>{t("projectDetail.tasks.columns.type")}</th>
+                <th>{t("projectDetail.tasks.columns.status")}</th>
+                <th>{t("projectDetail.tasks.columns.stage")}</th>
+                <th>{t("projectDetail.tasks.columns.priority")}</th>
+                <th>{t("projectDetail.tasks.columns.assignee")}</th>
+                <th>{t("projectDetail.tasks.columns.schedule")}</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td>完成时间轴页面</td>
                 <td>
-                  <Tag>开发</Tag>
+                  <Tag>{t("options.taskType.development")}</Tag>
                 </td>
                 <td>
-                  <Tag color="processing">进行中</Tag>
+                  <Tag color="processing">
+                    {t("options.taskStatus.in_progress")}
+                  </Tag>
                 </td>
                 <td>
-                  <Tag color="blue">交付</Tag>
+                  <Tag color="blue">{t("options.taskStage.delivery")}</Tag>
                 </td>
                 <td>
-                  <Tag color="orange">高</Tag>
+                  <Tag color="orange">{t("options.priority.high")}</Tag>
                 </td>
                 <td>
                   <span className="detail-member-inline">
@@ -365,16 +395,16 @@ export default function ProjectDetailPage() {
               <tr>
                 <td>设计任务权重配置面板</td>
                 <td>
-                  <Tag>设计</Tag>
+                  <Tag>{t("options.taskType.design")}</Tag>
                 </td>
                 <td>
-                  <Tag color="warning">待审核</Tag>
+                  <Tag color="warning">{t("options.taskStatus.review")}</Tag>
                 </td>
                 <td>
-                  <Tag color="cyan">设计</Tag>
+                  <Tag color="cyan">{t("options.taskStage.design")}</Tag>
                 </td>
                 <td>
-                  <Tag color="blue">中</Tag>
+                  <Tag color="blue">{t("options.priority.medium")}</Tag>
                 </td>
                 <td>
                   <span className="detail-member-inline">
@@ -389,16 +419,16 @@ export default function ProjectDetailPage() {
               <tr>
                 <td>修复跨天任务显示错位</td>
                 <td>
-                  <Tag color="red">缺陷</Tag>
+                  <Tag color="red">{t("options.taskType.bug")}</Tag>
                 </td>
                 <td>
-                  <Tag>待处理</Tag>
+                  <Tag>{t("options.taskStatus.pending")}</Tag>
                 </td>
                 <td>
-                  <Tag color="gold">验收</Tag>
+                  <Tag color="gold">{t("options.taskStage.acceptance")}</Tag>
                 </td>
                 <td>
-                  <Tag color="red">紧急</Tag>
+                  <Tag color="red">{t("options.priority.urgent")}</Tag>
                 </td>
                 <td>
                   <span className="detail-member-inline">
@@ -413,16 +443,16 @@ export default function ProjectDetailPage() {
               <tr>
                 <td>任务完成后插入休息时间</td>
                 <td>
-                  <Tag>测试</Tag>
+                  <Tag>{t("options.taskType.test")}</Tag>
                 </td>
                 <td>
-                  <Tag color="warning">待审核</Tag>
+                  <Tag color="warning">{t("options.taskStatus.review")}</Tag>
                 </td>
                 <td>
-                  <Tag color="gold">验收</Tag>
+                  <Tag color="gold">{t("options.taskStage.acceptance")}</Tag>
                 </td>
                 <td>
-                  <Tag color="orange">高</Tag>
+                  <Tag color="orange">{t("options.priority.high")}</Tag>
                 </td>
                 <td>
                   <span className="detail-member-inline">
@@ -442,8 +472,8 @@ export default function ProjectDetailPage() {
       <section className="static-detail-section">
         <div className="section-heading outside">
           <div>
-            <h2>项目成员</h2>
-            <p>项目角色与任务责任</p>
+            <h2>{t("projectDetail.members.title")}</h2>
+            <p>{t("projectDetail.members.description")}</p>
           </div>
         </div>
 
@@ -454,8 +484,8 @@ export default function ProjectDetailPage() {
             </Avatar>
             <h3>张伟</h3>
             <p>计算机学院</p>
-            <Tag color="purple">所有者</Tag>
-            <small>2 个负责任务</small>
+            <Tag color="purple">{t("options.role.owner")}</Tag>
+            <small>{t("projectDetail.members.taskCount", { count: 2 })}</small>
           </article>
           <article>
             <Avatar size={56} style={{ background: "#7c3aed" }}>
@@ -463,8 +493,8 @@ export default function ProjectDetailPage() {
             </Avatar>
             <h3>李明</h3>
             <p>软件工程系</p>
-            <Tag color="blue">管理员</Tag>
-            <small>1 个负责任务</small>
+            <Tag color="blue">{t("options.role.admin")}</Tag>
+            <small>{t("projectDetail.members.taskCount", { count: 1 })}</small>
           </article>
           <article>
             <Avatar size={56} style={{ background: "#0891b2" }}>
@@ -472,8 +502,8 @@ export default function ProjectDetailPage() {
             </Avatar>
             <h3>王强</h3>
             <p>人工智能学院</p>
-            <Tag color="green">成员</Tag>
-            <small>1 个负责任务</small>
+            <Tag color="green">{t("options.role.member")}</Tag>
+            <small>{t("projectDetail.members.taskCount", { count: 1 })}</small>
           </article>
           <article>
             <Avatar size={56} style={{ background: "#ea580c" }}>
@@ -481,8 +511,8 @@ export default function ProjectDetailPage() {
             </Avatar>
             <h3>赵敏</h3>
             <p>自动化学院</p>
-            <Tag color="green">成员</Tag>
-            <small>0 个负责任务</small>
+            <Tag color="green">{t("options.role.member")}</Tag>
+            <small>{t("projectDetail.members.taskCount", { count: 0 })}</small>
           </article>
           <article>
             <Avatar size={56} style={{ background: "#16a34a" }}>
@@ -490,8 +520,8 @@ export default function ProjectDetailPage() {
             </Avatar>
             <h3>陈晨</h3>
             <p>管理学院</p>
-            <Tag>只读</Tag>
-            <small>0 个负责任务</small>
+            <Tag>{t("options.role.readonly")}</Tag>
+            <small>{t("projectDetail.members.taskCount", { count: 0 })}</small>
           </article>
           <article>
             <Avatar size={56} style={{ background: "#db2777" }}>
@@ -499,8 +529,8 @@ export default function ProjectDetailPage() {
             </Avatar>
             <h3>周宁</h3>
             <p>计算机学院</p>
-            <Tag color="green">成员</Tag>
-            <small>0 个负责任务</small>
+            <Tag color="green">{t("options.role.member")}</Tag>
+            <small>{t("projectDetail.members.taskCount", { count: 0 })}</small>
           </article>
         </div>
       </section>
@@ -508,8 +538,8 @@ export default function ProjectDetailPage() {
       <section className="static-detail-section">
         <div className="section-heading outside">
           <div>
-            <h2>动态记录</h2>
-            <p>项目最近发生的变化</p>
+            <h2>{t("projectDetail.activity.title")}</h2>
+            <p>{t("projectDetail.activity.description")}</p>
           </div>
         </div>
 

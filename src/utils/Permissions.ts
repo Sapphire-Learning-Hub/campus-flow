@@ -1,16 +1,33 @@
+import i18n from "@/i18n";
 import type { ProjectRole } from "@/types/member";
 import type { Project } from "@/types/project";
 import type { Task } from "@/types/task";
 
 export const PERMISSION_DENIED = {
-  viewProject: "权限不足：你不是该项目的成员",
-  editProject: "权限不足：只有项目所有者或管理员可以修改项目信息",
-  deleteProject: "权限不足：只有项目所有者可以删除项目",
-  manageMembers: "权限不足：只有项目所有者可以管理成员",
-  createTask: "权限不足：当前角色不能创建任务",
-  editTask: "权限不足：只有项目所有者、管理员或任务负责人可以修改任务",
-  deleteTask: "权限不足：只有项目所有者或管理员可以删除任务",
-  assignTask: "权限不足：普通成员只能创建并负责自己的任务",
+  get viewProject() {
+    return i18n.t("permissions.viewProject");
+  },
+  get editProject() {
+    return i18n.t("permissions.editProject");
+  },
+  get deleteProject() {
+    return i18n.t("permissions.deleteProject");
+  },
+  get manageMembers() {
+    return i18n.t("permissions.manageMembers");
+  },
+  get createTask() {
+    return i18n.t("permissions.createTask");
+  },
+  get editTask() {
+    return i18n.t("permissions.editTask");
+  },
+  get deleteTask() {
+    return i18n.t("permissions.deleteTask");
+  },
+  get assignTask() {
+    return i18n.t("permissions.assignTask");
+  },
 } as const;
 
 export interface Permissions {

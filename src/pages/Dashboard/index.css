@@ -560,10 +560,9 @@
 
   .project-progress-header,
   .project-progress-row {
-    grid-template-columns: 8px minmax(150px, 1.25fr) minmax(
-        112px,
-        0.65fr
-      ) minmax(110px, 0.58fr) 86px;
+    grid-template-columns:
+      8px minmax(150px, 1.25fr) minmax(112px, 0.65fr)
+      minmax(110px, 0.58fr) 86px;
   }
 }
 
@@ -630,6 +629,16 @@
   .dashboard-page .page-heading-actions .ant-space-item,
   .dashboard-page .page-heading-actions .ant-btn {
     width: 100%;
+    min-width: 0;
+  }
+
+  .dashboard-page .page-heading-actions .ant-btn {
+    padding-inline: 8px;
+  }
+
+  .dashboard-page .page-heading-actions .ant-btn > span:not(.anticon) {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .metric-band {

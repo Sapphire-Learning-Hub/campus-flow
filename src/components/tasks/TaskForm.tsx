@@ -11,12 +11,8 @@ import {
 } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import { useEffect, useMemo, useState } from "react";
-import {
-  PRIORITY_OPTIONS,
-  TASK_STAGE_OPTIONS,
-  TASK_STATUS_OPTIONS,
-  TASK_TYPE_OPTIONS,
-} from "@/constants/options";
+import { useTranslation } from "react-i18next";
+import { useLocalizedOptions } from "@/hooks/useLocalizedOptions";
 import { getApiErrorMessage } from "@/services/client";
 import { createTask, deleteTask, updateTask } from "@/services/tasks";
 import type { Member } from "@/types/member";
@@ -59,7 +55,14 @@ export function TaskFormDrawer({
   onSaved,
   onDeleted,
 }: TaskFormDrawerProps) {
+  const { t } = useTranslation();
   const { message, modal } = App.useApp();
+  const {
+    priorityOptions,
+    taskStageOptions,
+    taskStatusOptions,
+    taskTypeOptions,
+  } = useLocalizedOptions();
   const [form] = Form.useForm<TaskFormModel>();
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -108,7 +111,9 @@ export function TaskFormDrawer({
       !allowedMembers.some((member) => member.id === initial.assigneeId)
     ) {
       options.push({
-        label: `${currentAssignee?.name ?? "原负责人"}（已移出项目）`,
+        label: t("taskForm.removedAssignee", {
+          name: currentAssignee?.name ?? t("taskForm.previousAssignee"),
+        }),
         value: initial.assigneeId,
       });
     }
@@ -119,6 +124,7 @@ export function TaskFormDrawer({
     initial,
     members,
     permissions.canManageAllTasks,
+    t,
   ]);
 
   useEffect(() => {
@@ -211,17 +217,19 @@ export function TaskFormDrawer({
         const { projectId: unchangedProjectId, ...patch } = formValues;
         void unchangedProjectId;
         savedTask = await updateTask(initial.id, patch);
-        message.success("工作项已更新");
+        message.success(t("taskForm.messages.updated"));
       } else {
         savedTask = await createTask(formValues);
-        message.success("工作项已创建");
+        message.success(t("taskForm.messages.created"));
       }
 
       onSaved(savedTask);
       form.resetFields();
       onClose();
     } catch (requestError) {
-      message.error(getApiErrorMessage(requestError, "保存工作项失败"));
+      message.error(
+        getApiErrorMessage(requestError, t("taskForm.messages.saveFailed")),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -235,21 +243,26 @@ export function TaskFormDrawer({
     }
 
     modal.confirm({
-      title: "删除工作项",
-      content: `确定删除“${initial.title}”吗？此操作无法撤销。`,
-      okText: "删除",
+      title: t("taskForm.delete.title"),
+      content: t("taskForm.delete.confirm", { title: initial.title }),
+      okText: t("taskForm.actions.delete"),
       okButtonProps: { danger: true },
-      cancelText: "取消",
+      cancelText: t("common.cancel"),
       async onOk() {
         setDeleting(true);
         try {
           await deleteTask(initial.id);
-          message.success("工作项已删除");
+          message.success(t("taskForm.messages.deleted"));
           onDeleted(initial.id);
           form.resetFields();
           onClose();
         } catch (requestError) {
-          message.error(getApiErrorMessage(requestError, "删除工作项失败"));
+          message.error(
+            getApiErrorMessage(
+              requestError,
+              t("taskForm.messages.deleteFailed"),
+            ),
+          );
           throw requestError;
         } finally {
           setDeleting(false);
@@ -260,7 +273,13 @@ export function TaskFormDrawer({
 
   return (
     <Drawer
-      title={initial ? (readOnly ? "查看工作项" : "编辑工作项") : "创建工作项"}
+      title={
+        initial
+          ? readOnly
+            ? t("taskForm.title.view")
+            : t("taskForm.title.edit")
+          : t("taskForm.title.create")
+      }
       size={540}
       open={open}
       onClose={close}
@@ -275,16 +294,16 @@ export function TaskFormDrawer({
                 loading={deleting}
                 onClick={confirmDelete}
               >
-                删除工作项
+                {t("taskForm.actions.delete")}
               </Button>
             ) : null}
           </div>
           {readOnly ? (
-            <Button onClick={close}>关闭</Button>
+            <Button onClick={close}>{t("common.close")}</Button>
           ) : (
             <Space>
               <Button disabled={submitting || deleting} onClick={close}>
-                取消
+                {t("common.cancel")}
               </Button>
               <Button
                 type="primary"
@@ -292,7 +311,9 @@ export function TaskFormDrawer({
                 disabled={deleting}
                 onClick={() => form.submit()}
               >
-                {initial ? "保存修改" : "创建工作项"}
+                {initial
+                  ? t("taskForm.actions.save")
+                  : t("taskForm.actions.create")}
               </Button>
             </Space>
           )}
@@ -303,7 +324,7 @@ export function TaskFormDrawer({
         <Alert
           showIcon
           type="warning"
-          title="权限不足，当前工作项为只读模式"
+          title={t("taskForm.readOnlyTitle")}
           description={PERMISSION_DENIED.editTask}
           style={{ marginBottom: 16 }}
         />
@@ -317,11 +338,16 @@ export function TaskFormDrawer({
       >
         <Form.Item
           name="projectId"
-          label="所属项目"
-          rules={[{ required: true, message: "请选择所属项目" }]}
+          label={t("taskForm.fields.project")}
+          rules={[
+            {
+              required: true,
+              message: t("taskForm.validation.projectRequired"),
+            },
+          ]}
         >
           <Select
-            placeholder="选择项目"
+            placeholder={t("taskForm.placeholders.project")}
             options={(initial ? projects : creatableProjects).map((item) => ({
               label: item.name,
               value: item.id,
@@ -344,80 +370,116 @@ export function TaskFormDrawer({
         </Form.Item>
         <Form.Item
           name="title"
-          label="工作项标题"
+          label={t("taskForm.fields.title")}
           rules={[
-            { required: true, message: "请输入工作项标题" },
-            { min: 2, max: 80, message: "标题应为 2–80 个字符" },
+            {
+              required: true,
+              message: t("taskForm.validation.titleRequired"),
+            },
+            {
+              min: 2,
+              max: 80,
+              message: t("taskForm.validation.titleLength"),
+            },
           ]}
         >
           <Input
-            placeholder="明确描述一个可交付工作项"
+            placeholder={t("taskForm.placeholders.title")}
             showCount
             maxLength={80}
           />
         </Form.Item>
         <Form.Item
           name="description"
-          label="工作项描述"
+          label={t("taskForm.fields.description")}
           rules={[
-            { required: true, message: "请输入工作项描述" },
-            { max: 500, message: "描述不能超过 500 个字符" },
+            {
+              required: true,
+              message: t("taskForm.validation.descriptionRequired"),
+            },
+            {
+              max: 500,
+              message: t("taskForm.validation.descriptionLength"),
+            },
           ]}
         >
           <Input.TextArea
             rows={4}
             showCount
             maxLength={500}
-            placeholder="补充背景、验收标准和相关说明"
+            placeholder={t("taskForm.placeholders.description")}
           />
         </Form.Item>
         <div className="form-grid-2">
           <Form.Item
             name="workItemType"
-            label="工作项类型"
-            rules={[{ required: true, message: "请选择工作项类型" }]}
+            label={t("taskForm.fields.type")}
+            rules={[
+              {
+                required: true,
+                message: t("taskForm.validation.typeRequired"),
+              },
+            ]}
           >
-            <Select options={[...TASK_TYPE_OPTIONS]} />
+            <Select options={taskTypeOptions} />
           </Form.Item>
           <Form.Item
             name="stage"
-            label="项目阶段"
-            rules={[{ required: true, message: "请选择项目阶段" }]}
+            label={t("taskForm.fields.stage")}
+            rules={[
+              {
+                required: true,
+                message: t("taskForm.validation.stageRequired"),
+              },
+            ]}
           >
-            <Select options={[...TASK_STAGE_OPTIONS]} />
+            <Select options={taskStageOptions} />
           </Form.Item>
         </div>
         <div className="form-grid-2">
           <Form.Item
             name="status"
-            label="状态"
-            rules={[{ required: true, message: "请选择状态" }]}
+            label={t("taskForm.fields.status")}
+            rules={[
+              {
+                required: true,
+                message: t("taskForm.validation.statusRequired"),
+              },
+            ]}
           >
-            <Select options={[...TASK_STATUS_OPTIONS]} />
+            <Select options={taskStatusOptions} />
           </Form.Item>
           <Form.Item
             name="priority"
-            label="优先级"
-            rules={[{ required: true, message: "请选择优先级" }]}
+            label={t("taskForm.fields.priority")}
+            rules={[
+              {
+                required: true,
+                message: t("taskForm.validation.priorityRequired"),
+              },
+            ]}
           >
-            <Select options={[...PRIORITY_OPTIONS]} />
+            <Select options={priorityOptions} />
           </Form.Item>
         </div>
-        <Form.Item name="assigneeId" label="负责人">
+        <Form.Item name="assigneeId" label={t("taskForm.fields.assignee")}>
           <Select
             allowClear
-            placeholder="暂不分配"
+            placeholder={t("taskForm.placeholders.assignee")}
             options={assigneeOptions}
             disabled={readOnly || permissions.role === "member"}
           />
         </Form.Item>
         <div className="form-grid-2">
-          <Form.Item name="startDate" label="开始日期">
+          <Form.Item
+            name="startDate"
+            label={t("taskForm.fields.startDate")}
+          >
             <DatePicker style={{ width: "100%" }} />
           </Form.Item>
           <Form.Item
             name="deadline"
-            label="截止日期"
+            label={t("taskForm.fields.deadline")}
             dependencies={["startDate"]}
             rules={[
               ({ getFieldValue }) => ({
@@ -426,7 +488,9 @@ export function TaskFormDrawer({
                   if (!start || !value || !value.isBefore(start, "day")) {
                     return Promise.resolve();
                   }
-                  return Promise.reject(new Error("截止日期不能早于开始日期"));
+                  return Promise.reject(
+                    new Error(t("taskForm.validation.deadlineOrder")),
+                  );
                 },
               }),
             ]}
@@ -439,11 +503,11 @@ export function TaskFormDrawer({
             />
           </Form.Item>
         </div>
-        <Form.Item name="tags" label="标签">
+        <Form.Item name="tags" label={t("taskForm.fields.tags")}>
           <Select
             mode="tags"
             tokenSeparators={[",", "，"]}
-            placeholder="输入后回车添加标签"
+            placeholder={t("taskForm.placeholders.tags")}
             maxCount={5}
           />
         </Form.Item>

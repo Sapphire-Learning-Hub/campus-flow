@@ -31,15 +31,16 @@ import {
   useState,
   type CSSProperties,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router";
 import { MemberAvatar } from "@/components/common/MemberAvatar";
 import { PageHeader } from "@/components/common/PageHeader";
 import { PageState } from "@/components/common/PageState";
 import { ProjectFormDrawer } from "@/components/projects/ProjectForm";
-import { PROJECT_STATUS_OPTIONS } from "@/constants/options";
 import { useAsyncPageData } from "@/hooks/useAsyncPageData";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useEntityEditor } from "@/hooks/useEntityEditor";
+import { useLocalizedOptions } from "@/hooks/useLocalizedOptions";
 import { useSettings } from "@/hooks/useSettings";
 import { getApiErrorMessage } from "@/services/client";
 import { listMembers } from "@/services/members";
@@ -59,22 +60,14 @@ import "./Project.css";
 
 const STATUS_META: Record<
   ProjectStatus,
-  { label: string; color: string; className: string }
+  { color: string; className: string }
 > = {
-  planning: { label: "规划中", color: "default", className: "planning" },
-  active: { label: "进行中", color: "processing", className: "active" },
-  completed: { label: "已完成", color: "success", className: "completed" },
-  archived: { label: "已归档", color: "default", className: "archived" },
+  planning: { color: "default", className: "planning" },
+  active: { color: "processing", className: "active" },
+  completed: { color: "success", className: "completed" },
+  archived: { color: "default", className: "archived" },
 };
 type DateSort = "createdAt" | "deadline" | "updatedAt";
-const DATE_SORT_OPTIONS: Array<{
-  label: string;
-  value: DateSort;
-}> = [
-  { label: "最近更新", value: "updatedAt" },
-  { label: "创建时间", value: "createdAt" },
-  { label: "截止日期", value: "deadline" },
-];
 const FILTER_SELECT_PROPS = {
   allowClear: true,
   showSearch: false,
@@ -130,10 +123,6 @@ async function loadProjectsPageData(): Promise<ProjectsPageData> {
   };
 }
 
-function getProjectsPageErrorMessage(error: unknown) {
-  return getApiErrorMessage(error, "项目加载失败，请稍后重试");
-}
-
 function isProjectOverdue(project: Project) {
   return isOverdue(
     project.deadline,
@@ -142,8 +131,11 @@ function isProjectOverdue(project: Project) {
 }
 
 function StatusTag({ status }: { status: ProjectStatus }) {
+  const { t } = useTranslation();
   const meta = STATUS_META[status];
-  return <Tag color={meta.color}>{meta.label}</Tag>;
+  return (
+    <Tag color={meta.color}>{t(`options.projectStatus.${status}`)}</Tag>
+  );
 }
 
 interface ProjectCardProps {
@@ -167,6 +159,7 @@ function ProjectCard({
   onOpenDetail,
   onToggleFavorite,
 }: ProjectCardProps) {
+  const { t } = useTranslation();
   const overdue = isProjectOverdue(project);
 
   return (
@@ -182,14 +175,28 @@ function ProjectCard({
           <button type="button" onClick={() => onEdit(project)}>
             {project.name}
           </button>
-          <small>{project.members.length} 名成员</small>
+          <small>
+            {t("projectsPage.memberCount", {
+              count: project.members.length,
+            })}
+          </small>
         </div>
-        <Tooltip title={editable ? "切换收藏" : PERMISSION_DENIED.editProject}>
+        <Tooltip
+          title={
+            editable
+              ? t("projectsPage.actions.toggleFavorite")
+              : PERMISSION_DENIED.editProject
+          }
+        >
           <Button
             className="project-favorite-button"
             type="text"
             size="small"
-            aria-label={project.favorite ? "取消收藏" : "收藏项目"}
+            aria-label={
+              project.favorite
+                ? t("projectsPage.actions.unfavorite")
+                : t("projectsPage.actions.favorite")
+            }
             icon={project.favorite ? <StarFilled /> : <StarOutlined />}
             loading={favoriteBusy}
             onClick={() => onToggleFavorite(project)}
@@ -201,19 +208,19 @@ function ProjectCard({
 
       <div className="project-card-insights">
         <span>
-          <b>{metrics.total}</b> 工作项
+          <b>{metrics.total}</b> {t("projectsPage.card.workItems")}
         </span>
         <span>
-          <b>{metrics.open}</b> 未完成
+          <b>{metrics.open}</b> {t("projectsPage.card.incomplete")}
         </span>
         <span className={metrics.overdue ? "danger-text" : undefined}>
-          <b>{metrics.overdue}</b> 逾期
+          <b>{metrics.overdue}</b> {t("projectsPage.card.overdue")}
         </span>
       </div>
 
       <div className="project-card-progress">
         <div>
-          <span>项目进度</span>
+          <span>{t("projectsPage.card.progress")}</span>
           <b>{metrics.progress}%</b>
         </div>
         <Progress
@@ -225,7 +232,13 @@ function ProjectCard({
 
       <footer className="project-card-footer">
         <MemberAvatar member={member} size={24} showName />
-        <Tooltip title={overdue ? "该项目已逾期" : "截止日期"}>
+        <Tooltip
+          title={
+            overdue
+              ? t("projectsPage.card.projectOverdue")
+              : t("projectsPage.columns.deadline")
+          }
+        >
           <time className={overdue ? "danger-text" : undefined}>
             {overdue ? <WarningFilled /> : <CalendarOutlined />}
             {formatShortDate(project.deadline)}
@@ -236,7 +249,7 @@ function ProjectCard({
       <div className="project-card-status">
         <StatusTag status={project.status} />
         <Button type="link" size="small" onClick={() => onOpenDetail(project)}>
-          查看详情
+          {t("projectsPage.actions.viewDetails")}
         </Button>
       </div>
     </article>
@@ -264,9 +277,15 @@ function ProjectBoard({
   onOpenDetail,
   onToggleFavorite,
 }: ProjectBoardProps) {
+  const { t } = useTranslation();
+  const { projectStatusOptions } = useLocalizedOptions();
+
   return (
-    <div className="project-board" aria-label="项目看板">
-      {PROJECT_STATUS_OPTIONS.map((column) => {
+    <div
+      className="project-board"
+      aria-label={t("projectsPage.boardLabel")}
+    >
+      {projectStatusOptions.map((column) => {
         const columnProjects = projects.filter(
           (project) => project.status === column.value,
         );
@@ -298,7 +317,9 @@ function ProjectBoard({
                   />
                 ))
               ) : (
-                <div className="project-column-empty">暂无项目</div>
+                <div className="project-column-empty">
+                  {t("projectsPage.states.columnEmpty")}
+                </div>
               )}
             </div>
           </section>
@@ -309,7 +330,9 @@ function ProjectBoard({
 }
 
 export default function ProjectsWorkspacePage() {
+  const { t } = useTranslation();
   const { message } = App.useApp();
+  const { projectStatusOptions } = useLocalizedOptions();
   const currentUser = useCurrentUser();
   const { settings: appSettings } = useSettings();
   const navigate = useNavigate();
@@ -322,6 +345,30 @@ export default function ProjectsWorkspacePage() {
   }));
   const [sort, setSort] = useState<DateSort>("updatedAt");
   const [favoriteBusyId, setFavoriteBusyId] = useState<string>();
+  const getProjectsPageErrorMessage = useCallback(
+    (requestError: unknown) =>
+      getApiErrorMessage(requestError, t("projectsPage.loadError")),
+    [t],
+  );
+  const dateSortOptions = useMemo<
+    Array<{ label: string; value: DateSort }>
+  >(
+    () => [
+      {
+        label: t("projectsPage.sort.updatedAt"),
+        value: "updatedAt",
+      },
+      {
+        label: t("projectsPage.sort.createdAt"),
+        value: "createdAt",
+      },
+      {
+        label: t("projectsPage.sort.deadline"),
+        value: "deadline",
+      },
+    ],
+    [t],
+  );
   const { data, setData, loading, refreshing, error, reload, refresh } =
     useAsyncPageData({
       initialData: INITIAL_PROJECTS_PAGE_DATA,
@@ -493,20 +540,29 @@ export default function ProjectsWorkspacePage() {
           favorite: !project.favorite,
         });
         handleProjectSaved(savedProject);
-        message.success(savedProject.favorite ? "已收藏项目" : "已取消收藏");
+        message.success(
+          savedProject.favorite
+            ? t("projectsPage.messages.favorited")
+            : t("projectsPage.messages.unfavorited"),
+        );
       } catch (requestError) {
-        message.error(getApiErrorMessage(requestError, "收藏状态更新失败"));
+        message.error(
+          getApiErrorMessage(
+            requestError,
+            t("projectsPage.messages.favoriteFailed"),
+          ),
+        );
       } finally {
         setFavoriteBusyId(undefined);
       }
     },
-    [favoriteBusyId, handleProjectSaved, isProjectEditable, message],
+    [favoriteBusyId, handleProjectSaved, isProjectEditable, message, t],
   );
 
   const columns: TableProps<Project>["columns"] = useMemo(
     () => [
       {
-        title: "项目",
+        title: t("projectsPage.columns.project"),
         key: "project",
         width: 300,
         render: (_, project) => (
@@ -522,13 +578,13 @@ export default function ProjectsWorkspacePage() {
         ),
       },
       {
-        title: "状态",
+        title: t("projectsPage.columns.status"),
         key: "status",
         width: 90,
         render: (_, project) => <StatusTag status={project.status} />,
       },
       {
-        title: "负责人",
+        title: t("projectsPage.columns.owner"),
         key: "leader",
         width: 120,
         render: (_, project) => (
@@ -540,7 +596,7 @@ export default function ProjectsWorkspacePage() {
         ),
       },
       {
-        title: "进度",
+        title: t("projectsPage.columns.progress"),
         key: "progress",
         width: 150,
         render: (_, project) => {
@@ -557,27 +613,32 @@ export default function ProjectsWorkspacePage() {
         },
       },
       {
-        title: "工作项",
+        title: t("projectsPage.columns.workItems"),
         key: "tasks",
         width: 145,
         render: (_, project) => {
           const metrics = metricsByProjectId.get(project.id) ?? EMPTY_METRICS;
           return (
             <span className="project-task-count">
-              <b>{metrics.open}</b> 未完成
-              {metrics.review ? ` · ${metrics.review} 待审` : ""}
+              <b>{metrics.open}</b> {t("projectsPage.card.incomplete")}
+              {metrics.review
+                ? ` · ${t("projectsPage.reviewCount", {
+                    count: metrics.review,
+                  })}`
+                : ""}
             </span>
           );
         },
       },
       {
-        title: "成员",
+        title: t("projectsPage.columns.members"),
         key: "members",
         width: 75,
-        render: (_, project) => `${project.members.length} 人`,
+        render: (_, project) =>
+          t("projectsPage.personCount", { count: project.members.length }),
       },
       {
-        title: "截止日期",
+        title: t("projectsPage.columns.deadline"),
         key: "deadline",
         width: 120,
         render: (_, project) => {
@@ -591,7 +652,7 @@ export default function ProjectsWorkspacePage() {
         },
       },
       {
-        title: "操作",
+        title: t("projectsPage.columns.actions"),
         key: "actions",
         fixed: "right",
         width: 130,
@@ -602,10 +663,12 @@ export default function ProjectsWorkspacePage() {
               size="small"
               onClick={() => openProjectDetail(project)}
             >
-              详情
+              {t("projectsPage.actions.details")}
             </Button>
             <Button type="link" size="small" onClick={() => openEdit(project)}>
-              {isProjectEditable(project) ? "编辑" : "查看"}
+              {isProjectEditable(project)
+                ? t("projectsPage.actions.edit")
+                : t("projectsPage.actions.view")}
             </Button>
           </Space>
         ),
@@ -617,6 +680,7 @@ export default function ProjectsWorkspacePage() {
       metricsByProjectId,
       openEdit,
       openProjectDetail,
+      t,
     ],
   );
 
@@ -645,7 +709,8 @@ export default function ProjectsWorkspacePage() {
           pagination={{
             pageSize: appSettings.pageSize,
             showSizeChanger: false,
-            showTotal: (total) => `共 ${total} 个项目`,
+            showTotal: (total) =>
+              t("projectsPage.paginationTotal", { count: total }),
           }}
         />
       </div>
@@ -654,17 +719,17 @@ export default function ProjectsWorkspacePage() {
   return (
     <div className="page-container projects-workspace-page">
       <PageHeader
-        title="项目"
-        description="集中管理课程项目、团队协作与社团活动"
+        title={t("projectsPage.header.title")}
+        description={t("projectsPage.header.description")}
         actions={
           <Space>
-            <Tooltip title="刷新数据">
+            <Tooltip title={t("projectsPage.actions.refreshData")}>
               <Button
                 icon={<ReloadOutlined spin={refreshing} />}
                 disabled={loading || refreshing}
                 onClick={() => void refresh()}
               >
-                刷新
+                {t("projectsPage.actions.refresh")}
               </Button>
             </Tooltip>
             <Button
@@ -673,7 +738,7 @@ export default function ProjectsWorkspacePage() {
               disabled={loading}
               onClick={handleOpenCreate}
             >
-              创建项目
+              {t("projectsPage.actions.create")}
             </Button>
           </Space>
         }
@@ -681,50 +746,61 @@ export default function ProjectsWorkspacePage() {
 
       <section
         className="workspace-summary project-workspace-summary"
-        aria-label="项目总览"
+        aria-label={t("projectsPage.summary.label")}
       >
         <article>
           <span>
             <ProjectOutlined />
           </span>
-          <small>全部项目</small>
+          <small>{t("projectsPage.summary.allProjects")}</small>
           <strong>{summary.total}</strong>
-          <em>{summary.active} 个进行中</em>
+          <em>
+            {t("projectsPage.summary.activeCount", {
+              count: summary.active,
+            })}
+          </em>
         </article>
         <article>
           <span>
             <FlagOutlined />
           </span>
-          <small>收藏项目</small>
+          <small>{t("projectsPage.summary.favorites")}</small>
           <strong>{summary.favorites}</strong>
-          <em>优先跟进空间</em>
+          <em>{t("projectsPage.summary.favoritesNote")}</em>
         </article>
         <article>
           <span>
             <CalendarOutlined />
           </span>
-          <small>全部工作项</small>
+          <small>{t("projectsPage.summary.allTasks")}</small>
           <strong>{summary.tasks}</strong>
-          <em>跨项目协作</em>
+          <em>{t("projectsPage.summary.allTasksNote")}</em>
         </article>
         <article className={summary.risks ? "risk" : undefined}>
           <span>
             <WarningFilled />
           </span>
-          <small>逾期项目</small>
+          <small>{t("projectsPage.summary.overdue")}</small>
           <strong>{summary.risks}</strong>
-          <em>{summary.risks ? "需要优先处理" : "当前进度健康"}</em>
+          <em>
+            {summary.risks
+              ? t("projectsPage.summary.riskNote")
+              : t("projectsPage.summary.healthyNote")}
+          </em>
         </article>
       </section>
 
-      <section className="project-controls surface-panel" aria-label="项目筛选">
+      <section
+        className="project-controls surface-panel"
+        aria-label={t("projectsPage.filters.label")}
+      >
         <div className="project-filter-grid">
           <Input
             className="project-search-input"
             prefix={<SearchOutlined />}
             allowClear
             value={filters.keyword}
-            placeholder="搜索项目、负责人或院系"
+            placeholder={t("projectsPage.filters.search")}
             onChange={(event) =>
               setFilters((current) => ({
                 ...current,
@@ -734,26 +810,26 @@ export default function ProjectsWorkspacePage() {
           />
           <Select
             {...FILTER_SELECT_PROPS}
-            aria-label="按状态筛选"
+            aria-label={t("projectsPage.filters.byStatus")}
             value={filters.status}
-            placeholder="全部状态"
-            options={[...PROJECT_STATUS_OPTIONS]}
+            placeholder={t("projectsPage.filters.allStatuses")}
+            options={projectStatusOptions}
             onChange={(status) =>
               setFilters((current) => ({ ...current, status }))
             }
           />
           <Select
-            aria-label="按时间排序"
+            aria-label={t("projectsPage.filters.sort")}
             value={sort}
-            placeholder="最近更新"
-            options={[...DATE_SORT_OPTIONS]}
+            placeholder={t("projectsPage.sort.updatedAt")}
+            options={dateSortOptions}
             onChange={setSort}
           ></Select>
           <Select
             {...FILTER_SELECT_PROPS}
-            aria-label="按负责人筛选"
+            aria-label={t("projectsPage.filters.byOwner")}
             value={filters.leaderId}
-            placeholder="全部负责人"
+            placeholder={t("projectsPage.filters.allOwners")}
             options={members.map((member) => ({
               label: member.name,
               value: member.id,
@@ -772,7 +848,7 @@ export default function ProjectsWorkspacePage() {
               }))
             }
           >
-            仅看收藏
+            {t("projectsPage.filters.favoritesOnly")}
           </Button>
           <Button
             type={filters.overdueOnly ? "primary" : "default"}
@@ -785,24 +861,40 @@ export default function ProjectsWorkspacePage() {
               }))
             }
           >
-            仅看逾期
+            {t("projectsPage.filters.overdueOnly")}
           </Button>
           <Button disabled={!activeFilterCount} onClick={() => setFilters({})}>
-            清空{activeFilterCount ? ` (${activeFilterCount})` : ""}
+            {t("projectsPage.actions.clear")}
+            {activeFilterCount ? ` (${activeFilterCount})` : ""}
           </Button>
         </div>
 
         <div className="project-controls-footer">
           <span>
-            显示 <b>{filteredProjects.length}</b> / {projects.length} 个项目
-            {summary.favorites ? ` · ${summary.favorites} 个收藏` : ""}
+            {t("projectsPage.resultSummary", {
+              filtered: filteredProjects.length,
+              total: projects.length,
+            })}
+            {summary.favorites
+              ? ` · ${t("projectsPage.favoriteCount", {
+                  count: summary.favorites,
+                })}`
+              : ""}
           </span>
           <Segmented
             value={view}
             onChange={(value) => setView(value as ProjectView)}
             options={[
-              { value: "list", icon: <UnorderedListOutlined />, label: "列表" },
-              { value: "card", icon: <AppstoreOutlined />, label: "看板" },
+              {
+                value: "list",
+                icon: <UnorderedListOutlined />,
+                label: t("projectsPage.views.list"),
+              },
+              {
+                value: "card",
+                icon: <AppstoreOutlined />,
+                label: t("projectsPage.views.board"),
+              },
             ]}
           />
         </div>
@@ -812,22 +904,26 @@ export default function ProjectsWorkspacePage() {
         loading={loading}
         error={error}
         empty={!filteredProjects.length}
-        loadingDescription="正在加载项目..."
-        errorTitle="项目加载失败"
+        loadingDescription={t("projectsPage.states.loading")}
+        errorTitle={t("projectsPage.states.errorTitle")}
         emptyDescription={
-          projects.length ? "没有符合当前筛选条件的项目" : "还没有项目"
+          projects.length
+            ? t("projectsPage.states.noMatch")
+            : t("projectsPage.states.empty")
         }
         onRetry={reload}
         emptyAction={
           projects.length ? (
-            <Button onClick={() => setFilters({})}>清空筛选</Button>
+            <Button onClick={() => setFilters({})}>
+              {t("projectsPage.actions.clearFilters")}
+            </Button>
           ) : (
             <Button
               type="primary"
               icon={<PlusOutlined />}
               onClick={handleOpenCreate}
             >
-              创建第一个项目
+              {t("projectsPage.actions.createFirst")}
             </Button>
           )
         }

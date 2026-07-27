@@ -22,21 +22,17 @@ import {
   type TableProps,
 } from "antd";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router";
 import { MemberAvatar } from "@/components/common/MemberAvatar";
 import { PageHeader } from "@/components/common/PageHeader";
 import { PageState } from "@/components/common/PageState";
 import { TaskFormDrawer } from "@/components/tasks/TaskForm";
-import {
-  PRIORITY_OPTIONS,
-  TASK_STAGE_OPTIONS,
-  TASK_STATUS_OPTIONS,
-  TASK_TYPE_OPTIONS,
-} from "@/constants/options";
 import { getApiErrorMessage } from "@/services/client";
 import { useAsyncPageData } from "@/hooks/useAsyncPageData";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useEntityEditor } from "@/hooks/useEntityEditor";
+import { useLocalizedOptions } from "@/hooks/useLocalizedOptions";
 import { useSettings } from "@/hooks/useSettings";
 import { listMembers } from "@/services/members";
 import { listProjects } from "@/services/projects";
@@ -61,41 +57,40 @@ import {
 import { getTaskStage, getTaskType, summarizeTasks } from "@/utils/task";
 import "./index.css";
 
-const TYPE_META: Record<TaskType, { label: string; color: string }> = {
-  requirement: { label: "需求", color: "purple" },
-  design: { label: "设计", color: "cyan" },
-  development: { label: "开发", color: "blue" },
-  test: { label: "测试", color: "gold" },
-  bug: { label: "缺陷", color: "red" },
-  operation: { label: "运营", color: "green" },
+const TYPE_COLORS: Record<TaskType, string> = {
+  requirement: "purple",
+  design: "cyan",
+  development: "blue",
+  test: "gold",
+  bug: "red",
+  operation: "green",
 };
 
-const STAGE_META: Record<TaskStage, { label: string; color: string }> = {
-  discovery: { label: "发现", color: "default" },
-  design: { label: "设计", color: "cyan" },
-  delivery: { label: "交付", color: "geekblue" },
-  acceptance: { label: "验收", color: "gold" },
+const STAGE_COLORS: Record<TaskStage, string> = {
+  discovery: "default",
+  design: "cyan",
+  delivery: "geekblue",
+  acceptance: "gold",
 };
 
-const PRIORITY_META: Record<TaskPriority, { label: string; color: string }> = {
-  low: { label: "低", color: "default" },
-  medium: { label: "中", color: "blue" },
-  high: { label: "高", color: "orange" },
-  urgent: { label: "紧急", color: "red" },
+const PRIORITY_COLORS: Record<TaskPriority, string> = {
+  low: "default",
+  medium: "blue",
+  high: "orange",
+  urgent: "red",
 };
 
 const STATUS_META: Record<
   TaskStatus,
-  { label: string; color: string; className: string }
+  { color: string; className: string }
 > = {
-  pending: { label: "待处理", color: "default", className: "pending" },
+  pending: { color: "default", className: "pending" },
   in_progress: {
-    label: "进行中",
     color: "processing",
     className: "in-progress",
   },
-  review: { label: "待审核", color: "warning", className: "review" },
-  done: { label: "已完成", color: "success", className: "done" },
+  review: { color: "warning", className: "review" },
+  done: { color: "success", className: "done" },
 };
 
 const FILTER_SELECT_PROPS = {
@@ -140,10 +135,6 @@ async function loadTasksPageData(): Promise<TasksPageData> {
   };
 }
 
-function getTasksPageErrorMessage(error: unknown) {
-  return getApiErrorMessage(error, "工作项加载失败，请稍后重试");
-}
-
 interface TaskCardProps {
   task: Task;
   project?: Project;
@@ -153,26 +144,34 @@ interface TaskCardProps {
 }
 
 function TypeTag({ type }: { type: TaskType }) {
-  const meta = TYPE_META[type];
-  return <Tag color={meta.color}>{meta.label}</Tag>;
+  const { t } = useTranslation();
+  return <Tag color={TYPE_COLORS[type]}>{t(`options.taskType.${type}`)}</Tag>;
 }
 
 function StageTag({ stage }: { stage: TaskStage }) {
-  const meta = STAGE_META[stage];
-  return <Tag color={meta.color}>{meta.label}</Tag>;
+  const { t } = useTranslation();
+  return (
+    <Tag color={STAGE_COLORS[stage]}>{t(`options.taskStage.${stage}`)}</Tag>
+  );
 }
 
 function PriorityTag({ priority }: { priority: TaskPriority }) {
-  const meta = PRIORITY_META[priority];
-  return <Tag color={meta.color}>{meta.label}</Tag>;
+  const { t } = useTranslation();
+  return (
+    <Tag color={PRIORITY_COLORS[priority]}>
+      {t(`options.priority.${priority}`)}
+    </Tag>
+  );
 }
 
 function StatusTag({ status }: { status: TaskStatus }) {
+  const { t } = useTranslation();
   const meta = STATUS_META[status];
-  return <Tag color={meta.color}>{meta.label}</Tag>;
+  return <Tag color={meta.color}>{t(`options.taskStatus.${status}`)}</Tag>;
 }
 
 function TaskCard({ task, project, member, editable, onEdit }: TaskCardProps) {
+  const { t } = useTranslation();
   const overdue = isOverdue(task.deadline, task.status === "done");
 
   return (
@@ -186,7 +185,9 @@ function TaskCard({ task, project, member, editable, onEdit }: TaskCardProps) {
           {task.title}
         </button>
         <Button type="link" size="small" onClick={() => onEdit(task)}>
-          {editable ? "编辑" : "查看"}
+          {editable
+            ? t("tasksPage.actions.edit")
+            : t("tasksPage.actions.view")}
         </Button>
       </header>
 
@@ -200,12 +201,18 @@ function TaskCard({ task, project, member, editable, onEdit }: TaskCardProps) {
 
       <div className="task-card-project">
         <span style={{ background: project?.color ?? "#94a3b8" }} />
-        <b>{project?.name ?? "未知项目"}</b>
+        <b>{project?.name ?? t("tasksPage.unknownProject")}</b>
       </div>
 
       <footer className="task-card-footer">
         <MemberAvatar member={member} size={24} showName />
-        <Tooltip title={overdue ? "该工作项已逾期" : "截止日期"}>
+        <Tooltip
+          title={
+            overdue
+              ? t("tasksPage.card.overdue")
+              : t("tasksPage.columns.schedule")
+          }
+        >
           <time className={overdue ? "danger-text" : undefined}>
             {overdue ? <WarningFilled /> : null}
             {formatShortDate(task.deadline)}
@@ -235,9 +242,12 @@ function TaskBoard({
   canEdit,
   onEdit,
 }: TaskBoardProps) {
+  const { t } = useTranslation();
+  const { taskStatusOptions } = useLocalizedOptions();
+
   return (
-    <div className="task-board" aria-label="工作项看板">
-      {TASK_STATUS_OPTIONS.map((column) => {
+    <div className="task-board" aria-label={t("tasksPage.boardLabel")}>
+      {taskStatusOptions.map((column) => {
         const columnTasks = tasks.filter(
           (task) => task.status === column.value,
         );
@@ -267,7 +277,9 @@ function TaskBoard({
                   />
                 ))
               ) : (
-                <div className="task-column-empty">暂无工作项</div>
+                <div className="task-column-empty">
+                  {t("tasksPage.states.columnEmpty")}
+                </div>
               )}
             </div>
           </section>
@@ -278,7 +290,14 @@ function TaskBoard({
 }
 
 export default function TasksWorkspacePage() {
+  const { t } = useTranslation();
   const { message } = App.useApp();
+  const {
+    priorityOptions,
+    taskStageOptions,
+    taskStatusOptions,
+    taskTypeOptions,
+  } = useLocalizedOptions();
   const currentUser = useCurrentUser();
   const { settings: appSettings } = useSettings();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -287,6 +306,11 @@ export default function TasksWorkspacePage() {
     projectId: searchParams.get("projectId") || undefined,
     assigneeId: searchParams.get("assigneeId") || undefined,
   }));
+  const getTasksPageErrorMessage = useCallback(
+    (requestError: unknown) =>
+      getApiErrorMessage(requestError, t("tasksPage.loadError")),
+    [t],
+  );
   const { data, setData, loading, refreshing, error, reload, refresh } =
     useAsyncPageData({
       initialData: INITIAL_TASKS_PAGE_DATA,
@@ -438,7 +462,7 @@ export default function TasksWorkspacePage() {
   const columns: TableProps<Task>["columns"] = useMemo(
     () => [
       {
-        title: "工作项",
+        title: t("tasksPage.columns.task"),
         key: "task",
         width: 260,
         render: (_, task) => (
@@ -453,7 +477,7 @@ export default function TasksWorkspacePage() {
         ),
       },
       {
-        title: "所属项目",
+        title: t("tasksPage.columns.project"),
         key: "project",
         width: 145,
         render: (_, task) => {
@@ -461,37 +485,37 @@ export default function TasksWorkspacePage() {
           return (
             <span className="task-project-cell">
               <i style={{ background: project?.color ?? "#94a3b8" }} />
-              {project?.name ?? "未知项目"}
+              {project?.name ?? t("tasksPage.unknownProject")}
             </span>
           );
         },
       },
       {
-        title: "类型",
+        title: t("tasksPage.columns.type"),
         key: "type",
         width: 72,
         render: (_, task) => <TypeTag type={getTaskType(task)} />,
       },
       {
-        title: "状态",
+        title: t("tasksPage.columns.status"),
         key: "status",
         width: 82,
         render: (_, task) => <StatusTag status={task.status} />,
       },
       {
-        title: "阶段",
+        title: t("tasksPage.columns.stage"),
         key: "stage",
         width: 72,
         render: (_, task) => <StageTag stage={getTaskStage(task)} />,
       },
       {
-        title: "优先级",
+        title: t("tasksPage.columns.priority"),
         key: "priority",
         width: 72,
         render: (_, task) => <PriorityTag priority={task.priority} />,
       },
       {
-        title: "负责人",
+        title: t("tasksPage.columns.assignee"),
         key: "assignee",
         width: 105,
         render: (_, task) => (
@@ -505,7 +529,7 @@ export default function TasksWorkspacePage() {
         ),
       },
       {
-        title: "计划",
+        title: t("tasksPage.columns.schedule"),
         key: "schedule",
         width: 145,
         render: (_, task) => {
@@ -520,18 +544,20 @@ export default function TasksWorkspacePage() {
         },
       },
       {
-        title: "操作",
+        title: t("tasksPage.columns.actions"),
         key: "actions",
         fixed: "right",
         width: 65,
         render: (_, task) => (
           <Button type="link" size="small" onClick={() => openEdit(task)}>
-            {isTaskEditable(task) ? "编辑" : "查看"}
+            {isTaskEditable(task)
+              ? t("tasksPage.actions.edit")
+              : t("tasksPage.actions.view")}
           </Button>
         ),
       },
     ],
-    [isTaskEditable, membersById, openEdit, projectsById],
+    [isTaskEditable, membersById, openEdit, projectsById, t],
   );
 
   const taskContent =
@@ -558,7 +584,8 @@ export default function TasksWorkspacePage() {
           pagination={{
             pageSize: appSettings.pageSize,
             showSizeChanger: false,
-            showTotal: (total) => `共 ${total} 个工作项`,
+            showTotal: (total) =>
+              t("tasksPage.paginationTotal", { count: total }),
           }}
         />
       </div>
@@ -567,17 +594,17 @@ export default function TasksWorkspacePage() {
   return (
     <div className="page-container tasks-workspace-page">
       <PageHeader
-        title="工作项"
-        description="集中安排、跟进和交付跨项目工作"
+        title={t("tasksPage.header.title")}
+        description={t("tasksPage.header.description")}
         actions={
           <Space>
-            <Tooltip title="刷新数据">
+            <Tooltip title={t("tasksPage.actions.refreshData")}>
               <Button
                 icon={<ReloadOutlined spin={refreshing} />}
                 disabled={loading || refreshing}
                 onClick={() => void refresh()}
               >
-                刷新
+                {t("tasksPage.actions.refresh")}
               </Button>
             </Tooltip>
             <Button
@@ -586,7 +613,7 @@ export default function TasksWorkspacePage() {
               disabled={loading}
               onClick={handleOpenCreate}
             >
-              创建工作项
+              {t("tasksPage.actions.create")}
             </Button>
           </Space>
         }
@@ -594,53 +621,64 @@ export default function TasksWorkspacePage() {
 
       <section
         className="workspace-summary task-workspace-summary"
-        aria-label="工作项总览"
+        aria-label={t("tasksPage.summary.label")}
       >
         <article>
           <span>
             <ApartmentOutlined />
           </span>
-          <small>全部工作项</small>
+          <small>{t("tasksPage.summary.all")}</small>
           <strong>{summary.total}</strong>
-          <em>{summary.progress}% 已完成</em>
+          <em>
+            {t("tasksPage.summary.completedPercent", {
+              percent: summary.progress,
+            })}
+          </em>
         </article>
 
         <article>
           <span>
             <FieldTimeOutlined />
           </span>
-          <small>未完成</small>
+          <small>{t("tasksPage.summary.open")}</small>
           <strong>{summary.open}</strong>
-          <em>等待推进交付</em>
+          <em>{t("tasksPage.summary.openNote")}</em>
         </article>
 
         <article>
           <span>
             <CalendarOutlined />
           </span>
-          <small>待审核</small>
+          <small>{t("tasksPage.summary.review")}</small>
           <strong>{summary.review}</strong>
-          <em>等待验收确认</em>
+          <em>{t("tasksPage.summary.reviewNote")}</em>
         </article>
 
         <article className={summary.overdue ? "risk" : undefined}>
           <span>
             <WarningFilled />
           </span>
-          <small>逾期风险</small>
+          <small>{t("tasksPage.summary.overdue")}</small>
           <strong>{summary.overdue}</strong>
-          <em>{summary.overdue ? "需要优先处理" : "当前进度健康"}</em>
+          <em>
+            {summary.overdue
+              ? t("tasksPage.summary.riskNote")
+              : t("tasksPage.summary.healthyNote")}
+          </em>
         </article>
       </section>
 
-      <section className="task-controls surface-panel" aria-label="工作项筛选">
+      <section
+        className="task-controls surface-panel"
+        aria-label={t("tasksPage.filters.label")}
+      >
         <div className="task-filter-grid">
           <Input
             className="task-search-input"
             prefix={<SearchOutlined />}
             allowClear
             value={filters.keyword}
-            placeholder="搜索标题、项目、负责人或标签"
+            placeholder={t("tasksPage.filters.search")}
             onChange={(event) =>
               setFilters((current) => ({
                 ...current,
@@ -650,16 +688,14 @@ export default function TasksWorkspacePage() {
           />
           <Select
             {...FILTER_SELECT_PROPS}
-            aria-label="按项目筛选"
+            aria-label={t("tasksPage.filters.byProject")}
             value={filters.projectId}
-            placeholder="全部项目"
+            placeholder={t("tasksPage.filters.allProjects")}
             options={projects.map((project) => ({
               label: project.name,
               value: project.id,
             }))}
             onChange={(projectId) => {
-              console.log("[项目 Select] change:", projectId);
-
               setFilters((current) => ({
                 ...current,
                 projectId,
@@ -668,49 +704,49 @@ export default function TasksWorkspacePage() {
           />
           <Select
             {...FILTER_SELECT_PROPS}
-            aria-label="按类型筛选"
+            aria-label={t("tasksPage.filters.byType")}
             value={filters.workItemType}
-            placeholder="全部类型"
-            options={[...TASK_TYPE_OPTIONS]}
+            placeholder={t("tasksPage.filters.allTypes")}
+            options={taskTypeOptions}
             onChange={(workItemType) =>
               setFilters((current) => ({ ...current, workItemType }))
             }
           />
           <Select
             {...FILTER_SELECT_PROPS}
-            aria-label="按阶段筛选"
+            aria-label={t("tasksPage.filters.byStage")}
             value={filters.stage}
-            placeholder="全部阶段"
-            options={[...TASK_STAGE_OPTIONS]}
+            placeholder={t("tasksPage.filters.allStages")}
+            options={taskStageOptions}
             onChange={(stage) =>
               setFilters((current) => ({ ...current, stage }))
             }
           />
           <Select
             {...FILTER_SELECT_PROPS}
-            aria-label="按状态筛选"
+            aria-label={t("tasksPage.filters.byStatus")}
             value={filters.status}
-            placeholder="全部状态"
-            options={[...TASK_STATUS_OPTIONS]}
+            placeholder={t("tasksPage.filters.allStatuses")}
+            options={taskStatusOptions}
             onChange={(status) =>
               setFilters((current) => ({ ...current, status }))
             }
           />
           <Select
             {...FILTER_SELECT_PROPS}
-            aria-label="按优先级筛选"
+            aria-label={t("tasksPage.filters.byPriority")}
             value={filters.priority}
-            placeholder="全部优先级"
-            options={[...PRIORITY_OPTIONS]}
+            placeholder={t("tasksPage.filters.allPriorities")}
+            options={priorityOptions}
             onChange={(priority) =>
               setFilters((current) => ({ ...current, priority }))
             }
           />
           <Select
             {...FILTER_SELECT_PROPS}
-            aria-label="按负责人筛选"
+            aria-label={t("tasksPage.filters.byAssignee")}
             value={filters.assigneeId}
-            placeholder="全部负责人"
+            placeholder={t("tasksPage.filters.allAssignees")}
             options={members.map((member) => ({
               label: member.name,
               value: member.id,
@@ -730,24 +766,40 @@ export default function TasksWorkspacePage() {
               }))
             }
           >
-            仅看逾期
+            {t("tasksPage.filters.overdueOnly")}
           </Button>
           <Button disabled={!activeFilterCount} onClick={() => setFilters({})}>
-            清空{activeFilterCount ? ` (${activeFilterCount})` : ""}
+            {t("tasksPage.actions.clear")}
+            {activeFilterCount ? ` (${activeFilterCount})` : ""}
           </Button>
         </div>
 
         <div className="task-controls-footer">
           <span>
-            显示 <b>{filteredTasks.length}</b> / {tasks.length} 个工作项
-            {summary.overdue ? ` · ${summary.overdue} 个逾期` : ""}
+            {t("tasksPage.resultSummary", {
+              filtered: filteredTasks.length,
+              total: tasks.length,
+            })}
+            {summary.overdue
+              ? ` · ${t("tasksPage.overdueCount", {
+                  count: summary.overdue,
+                })}`
+              : ""}
           </span>
           <Segmented
             value={view}
             onChange={(value) => setView(value as TaskView)}
             options={[
-              { value: "list", icon: <UnorderedListOutlined />, label: "列表" },
-              { value: "card", icon: <AppstoreOutlined />, label: "看板" },
+              {
+                value: "list",
+                icon: <UnorderedListOutlined />,
+                label: t("tasksPage.views.list"),
+              },
+              {
+                value: "card",
+                icon: <AppstoreOutlined />,
+                label: t("tasksPage.views.board"),
+              },
             ]}
           />
         </div>
@@ -757,22 +809,26 @@ export default function TasksWorkspacePage() {
         loading={loading}
         error={error}
         empty={!filteredTasks.length}
-        loadingDescription="正在加载工作项..."
-        errorTitle="工作项加载失败"
+        loadingDescription={t("tasksPage.states.loading")}
+        errorTitle={t("tasksPage.states.errorTitle")}
         emptyDescription={
-          tasks.length ? "没有符合当前筛选条件的工作项" : "还没有工作项"
+          tasks.length
+            ? t("tasksPage.states.noMatch")
+            : t("tasksPage.states.empty")
         }
         onRetry={reload}
         emptyAction={
           tasks.length ? (
-            <Button onClick={() => setFilters({})}>清空筛选</Button>
+            <Button onClick={() => setFilters({})}>
+              {t("tasksPage.actions.clearFilters")}
+            </Button>
           ) : (
             <Button
               type="primary"
               icon={<PlusOutlined />}
               onClick={handleOpenCreate}
             >
-              创建第一个工作项
+              {t("tasksPage.actions.createFirst")}
             </Button>
           )
         }

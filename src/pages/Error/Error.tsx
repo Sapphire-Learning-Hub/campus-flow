@@ -1,18 +1,20 @@
 import { Button, Result } from "antd";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import "./index.css";
 
 export default function NotFoundPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   return (
     <main className="not-found-page">
       <Result
         status="404"
         title="404"
-        subTitle="你访问的页面不存在，可能已被移动或删除。"
+        subTitle={t("notFound.description")}
         extra={
           <Button type="primary" onClick={() => navigate("/dashboard")}>
-            返回工作台
+            {t("notFound.back")}
           </Button>
         }
       />

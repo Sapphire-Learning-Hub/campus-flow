@@ -7,6 +7,7 @@ import {
 import { App, Button, Input, Select, Space, Table, Tag, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router";
 import { MemberAvatar } from "@/components/common/MemberAvatar";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -15,6 +16,7 @@ import { MemberFormDrawer } from "@/components/members/MemberForm";
 import { useAsyncPageData } from "@/hooks/useAsyncPageData";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useEntityEditor } from "@/hooks/useEntityEditor";
+import { useLocalizedOptions } from "@/hooks/useLocalizedOptions";
 import { useSettings } from "@/hooks/useSettings";
 import { getApiErrorMessage } from "@/services/client";
 import { listMembers } from "@/services/members";
@@ -59,11 +61,11 @@ const INITIAL_MEMBERS_PAGE_DATA: MembersPageData = {
   members: [],
 };
 
-const ROLE_META: Record<ProjectRole, { label: string; color: string }> = {
-  owner: { label: "项目所有者", color: "purple" },
-  admin: { label: "项目管理员", color: "blue" },
-  member: { label: "普通成员", color: "green" },
-  readonly: { label: "只读成员", color: "default" },
+const ROLE_COLORS: Record<ProjectRole, string> = {
+  owner: "purple",
+  admin: "blue",
+  member: "green",
+  readonly: "default",
 };
 
 async function loadMembersPageData(): Promise<MembersPageData> {
@@ -80,12 +82,10 @@ async function loadMembersPageData(): Promise<MembersPageData> {
   };
 }
 
-function getMembersPageErrorMessage(error: unknown) {
-  return getApiErrorMessage(error, "成员加载失败，请稍后重试");
-}
-
 export default function MembersPage() {
+  const { t } = useTranslation();
   const { message } = App.useApp();
+  const { roleOptions } = useLocalizedOptions();
   const currentUser = useCurrentUser();
   const { settings: appSettings } = useSettings();
   const navigate = useNavigate();
@@ -93,6 +93,11 @@ export default function MembersPage() {
   const [filters, setFilters] = useState<MemberFilters>(() => ({
     projectId: searchParams.get("projectId") || undefined,
   }));
+  const getMembersPageErrorMessage = useCallback(
+    (requestError: unknown) =>
+      getApiErrorMessage(requestError, t("membersPage.loadError")),
+    [t],
+  );
   const { data, setData, loading, refreshing, error, reload, refresh } =
     useAsyncPageData({
       initialData: INITIAL_MEMBERS_PAGE_DATA,
@@ -195,7 +200,7 @@ export default function MembersPage() {
 
   const handleAddMember = useCallback(() => {
     if (!selectedProject) {
-      message.info("请先选择需要管理成员的项目");
+      message.info(t("membersPage.messages.selectProject"));
       return;
     }
     if (
@@ -206,7 +211,7 @@ export default function MembersPage() {
       return;
     }
     openCreate();
-  }, [currentUser.memberId, message, openCreate, selectedProject]);
+  }, [currentUser.memberId, message, openCreate, selectedProject, t]);
 
   const handleManageMember = useCallback(
     (row: MemberRow) => {
@@ -218,12 +223,12 @@ export default function MembersPage() {
         return;
       }
       if (row.role === "owner") {
-        message.info("项目所有者角色不能在成员管理中变更");
+        message.info(t("membersPage.messages.ownerImmutable"));
         return;
       }
       openEdit(row);
     },
-    [currentUser.memberId, message, openEdit, projectsById],
+    [currentUser.memberId, message, openEdit, projectsById, t],
   );
 
   useEffect(() => {
@@ -244,7 +249,7 @@ export default function MembersPage() {
   const columns: ColumnsType<MemberRow> = useMemo(
     () => [
       {
-        title: "成员",
+        title: t("membersPage.columns.member"),
         key: "member",
         width: 240,
         render: (_, row) => (
@@ -258,27 +263,30 @@ export default function MembersPage() {
         ),
       },
       {
-        title: "所属项目",
+        title: t("membersPage.columns.project"),
         dataIndex: "projectName",
         width: 180,
       },
       {
-        title: "学院 / 部门",
+        title: t("membersPage.columns.department"),
         key: "department",
         width: 180,
         render: (_, row) => row.member.department,
       },
       {
-        title: "项目角色",
+        title: t("membersPage.columns.role"),
         key: "role",
         width: 120,
         render: (_, row) => {
-          const meta = ROLE_META[row.role];
-          return <Tag color={meta.color}>{meta.label}</Tag>;
+          return (
+            <Tag color={ROLE_COLORS[row.role]}>
+              {t(`options.role.${row.role}`)}
+            </Tag>
+          );
         },
       },
       {
-        title: "负责任务",
+        title: t("membersPage.columns.tasks"),
         key: "tasks",
         width: 110,
         render: (_, row) => (
@@ -291,18 +299,18 @@ export default function MembersPage() {
               )
             }
           >
-            {row.taskCount} 个任务
+            {t("membersPage.taskCount", { count: row.taskCount })}
           </Button>
         ),
       },
       {
-        title: "加入项目",
+        title: t("membersPage.columns.joined"),
         key: "addedAt",
         width: 120,
         render: (_, row) => formatShortDate(row.addedAt),
       },
       {
-        title: "操作",
+        title: t("membersPage.columns.actions"),
         key: "actions",
         fixed: "right",
         width: 80,
@@ -312,28 +320,30 @@ export default function MembersPage() {
             size="small"
             onClick={() => handleManageMember(row)}
           >
-            {row.role === "owner" ? "所有者" : "管理"}
+            {row.role === "owner"
+              ? t("membersPage.actions.owner")
+              : t("membersPage.actions.manage")}
           </Button>
         ),
       },
     ],
-    [handleManageMember, navigate],
+    [handleManageMember, navigate, t],
   );
 
   return (
     <div className="page-container members-page">
       <PageHeader
-        title="成员"
-        description="按项目维护角色权限与任务责任"
+        title={t("membersPage.header.title")}
+        description={t("membersPage.header.description")}
         actions={
           <Space>
-            <Tooltip title="刷新数据">
+            <Tooltip title={t("membersPage.actions.refreshData")}>
               <Button
                 icon={<ReloadOutlined spin={refreshing} />}
                 disabled={loading || refreshing}
                 onClick={() => void refresh()}
               >
-                刷新
+                {t("membersPage.actions.refresh")}
               </Button>
             </Tooltip>
             <Button
@@ -342,7 +352,7 @@ export default function MembersPage() {
               disabled={loading}
               onClick={handleAddMember}
             >
-              添加成员
+              {t("membersPage.actions.add")}
             </Button>
           </Space>
         }
@@ -350,12 +360,12 @@ export default function MembersPage() {
 
       <div className="project-context-bar">
         <TeamOutlined />
-        <span>当前项目</span>
+        <span>{t("membersPage.currentProject")}</span>
         <Select
           allowClear
-          aria-label="按项目筛选"
+          aria-label={t("membersPage.filters.byProject")}
           value={filters.projectId}
-          placeholder="全部项目"
+          placeholder={t("membersPage.filters.allProjects")}
           options={projects.map((project) => ({
             label: project.name,
             value: project.id,
@@ -364,8 +374,12 @@ export default function MembersPage() {
             setFilters((current) => ({ ...current, projectId }))
           }
         />
-        <Tag>{members.length} 名成员</Tag>
-        <Tag>{filteredMemberRows.length} 条成员关系</Tag>
+        <Tag>{t("membersPage.memberCount", { count: members.length })}</Tag>
+        <Tag>
+          {t("membersPage.relationshipCount", {
+            count: filteredMemberRows.length,
+          })}
+        </Tag>
       </div>
 
       <div className="data-toolbar">
@@ -373,8 +387,8 @@ export default function MembersPage() {
           allowClear
           prefix={<SearchOutlined />}
           value={filters.keyword}
-          aria-label="搜索成员"
-          placeholder="搜索姓名、邮箱、学院或项目"
+          aria-label={t("membersPage.filters.searchLabel")}
+          placeholder={t("membersPage.filters.searchPlaceholder")}
           onChange={(event) =>
             setFilters((current) => ({
               ...current,
@@ -384,21 +398,23 @@ export default function MembersPage() {
         />
         <Select
           allowClear
-          aria-label="按角色筛选"
+          aria-label={t("membersPage.filters.byRole")}
           value={filters.role}
-          placeholder="全部角色"
-          options={Object.entries(ROLE_META).map(([value, meta]) => ({
-            label: meta.label,
-            value,
-          }))}
+          placeholder={t("membersPage.filters.allRoles")}
+          options={roleOptions}
           onChange={(role) => setFilters((current) => ({ ...current, role }))}
         />
         <Button disabled={!activeFilterCount} onClick={() => setFilters({})}>
-          清空{activeFilterCount ? ` (${activeFilterCount})` : ""}
+          {t("membersPage.actions.clear")}
+          {activeFilterCount ? ` (${activeFilterCount})` : ""}
         </Button>
         <span className="toolbar-meta">
-          显示 {filteredMemberRows.length} / {memberRows.length} 条
-          {selectedProject ? ` · ${selectedProject.name}` : " · 全部项目"}
+          {t("membersPage.resultSummary", {
+            filtered: filteredMemberRows.length,
+            total: memberRows.length,
+          })}
+          {" · "}
+          {selectedProject?.name ?? t("membersPage.filters.allProjects")}
         </span>
       </div>
 
@@ -406,15 +422,19 @@ export default function MembersPage() {
         loading={loading}
         error={error}
         empty={!filteredMemberRows.length}
-        loadingDescription="正在加载成员..."
-        errorTitle="成员加载失败"
+        loadingDescription={t("membersPage.states.loading")}
+        errorTitle={t("membersPage.states.errorTitle")}
         emptyDescription={
-          memberRows.length ? "没有符合当前筛选条件的成员" : "还没有项目成员"
+          memberRows.length
+            ? t("membersPage.states.noMatch")
+            : t("membersPage.states.empty")
         }
         onRetry={reload}
         emptyAction={
           memberRows.length ? (
-            <Button onClick={() => setFilters({})}>清空筛选</Button>
+            <Button onClick={() => setFilters({})}>
+              {t("membersPage.actions.clearFilters")}
+            </Button>
           ) : undefined
         }
       >
@@ -426,7 +446,8 @@ export default function MembersPage() {
           pagination={{
             pageSize: appSettings.pageSize,
             showSizeChanger: false,
-            showTotal: (total) => `共 ${total} 条成员关系`,
+            showTotal: (total) =>
+              t("membersPage.paginationTotal", { count: total }),
           }}
         />
       </PageState>

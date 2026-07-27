@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
+import { i18nReady } from "./i18n";
 import "./style/base.css";
 import { initializeAppSettings } from "@/services/preferences";
 
@@ -20,7 +21,7 @@ async function enableMocking() {
 }
 
 async function bootstrap() {
-  await enableMocking();
+  await Promise.all([enableMocking(), i18nReady]);
 
   createRoot(document.getElementById("root")!).render(
     <StrictMode>

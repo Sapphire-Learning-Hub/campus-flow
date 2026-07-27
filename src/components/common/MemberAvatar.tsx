@@ -1,4 +1,5 @@
 import { Avatar, Tooltip } from "antd";
+import { useTranslation } from "react-i18next";
 import type { Member } from "@/types/member.ts";
 
 interface MemberAvatarProps {
@@ -12,6 +13,8 @@ export function MemberAvatar({
   size = "default",
   showName = false,
 }: MemberAvatarProps) {
+  const { t } = useTranslation();
+  const displayName = member?.name ?? t("common.unassigned");
   const avatar = (
     <Avatar
       src={member?.avatar}
@@ -26,8 +29,8 @@ export function MemberAvatar({
     return (
       <span className="member-inline">
         {avatar}
-        <span>{member?.name ?? "未分配"}</span>
+        <span>{displayName}</span>
       </span>
     );
-  return <Tooltip title={member?.name ?? "未分配"}>{avatar}</Tooltip>;
+  return <Tooltip title={displayName}>{avatar}</Tooltip>;
 }
