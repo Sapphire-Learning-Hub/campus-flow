@@ -773,8 +773,8 @@
       "departmentRequired": "Enter your school or department",
       "departmentLength": "School or department cannot exceed 40 characters",
       "passwordRequired": "Enter your password",
-      "passwordMin": "Password must be at least 6 characters",
-      "passwordLength": "Password must be 6–32 characters",
+      "passwordMin": "Password must be at least 8 characters",
+      "passwordLength": "Password must be 8–72 characters",
       "confirmPasswordRequired": "Enter your password again",
       "passwordMismatch": "The passwords do not match",
       "agreementRequired": "Read and accept the platform terms first"

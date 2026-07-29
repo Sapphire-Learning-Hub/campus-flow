@@ -752,8 +752,8 @@
       "departmentRequired": "请输入学院或部门",
       "departmentLength": "学院或部门不能超过 40 个字符",
       "passwordRequired": "请输入密码",
-      "passwordMin": "密码至少需要 6 位",
-      "passwordLength": "密码应为 6–32 位",
+      "passwordMin": "密码至少需要 8 位",
+      "passwordLength": "密码应为 8–72 位",
       "confirmPasswordRequired": "请再次输入密码",
       "passwordMismatch": "两次输入的密码不一致",
       "agreementRequired": "请先阅读并同意平台服务条款"

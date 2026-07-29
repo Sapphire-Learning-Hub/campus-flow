@@ -28,7 +28,9 @@ import { register } from "@/services/auth.ts";
 import "./index.css";
 
 function getInternalPath(value: unknown): string | undefined {
-  return typeof value === "string" && value.startsWith("/") && !value.startsWith("//")
+  return typeof value === "string" &&
+    value.startsWith("/") &&
+    !value.startsWith("//")
     ? value
     : undefined;
 }
@@ -200,8 +202,8 @@ const Register: React.FC = () => {
                   message: t("auth.validation.passwordRequired"),
                 },
                 {
-                  min: 6,
-                  max: 32,
+                  min: 8,
+                  max: 72,
                   message: t("auth.validation.passwordLength"),
                 },
               ]}
