@@ -134,12 +134,6 @@
   line-height: 1.6;
 }
 
-.detail-member-inline {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .detail-progress {
   padding: 20px 22px 0;
 }
@@ -161,7 +155,6 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   overflow: hidden;
 }
-
 .detail-stats .ant-statistic {
   padding: 24px;
   border-right: 1px solid var(--line);
@@ -175,7 +168,6 @@
 .detail-stats .ant-statistic:nth-child(n + 3) {
   border-bottom: 0;
 }
-
 .detail-upcoming {
   grid-column: 1 / -1;
   padding-bottom: 8px;
@@ -374,12 +366,4 @@
     grid-template-columns: 1fr;
   }
 
-  .detail-stats .ant-statistic {
-    border-right: 0;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .detail-stats .ant-statistic:last-child {
-    border-bottom: 0;
-  }
 }

@@ -13,7 +13,7 @@ import {
 import { App, Button, Progress, Space } from "antd";
 import dayjs from "dayjs";
 import type { TFunction } from "i18next";
-import { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import { MemberAvatar } from "@/components/common/MemberAvatar";
@@ -517,7 +517,9 @@ export default function DashboardPage() {
                       </time>
                       <small
                         className={`project-status-text ${PROJECT_STATUS_META[project.status].className}`}
-                        style={{ color: PROJECT_STATUS_META[project.status].hex }}
+                        style={{
+                          color: PROJECT_STATUS_META[project.status].hex,
+                        }}
                       >
                         {t(`options.projectStatus.${project.status}`)}
                       </small>

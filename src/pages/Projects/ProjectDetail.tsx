@@ -10,7 +10,7 @@ import {
 } from "@ant-design/icons";
 import { App, Button, Progress, Space, Statistic, Tag } from "antd";
 import dayjs from "dayjs";
-import { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router";
 import { MemberAvatar } from "@/components/common/MemberAvatar";
@@ -470,11 +470,7 @@ export default function ProjectDetailPage() {
                         )}
                       </td>
                       <td>
-                        <Tag
-                          color={
-                            TASK_STATUS_META[task.status].color
-                          }
-                        >
+                        <Tag color={TASK_STATUS_META[task.status].color}>
                           {t(`options.taskStatus.${task.status}`)}
                         </Tag>
                       </td>

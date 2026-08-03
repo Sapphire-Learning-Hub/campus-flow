@@ -25,41 +25,10 @@
   border-bottom: 1px solid var(--line);
 }
 /* ===== Navigation ===== */
-.main-nav.ant-menu {
-  background: transparent;
-  border-inline-end: 0 !important;
-  padding: 12px;
-}
-.main-nav .ant-menu-item {
-  height: 40px;
-  margin: 2px 0;
-  border-radius: 8px;
-  color: var(--text-secondary);
-  font-size: 14px;
-  font-weight: 550;
-}
-.main-nav .ant-menu-item .anticon {
-  font-size: 17px;
-}
-.main-nav .ant-menu-item-selected {
-  color: var(--brand-primary) !important;
-  background: color-mix(
-    in srgb,
-    var(--brand-primary) 10%,
-    transparent
-  ) !important;
-}
-.main-nav .ant-menu-item-selected::after {
-  display: none;
-}
-.main-nav .ant-menu-item-divider {
-  border-color: var(--line);
-  margin: 14px 8px;
-}
 .sider-line{
   position: absolute;
   inset: auto 0 70px;
-  border-bottom: 1.5px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
 .sider-footnote {
   position: absolute;
@@ -174,15 +143,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.profile-drawer .ant-drawer-body {
-  padding: 18px;
-  background: var(--layout-bg);
-}
-.user-trigger .ant-avatar,
-.profile-card .ant-avatar {
-  border-radius: 50% !important;
-  overflow: hidden;
-}
+
 .profile-card {
   display: grid;
   grid-template-columns: 64px minmax(0, 1fr);
@@ -295,21 +256,6 @@
   .sider-brand {
     justify-content: center;
     padding-inline: 0;
-  }
-
-  .app-sider .sider-brand .brand-mark > span:last-child,
-  .app-sider .main-nav .ant-menu-title-content,
-  .app-sider .sider-footnote,
-  .app-sider .sider-line {
-    display: none;
-  }
-
-  .main-nav.ant-menu {
-    padding-inline: 10px;
-  }
-
-  .main-nav .ant-menu-item {
-    padding-inline: 17px !important;
   }
 
   .app-header {

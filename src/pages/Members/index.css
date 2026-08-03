@@ -13,28 +13,12 @@
   box-shadow: var(--shadow-soft);
 }
 
-.project-context-bar .ant-select {
-  min-width: 250px;
-}
-
 /* ===== Member table ===== */
 .member-cell {
   display: flex;
   align-items: center;
   gap: 12px;
   min-width: 0;
-}
-
-.member-cell .avatar {
-  width: 42px;
-  height: 42px;
-  display: grid;
-  flex: 0 0 auto;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--brand-primary);
-  color: #fff;
-  font-weight: 700;
 }
 
 .member-cell > span {
@@ -60,8 +44,4 @@
     flex-wrap: wrap;
   }
 
-  .project-context-bar .ant-select {
-    min-width: 0;
-    flex: 1 1 180px;
-  }
 }

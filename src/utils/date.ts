@@ -1,4 +1,4 @@
-import dayjs, { type Dayjs } from "dayjs";
+import dayjs from "dayjs";
 import i18n, { normalizeLanguage } from "@/i18n";
 
 export const DATE_FORMAT = "YYYY-MM-DD";
@@ -27,8 +27,4 @@ export function daysUntil(deadline?: string): number | null {
   return deadline
     ? dayjs(deadline).startOf("day").diff(dayjs().startOf("day"), "day")
     : null;
-}
-
-export function toDateString(value: Dayjs | string): string {
-  return dayjs(value).format(DATE_FORMAT);
 }

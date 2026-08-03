@@ -35,12 +35,6 @@
   gap: 8px;
 }
 
-.task-filter-grid .ant-input-affix-wrapper,
-.task-filter-grid .ant-select,
-.task-filter-grid .ant-btn {
-  width: 100%;
-}
-
 .task-controls-footer {
   display: flex;
   align-items: center;
@@ -74,9 +68,6 @@
   min-width: 0;
 }
 
-.task-filter-grid .ant-select-dropdown {
-  z-index: 1000;
-}
 /* ===== Table ===== */
 .task-table-panel {
   overflow: hidden;
@@ -139,10 +130,6 @@
   box-shadow: inset 3px 0 var(--danger);
 }
 
-.task-table-panel .ant-pagination {
-  margin-inline: 16px;
-}
-
 /* ===== Board ===== */
 .task-board {
   display: grid;
@@ -190,10 +177,6 @@
   height: 8px;
   border-radius: 50%;
   background: #98a2b3;
-}
-
-.task-status-dot.in-progress {
-  background: #1d5eff;
 }
 
 .task-status-dot.review {
@@ -250,10 +233,6 @@
   gap: 4px;
 }
 
-.task-card-header > .ant-btn {
-  padding-inline: 4px;
-}
-
 .task-card-title {
   padding: 2px 0 0;
   border: 0;
@@ -288,11 +267,6 @@
   align-items: center;
   gap: 5px;
   margin-bottom: 12px;
-}
-
-.task-card-tags .ant-tag {
-  margin: 0;
-  font-size: 10px;
 }
 
 .task-card-project {
@@ -332,11 +306,6 @@
   font-size: 10px;
 }
 
-.task-card-footer .member-inline {
-  min-width: 0;
-  font-size: 10px;
-}
-
 .task-card-footer time {
   display: inline-flex;
   align-items: center;
@@ -350,10 +319,6 @@
   justify-content: flex-end;
   gap: 8px;
   margin-top: 10px;
-}
-
-.task-card-status .ant-tag {
-  margin-inline-end: 0;
 }
 
 @media (max-width: 1480px) {
@@ -384,14 +349,6 @@
   .task-controls-footer {
     align-items: stretch;
     flex-direction: column;
-  }
-
-  .task-controls-footer .ant-segmented {
-    width: 100%;
-  }
-
-  .task-controls-footer .ant-segmented-item {
-    flex: 1;
   }
 
   .task-board {

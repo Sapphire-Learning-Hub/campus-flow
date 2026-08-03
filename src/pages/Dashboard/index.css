@@ -61,31 +61,6 @@
   font-size: 17px;
 }
 
-.metric-icon.blue {
-  color: var(--dashboard-blue);
-  background: color-mix(in srgb, var(--dashboard-blue) 11%, transparent);
-}
-
-.metric-icon.cyan {
-  color: var(--dashboard-cyan);
-  background: color-mix(in srgb, var(--dashboard-cyan) 11%, transparent);
-}
-
-.metric-icon.amber {
-  color: var(--dashboard-amber);
-  background: color-mix(in srgb, var(--dashboard-amber) 12%, transparent);
-}
-
-.metric-icon.red {
-  color: var(--dashboard-red);
-  background: color-mix(in srgb, var(--dashboard-red) 10%, transparent);
-}
-
-.metric-icon.violet {
-  color: var(--dashboard-violet);
-  background: color-mix(in srgb, var(--dashboard-violet) 10%, transparent);
-}
-
 .metric-copy {
   display: flex;
   min-width: 0;
@@ -142,12 +117,6 @@
 
 .dashboard-page .section-heading h2 {
   font-size: 15px;
-}
-
-.dashboard-page .section-heading .ant-btn-link {
-  height: 30px;
-  padding-inline: 6px;
-  font-size: 12px;
 }
 
 /* ===== Project progress ===== */
@@ -229,12 +198,6 @@
   overflow: hidden;
 }
 
-.project-progress-owner .member-inline {
-  max-width: 100%;
-  color: var(--text-secondary);
-  font-size: 11px;
-}
-
 .project-progress-owner .member-inline > span:last-child {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -244,11 +207,6 @@
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.project-progress-bar .ant-progress {
-  min-width: 72px;
-  margin: 0;
 }
 
 .project-progress-bar small {
@@ -329,22 +287,6 @@
   background: #94a3b8;
 }
 
-.priority-rail.priority-urgent {
-  background: var(--dashboard-red);
-}
-
-.priority-rail.priority-high {
-  background: var(--dashboard-amber);
-}
-
-.priority-rail.priority-medium {
-  background: var(--dashboard-blue);
-}
-
-.priority-rail.priority-low {
-  background: #64748b;
-}
-
 .focus-task-copy,
 .focus-task-meta {
   display: flex;
@@ -383,31 +325,6 @@
   color: var(--text-tertiary);
   font-size: 10px;
   white-space: nowrap;
-}
-
-.priority-text.priority-urgent {
-  color: var(--dashboard-red);
-}
-
-.priority-text.priority-high {
-  color: var(--dashboard-amber);
-}
-
-.focus-task-row > .anticon:last-child,
-.activity-list button > .anticon:last-child {
-  color: var(--text-tertiary);
-  font-size: 9px;
-  opacity: 0;
-  transform: translateX(-3px);
-  transition:
-    opacity 160ms ease,
-    transform 160ms ease;
-}
-
-.focus-task-row:hover > .anticon:last-child,
-.activity-list button:hover > .anticon:last-child {
-  opacity: 1;
-  transform: translateX(0);
 }
 
 /* ===== Activity feed ===== */
@@ -455,16 +372,6 @@
   font-size: 13px;
 }
 
-.activity-task_updated {
-  color: #0f8f66;
-  background: color-mix(in srgb, #0f8f66 10%, transparent);
-}
-
-.activity-member_updated {
-  color: var(--dashboard-violet);
-  background: color-mix(in srgb, var(--dashboard-violet) 10%, transparent);
-}
-
 .activity-copy {
   display: flex;
   min-width: 0;
@@ -504,12 +411,6 @@
   gap: 6px;
   color: var(--text-tertiary);
   text-align: center;
-}
-
-.dashboard-compact-empty > .anticon {
-  margin-bottom: 5px;
-  color: #0f8f66;
-  font-size: 24px;
 }
 
 .dashboard-compact-empty b {
@@ -610,21 +511,6 @@
     grid-template-columns: 38px 1fr 1fr;
   }
 
-  .dashboard-page .page-heading-actions .ant-space-item,
-  .dashboard-page .page-heading-actions .ant-btn {
-    width: 100%;
-    min-width: 0;
-  }
-
-  .dashboard-page .page-heading-actions .ant-btn {
-    padding-inline: 8px;
-  }
-
-  .dashboard-page .page-heading-actions .ant-btn > span:not(.anticon) {
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
   .metric-band {
     grid-template-columns: 1fr;
   }
@@ -652,10 +538,6 @@
     display: none;
   }
 
-  .project-progress-bar .ant-progress {
-    min-width: 45px;
-  }
-
   .focus-task-row {
     grid-template-columns: 4px minmax(0, 1fr) 10px;
     padding-inline: 14px;
@@ -666,11 +548,6 @@
     align-items: flex-start;
     margin-top: -5px;
     text-align: left;
-  }
-
-  .focus-task-row > .anticon:last-child {
-    grid-column: 3;
-    grid-row: 1 / 3;
   }
 
   .dashboard-page .activity-list {
@@ -688,12 +565,4 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .metric-item,
-  .project-progress-row,
-  .focus-task-row,
-  .activity-list button,
-  .focus-task-row > .anticon:last-child,
-  .activity-list button > .anticon:last-child {
-    transition: none;
-  }
 }

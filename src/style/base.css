@@ -181,15 +181,6 @@ a {
   font-size: 12px;
 }
 
-.empty-panel {
-  display: grid;
-  min-height: 330px;
-  place-items: center;
-  border: 1px dashed var(--line-strong);
-  border-radius: 8px;
-  background: var(--surface);
-}
-
 .page-state-panel,
 .page-empty-panel {
   min-height: 380px;
@@ -199,10 +190,6 @@ a {
   border-radius: 8px;
   background: var(--surface);
   box-shadow: var(--shadow-soft);
-}
-
-.page-state-panel .ant-spin {
-  min-height: 76px;
 }
 
 .page-error-panel {
@@ -304,25 +291,6 @@ a {
   box-shadow: var(--shadow-soft);
 }
 
-.view-toolbar {
-  flex-wrap: wrap;
-  align-items: flex-start;
-}
-
-.toolbar-view-row {
-  display: flex;
-  flex: 0 0 100%;
-  justify-content: flex-end;
-}
-
-.data-toolbar .ant-input-affix-wrapper {
-  width: min(320px, 30vw);
-}
-
-.data-toolbar .ant-select {
-  min-width: 130px;
-}
-
 .toolbar-meta {
   margin-left: auto;
   color: var(--text-tertiary);
@@ -331,36 +299,12 @@ a {
   white-space: nowrap;
 }
 
-.page-pagination {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 22px;
-}
-
 .login-mobile-brand {
   display: none;
   margin-bottom: 28px;
 }
 
 /* ===== Ant Design refinements ===== */
-.ant-btn {
-  box-shadow: none !important;
-}
-
-.ant-card,
-.ant-table-wrapper .ant-table,
-.ant-tabs-content-holder {
-  color: var(--text-primary);
-  background: var(--surface);
-}
-
-.ant-table-wrapper {
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--surface);
-  overflow: hidden;
-  box-shadow: var(--shadow-soft);
-}
 
 .ant-table-wrapper .ant-table-thead > tr > th {
   color: var(--text-secondary);
@@ -370,15 +314,6 @@ a {
 
 .ant-table-wrapper .ant-table-tbody > tr > td {
   font-size: 12px;
-}
-
-.ant-tag {
-  border-radius: 6px;
-  font-weight: 550;
-}
-
-.ant-drawer .ant-drawer-title {
-  font-weight: 700;
 }
 
 /* ===== Shared responsive behavior ===== */
@@ -391,10 +326,6 @@ a {
 @media (max-width: 980px) {
   .data-toolbar {
     flex-wrap: wrap;
-  }
-
-  .data-toolbar .ant-input-affix-wrapper {
-    width: 100%;
   }
 
   .toolbar-meta {
@@ -422,10 +353,6 @@ a {
     width: 100%;
   }
 
-  .page-heading-actions .ant-btn {
-    flex: 1;
-  }
-
   .workspace-summary article {
     grid-template-columns: 34px 1fr auto;
     padding: 14px;
@@ -450,12 +377,6 @@ a {
   .entity-form-footer {
     align-items: stretch;
     flex-direction: column-reverse;
-  }
-
-  .entity-form-footer .ant-space,
-  .entity-form-footer .ant-space-item,
-  .entity-form-footer .ant-btn {
-    width: 100%;
   }
 
   .workspace-summary {

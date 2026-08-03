@@ -31,16 +31,6 @@
   overflow: hidden;
 }
 
-.settings-account-card {
-  display: grid;
-  grid-template-columns: 42px minmax(0, 1fr);
-  align-items: center;
-  gap: 11px;
-  margin: 2px 2px 10px;
-  padding: 10px;
-  border-bottom: 1px solid var(--line);
-}
-
 .settings-account-card > div {
   display: flex;
   min-width: 0;
@@ -65,26 +55,6 @@
   font-size: 10px;
 }
 
-.settings-sider .ant-menu {
-  width: 100%;
-  padding: 0;
-  background: transparent !important;
-  border-inline-end: 0 !important;
-  font-size: 13px;
-}
-
-.settings-sider .ant-menu-item {
-  width: 100%;
-  height: 42px;
-  margin: 3px 0;
-  padding-inline: 12px !important;
-  border-radius: 8px;
-}
-
-.settings-sider .ant-menu-item .anticon {
-  font-size: 15px;
-}
-
 .settings-content {
   width: auto;
   min-width: 0;
@@ -98,20 +68,6 @@
   border-radius: 10px;
   background: var(--surface);
   box-shadow: var(--shadow-soft);
-}
-
-.settings-card .ant-card-head {
-  min-height: 70px;
-  padding-inline: 24px;
-  border-bottom-color: var(--line);
-}
-
-.settings-card .ant-card-head-title {
-  padding-block: 14px;
-}
-
-.settings-card .ant-card-body {
-  padding: 24px;
 }
 
 .settings-card-title {
@@ -164,12 +120,6 @@
   background: var(--surface-subtle);
 }
 
-.profile-identity .ant-avatar {
-  flex: 0 0 auto;
-  font-size: 24px;
-  font-weight: 700;
-}
-
 .profile-identity-copy {
   display: flex;
   min-width: 0;
@@ -215,15 +165,6 @@
   font-weight: 600;
 }
 
-.settings-card .ant-input,
-.settings-card .ant-input-affix-wrapper,
-.settings-card .ant-select-selector,
-.settings-mobile-collapse .ant-input,
-.settings-mobile-collapse .ant-input-affix-wrapper,
-.settings-mobile-collapse .ant-select-selector {
-  font-size: 12px;
-}
-
 .settings-actions {
   display: flex;
   align-items: center;
@@ -234,37 +175,8 @@
   border-top: 1px solid var(--line);
 }
 
-.settings-actions .ant-typography {
-  font-size: 10px;
-}
-
 .settings-actions-end {
   justify-content: flex-end;
-}
-
-.security-summary,
-.preference-intro {
-  display: grid;
-  grid-template-columns: 42px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 13px;
-  margin-bottom: 22px;
-  padding: 15px 17px;
-  border: 1px solid color-mix(in srgb, #0f8f66 24%, var(--line));
-  border-radius: 9px;
-  background: color-mix(in srgb, #0f8f66 6%, var(--surface));
-}
-
-.security-summary-icon,
-.preference-intro > .anticon {
-  width: 42px;
-  height: 42px;
-  display: grid;
-  place-items: center;
-  border-radius: 9px;
-  color: #0f8f66;
-  background: color-mix(in srgb, #0f8f66 10%, transparent);
-  font-size: 19px;
 }
 
 .security-summary > div,
@@ -288,15 +200,6 @@
   line-height: 1.5;
 }
 
-.security-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  color: #0f8f66;
-  font-size: 10px;
-  font-weight: 650;
-}
-
 .security-form {
   width: min(100%, 520px);
   margin-inline: auto;
@@ -316,10 +219,6 @@
 
 .password-strength b {
   color: var(--text-secondary);
-}
-
-.password-strength .ant-progress {
-  margin: 0;
 }
 
 .password-guidance {
@@ -389,7 +288,6 @@
   color: #0f8f66;
   font-size: 10px;
 }
-
 .theme-mode-group {
   display: grid !important;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -416,7 +314,7 @@
 .theme-mode-group .ant-radio-button-wrapper-checked {
   border-color: var(--brand-primary) !important;
   box-shadow: 0 0 0 2px
-    color-mix(in srgb, var(--brand-primary) 12%, transparent);
+  color-mix(in srgb, var(--brand-primary) 12%, transparent);
 }
 
 .theme-card {
@@ -508,17 +406,6 @@
   box-shadow: 0 0 0 2px var(--brand-primary);
 }
 
-.preference-intro {
-  grid-template-columns: 42px minmax(0, 1fr);
-  border-color: color-mix(in srgb, var(--brand-primary) 20%, var(--line));
-  background: color-mix(in srgb, var(--brand-primary) 5%, var(--surface));
-}
-
-.preference-intro > .anticon {
-  color: var(--brand-primary);
-  background: color-mix(in srgb, var(--brand-primary) 10%, transparent);
-}
-
 .settings-mobile-collapse {
   display: none;
 }
@@ -532,29 +419,6 @@
     display: block;
     width: 100%;
     background: transparent;
-  }
-
-  .settings-mobile-collapse > .ant-collapse-item {
-    margin-bottom: 12px;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    background: var(--surface);
-    box-shadow: var(--shadow-soft);
-    overflow: hidden;
-  }
-
-  .settings-mobile-collapse > .ant-collapse-item:last-child {
-    margin-bottom: 0;
-  }
-
-  .settings-mobile-collapse > .ant-collapse-item > .ant-collapse-header {
-    min-height: 64px;
-    align-items: center;
-    padding: 12px 15px;
-  }
-
-  .settings-mobile-collapse > .ant-collapse-item-active > .ant-collapse-header {
-    background: color-mix(in srgb, var(--brand-primary) 5%, var(--surface));
   }
 
   .settings-collapse-label {
@@ -575,21 +439,8 @@
     font-weight: 400;
   }
 
-  .settings-mobile-collapse .ant-collapse-content {
-    border-top: 1px solid var(--line);
-    background: var(--surface);
-  }
-
-  .settings-mobile-collapse .ant-collapse-content-box {
-    padding: 18px 16px;
-  }
-
   .profile-identity {
     margin-bottom: 20px;
-  }
-
-  .theme-mode-group {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .theme-preview {
@@ -607,42 +458,13 @@
     padding: 14px;
   }
 
-  .profile-identity .ant-avatar {
-    width: 58px !important;
-    height: 58px !important;
-    flex-basis: 58px;
-    line-height: 58px !important;
-  }
-
   .settings-actions {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .settings-actions .ant-btn {
-    width: 100%;
-  }
-
   .settings-actions-end {
     align-items: flex-end;
-  }
-
-  .security-summary {
-    grid-template-columns: 38px minmax(0, 1fr);
-    padding: 13px;
-  }
-
-  .security-summary-icon {
-    width: 38px;
-    height: 38px;
-  }
-
-  .security-status {
-    grid-column: 2;
-  }
-
-  .theme-mode-group {
-    grid-template-columns: 1fr;
   }
 
   .theme-preview {

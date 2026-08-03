@@ -27,10 +27,6 @@ export function listTasks(
   );
 }
 
-export function getTask(taskId: string): Promise<Task> {
-  return unwrap(http.get<ApiResponse<Task>>(`/tasks/${taskId}`));
-}
-
 export function createTask(values: TaskFormValues): Promise<Task> {
   return unwrap(http.post<ApiResponse<Task>>("/tasks", values));
 }
