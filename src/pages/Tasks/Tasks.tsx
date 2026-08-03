@@ -41,9 +41,6 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useEntityEditor } from "@/hooks/useEntityEditor";
 import { useLocalizedOptions } from "@/hooks/useLocalizedOptions";
 import { useSettings } from "@/hooks/useSettings";
-import { listMembers } from "@/services/members";
-import { listProjects } from "@/services/projects";
-import { listTasks } from "@/services/tasks";
 import type { Member } from "@/types/member";
 import type { Project } from "@/types/project";
 import type { TaskView } from "@/types/settings";
@@ -62,48 +59,25 @@ import type {
 } from "@/types/task";
 import { formatShortDate, isOverdue } from "@/utils/date";
 import { countActiveFilters, indexById } from "@/utils/collection";
-import { fetchAllPages } from "@/utils/pagination";
 import {
   canEditTask,
   getProjectPermissions,
   PERMISSION_DENIED,
 } from "@/utils/Permissions.ts";
 import { getTaskStage, getTaskType, summarizeTasks } from "@/utils/task";
+import {
+  filterTasks,
+  loadTasksPageData,
+  readPage,
+  type TaskFilters,
+  type TasksPageData,
+} from "./taskData";
 import "./index.css";
 
 const FILTER_SELECT_PROPS = {
   allowClear: true,
   showSearch: false,
 };
-
-interface TaskFilters {
-  keyword?: string;
-  projectId?: string;
-  workItemType?: TaskType;
-  stage?: TaskStage;
-  status?: TaskStatus;
-  priority?: TaskPriority;
-  assigneeId?: string;
-  overdueOnly?: boolean;
-}
-
-interface TasksPageData {
-  tasks: Task[];
-  taskTotal: number;
-  taskSummary: ReturnType<typeof summarizeTasks>;
-  projects: Project[];
-  members: Member[];
-}
-
-interface TasksPageQuery {
-  page: number;
-  pageSize: number;
-  keyword?: string;
-  projectId?: string;
-  status?: TaskStatus;
-  priority?: TaskPriority;
-  assigneeId?: string;
-}
 
 const INITIAL_TASKS_PAGE_DATA: TasksPageData = {
   tasks: [],
@@ -112,48 +86,6 @@ const INITIAL_TASKS_PAGE_DATA: TasksPageData = {
   projects: [],
   members: [],
 };
-
-async function loadTasksPageData(
-  query: TasksPageQuery,
-): Promise<TasksPageData> {
-  const allTaskResultPromise = fetchAllPages(
-    (page, pageSize) =>
-      listTasks({
-        page,
-        pageSize,
-        keyword: query.keyword,
-        projectId: query.projectId,
-        status: query.status,
-        priority: query.priority,
-        assigneeId: query.assigneeId,
-      }),
-    query.pageSize,
-  );
-  const [taskResult, allTaskResult, projectResult, members] = await Promise.all(
-    [
-      listTasks(query),
-      allTaskResultPromise,
-      fetchAllPages(
-        (page, pageSize) => listProjects({ page, pageSize }),
-        query.pageSize,
-      ),
-      listMembers(),
-    ],
-  );
-
-  return {
-    tasks: taskResult.items,
-    taskTotal: taskResult.total,
-    taskSummary: summarizeTasks(allTaskResult.items),
-    projects: projectResult.items,
-    members,
-  };
-}
-
-function readPage(value: string | null) {
-  const page = Number(value);
-  return Number.isInteger(page) && page > 0 ? page : 1;
-}
 
 interface TaskCardProps {
   task: Task;
@@ -440,48 +372,10 @@ export default function TasksWorkspacePage() {
     };
   }, [handleOpenCreate, loading, searchParams, setSearchParams]);
 
-  const filteredTasks = useMemo(() => {
-    const keyword = filters.keyword?.trim().toLowerCase();
-
-    return tasks
-      .filter((task) => {
-        const project = projectsById.get(task.projectId);
-        const member = task.assigneeId
-          ? membersById.get(task.assigneeId)
-          : undefined;
-        const searchableText = [
-          task.title,
-          task.description,
-          project?.name,
-          member?.name,
-          ...task.tags,
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-
-        return (
-          (!keyword || searchableText.includes(keyword)) &&
-          (!filters.projectId || task.projectId === filters.projectId) &&
-          (!filters.workItemType ||
-            getTaskType(task) === filters.workItemType) &&
-          (!filters.stage || getTaskStage(task) === filters.stage) &&
-          (!filters.status || task.status === filters.status) &&
-          (!filters.priority || task.priority === filters.priority) &&
-          (!filters.assigneeId || task.assigneeId === filters.assigneeId) &&
-          (!filters.overdueOnly ||
-            isOverdue(task.deadline, task.status === "done"))
-        );
-      })
-      .toSorted((left, right) => {
-        const leftOverdue = isOverdue(left.deadline, left.status === "done");
-        const rightOverdue = isOverdue(right.deadline, right.status === "done");
-        if (leftOverdue !== rightOverdue) return leftOverdue ? -1 : 1;
-        return (left.deadline ?? "9999").localeCompare(
-          right.deadline ?? "9999",
-        );
-      });
-  }, [filters, membersById, projectsById, tasks]);
+  const filteredTasks = useMemo(
+    () => filterTasks(tasks, filters, projectsById, membersById),
+    [filters, membersById, projectsById, tasks],
+  );
 
   const activeFilterCount = useMemo(
     () => countActiveFilters(filters),

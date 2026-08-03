@@ -12,7 +12,6 @@ import {
 } from "@ant-design/icons";
 import { App, Button, Progress, Space } from "antd";
 import dayjs from "dayjs";
-import type { TFunction } from "i18next";
 import React, { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
@@ -26,40 +25,25 @@ import { useAsyncPageData } from "@/hooks/useAsyncPageData";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useEntityEditor } from "@/hooks/useEntityEditor";
 import { useSettings } from "@/hooks/useSettings";
-import { listActivities } from "@/services/activities";
 import { getApiErrorMessage } from "@/services/client";
-import { listMembers } from "@/services/members";
-import { listProjects } from "@/services/projects";
-import { listTasks } from "@/services/tasks";
-import type { Activity, ActivityKind } from "@/types/activity";
-import type { Member } from "@/types/member";
+import type { ActivityKind } from "@/types/activity";
 import type { Project } from "@/types/project";
 import type { Task } from "@/types/task";
 import { indexById } from "@/utils/collection";
-import {
-  daysUntil,
-  formatDate,
-  formatShortDate,
-  isOverdue,
-} from "@/utils/date";
-import { fetchAllPages } from "@/utils/pagination";
+import { formatDate, formatShortDate, isOverdue } from "@/utils/date";
 import { getProjectPermissions, PERMISSION_DENIED } from "@/utils/Permissions";
+import {
+  calculateDashboardProjectMetrics,
+  getDeadlineLabel,
+  getFocusTasks,
+  getGreeting,
+  getRecentProjects,
+  getRelativeTime,
+  loadDashboardData,
+  summarizeDashboard,
+  type DashboardData,
+} from "./dashboardData";
 import "./index.css";
-
-interface DashboardData {
-  tasks: Task[];
-  projects: Project[];
-  members: Member[];
-  activities: Activity[];
-}
-
-interface ProjectMetrics {
-  total: number;
-  completed: number;
-  review: number;
-  overdue: number;
-  progress: number;
-}
 
 const INITIAL_DATA: DashboardData = {
   tasks: [],
@@ -75,67 +59,6 @@ const ACTIVITY_ICONS: Record<ActivityKind, React.ReactNode> = {
   task_updated: <CheckCircleOutlined />,
   member_updated: <TeamOutlined />,
 };
-
-async function loadDashboardData(pageSize: number): Promise<DashboardData> {
-  const [taskResult, projectResult, members, activities] = await Promise.all([
-    fetchAllPages((page, pageSize) => listTasks({ page, pageSize }), pageSize),
-    fetchAllPages(
-      (page, pageSize) => listProjects({ page, pageSize }),
-      pageSize,
-    ),
-    listMembers(),
-    listActivities({ limit: 8 }),
-  ]);
-
-  return {
-    tasks: taskResult.items,
-    projects: projectResult.items,
-    members,
-    activities,
-  };
-}
-
-function getGreeting(t: TFunction) {
-  const hour = dayjs().hour();
-  if (hour < 6) return t("dashboard.greeting.night");
-  if (hour < 12) return t("dashboard.greeting.morning");
-  if (hour < 18) return t("dashboard.greeting.afternoon");
-  return t("dashboard.greeting.evening");
-}
-
-function getDeadlineLabel(t: TFunction, deadline?: string) {
-  const remainingDays = daysUntil(deadline);
-  if (remainingDays === null) return t("dashboard.deadline.none");
-  if (remainingDays < 0) {
-    return t("dashboard.deadline.overdue", {
-      count: Math.abs(remainingDays),
-    });
-  }
-  if (remainingDays === 0) return t("dashboard.deadline.today");
-  if (remainingDays === 1) return t("dashboard.deadline.tomorrow");
-  if (remainingDays <= 7) {
-    return t("dashboard.deadline.days", { count: remainingDays });
-  }
-  return formatShortDate(deadline);
-}
-
-function getRelativeTime(t: TFunction, value: string) {
-  const createdAt = dayjs(value);
-  const minuteDiff = dayjs().diff(createdAt, "minute");
-  if (minuteDiff < 1) return t("dashboard.relativeTime.justNow");
-  if (minuteDiff < 60) {
-    return t("dashboard.relativeTime.minutes", { count: minuteDiff });
-  }
-  const hourDiff = dayjs().diff(createdAt, "hour");
-  if (hourDiff < 24) {
-    return t("dashboard.relativeTime.hours", { count: hourDiff });
-  }
-  const dayDiff = dayjs().diff(createdAt, "day");
-  if (dayDiff < 7) {
-    return t("dashboard.relativeTime.days", { count: dayDiff });
-  }
-  return formatShortDate(value);
-}
 
 export default function DashboardPage() {
   const { t } = useTranslation();
@@ -175,97 +98,22 @@ export default function DashboardPage() {
   const projectsById = useMemo(() => indexById(projects), [projects]);
   const membersById = useMemo(() => indexById(members), [members]);
 
-  const projectMetrics = useMemo(() => {
-    const result = new Map<string, ProjectMetrics>();
-
-    for (const project of projects) {
-      result.set(project.id, {
-        total: 0,
-        completed: 0,
-        review: 0,
-        overdue: 0,
-        progress: 0,
-      });
-    }
-
-    for (const task of tasks) {
-      const metrics = result.get(task.projectId);
-      if (!metrics) continue;
-      metrics.total += 1;
-      if (task.status === "done") metrics.completed += 1;
-      if (task.status === "review") metrics.review += 1;
-      if (isOverdue(task.deadline, task.status === "done")) {
-        metrics.overdue += 1;
-      }
-    }
-
-    for (const project of projects) {
-      const metrics = result.get(project.id);
-      if (!metrics) continue;
-      metrics.progress = metrics.total
-        ? Math.round((metrics.completed / metrics.total) * 100)
-        : project.status === "completed" || project.status === "archived"
-          ? 100
-          : 0;
-    }
-
-    return result;
-  }, [projects, tasks]);
-
-  const summary = useMemo(() => {
-    let activeProjects = 0;
-    let openTasks = 0;
-    let dueSoon = 0;
-    let overdueTasks = 0;
-
-    for (const project of projects) {
-      if (project.status === "active") activeProjects += 1;
-    }
-
-    for (const task of tasks) {
-      if (task.status === "done") continue;
-      openTasks += 1;
-      const remainingDays = daysUntil(task.deadline);
-      if (remainingDays !== null && remainingDays >= 0 && remainingDays <= 7) {
-        dueSoon += 1;
-      }
-      if (isOverdue(task.deadline)) overdueTasks += 1;
-    }
-
-    return {
-      activeProjects,
-      openTasks,
-      dueSoon,
-      overdueTasks,
-      members: members.length,
-    };
-  }, [members.length, projects, tasks]);
-
-  const recentProjects = useMemo(
-    () =>
-      [...projects]
-        .sort(
-          (a, b) => dayjs(b.updatedAt).valueOf() - dayjs(a.updatedAt).valueOf(),
-        )
-        .slice(0, 5),
-    [projects],
+  const projectMetrics = useMemo(
+    () => calculateDashboardProjectMetrics(projects, tasks),
+    [projects, tasks],
   );
 
-  const focusTasks = useMemo(() => {
-    const incompleteTasks = tasks.filter((task) => task.status !== "done");
-    const myTasks = incompleteTasks.filter(
-      (task) => task.assigneeId === currentUser.memberId,
-    );
-    const source = myTasks.length ? myTasks : incompleteTasks;
+  const summary = useMemo(
+    () => summarizeDashboard(projects, tasks, members.length),
+    [members.length, projects, tasks],
+  );
 
-    return [...source]
-      .sort((a, b) => {
-        const aDeadline = a.deadline ? dayjs(a.deadline).valueOf() : Infinity;
-        const bDeadline = b.deadline ? dayjs(b.deadline).valueOf() : Infinity;
-        return aDeadline - bDeadline;
-      })
-      .slice(0, 5);
-  }, [currentUser.memberId, tasks]);
+  const recentProjects = useMemo(() => getRecentProjects(projects), [projects]);
+
+  const focusTasks = useMemo(
+    () => getFocusTasks(tasks, currentUser.memberId),
+    [currentUser.memberId, tasks],
+  );
 
   const metricItems = useMemo(
     () => [

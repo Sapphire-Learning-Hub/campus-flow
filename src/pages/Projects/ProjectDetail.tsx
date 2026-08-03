@@ -19,14 +19,8 @@ import { ProjectFormDrawer } from "@/components/projects/ProjectForm";
 import { useAsyncPageData } from "@/hooks/useAsyncPageData";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { getApiErrorMessage } from "@/services/client";
-import { deleteProject, getProject } from "@/services/projects";
-import { listTasks } from "@/services/tasks";
-import { listMembers } from "@/services/members";
-import { listActivities } from "@/services/activities";
-import type { Activity } from "@/types/activity";
-import type { Member } from "@/types/member";
+import { deleteProject } from "@/services/projects";
 import type { Project } from "@/types/project";
-import type { Task } from "@/types/task";
 import {
   PROJECT_ROLE_META,
   PROJECT_STATUS_META,
@@ -36,19 +30,16 @@ import {
 } from "@/constants/status.ts";
 import { indexById } from "@/utils/collection";
 import { formatDate, isOverdue } from "@/utils/date";
-import { fetchAllPages } from "@/utils/pagination";
 import {
   getProjectPermissions,
   PERMISSION_DENIED,
 } from "@/utils/Permissions.ts";
+import {
+  loadProjectDetailData,
+  summarizeProjectDetail,
+  type ProjectDetailData,
+} from "./projectDetailData";
 import "./ProjectDetail.css";
-
-interface ProjectDetailData {
-  project: Project;
-  tasks: Task[];
-  members: Member[];
-  activities: Activity[];
-}
 
 export default function ProjectDetailPage() {
   const { t } = useTranslation();
@@ -65,24 +56,10 @@ export default function ProjectDetailPage() {
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
-  const loadProjectDetail = useCallback(() => {
-    if (!projectId) {
-      return Promise.reject(new Error(t("projectDetail.missingProjectId")));
-    }
-    return Promise.all([
-      getProject(projectId),
-      fetchAllPages((page, pageSize) =>
-        listTasks({ projectId, page, pageSize }),
-      ),
-      listMembers({ projectId }),
-      listActivities({ projectId, limit: 10 }),
-    ]).then(([project, taskResult, members, activities]) => ({
-      project,
-      tasks: taskResult.items,
-      members,
-      activities,
-    }));
-  }, [projectId, t]);
+  const loadProjectDetail = useCallback(
+    () => loadProjectDetailData(projectId, t("projectDetail.missingProjectId")),
+    [projectId, t],
+  );
 
   const getProjectDetailErrorMessage = useCallback(
     (requestError: unknown) =>
@@ -181,23 +158,15 @@ export default function ProjectDetailPage() {
     setEditorOpen(false);
   };
 
-  const openTasks = tasks.filter((task) => task.status !== "done").length;
-  const totalTasks = tasks.length;
-  const inProgressTasks = tasks.filter(
-    (task) => task.status === "in_progress",
-  ).length;
-  const overdueTasks = tasks.filter((task) =>
-    isOverdue(task.deadline, task.status === "done"),
-  ).length;
-  const completedTasks = tasks.filter((task) => task.status === "done").length;
-  const progress = totalTasks
-    ? Math.round((completedTasks / totalTasks) * 100)
-    : project.status === "completed" || project.status === "archived"
-      ? 100
-      : 0;
-  const daysRemaining = project.deadline
-    ? dayjs(project.deadline).startOf("day").diff(dayjs().startOf("day"), "day")
-    : 0;
+  const {
+    openTasks,
+    totalTasks,
+    inProgressTasks,
+    overdueTasks,
+    completedTasks,
+    progress,
+    daysRemaining,
+  } = summarizeProjectDetail(project, tasks);
 
   const leader = membersById.get(project.leaderId);
 

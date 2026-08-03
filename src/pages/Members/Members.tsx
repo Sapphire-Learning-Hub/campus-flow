@@ -20,65 +20,29 @@ import { useEntityEditor } from "@/hooks/useEntityEditor";
 import { useLocalizedOptions } from "@/hooks/useLocalizedOptions";
 import { useSettings } from "@/hooks/useSettings";
 import { getApiErrorMessage } from "@/services/client";
-import { listMembers } from "@/services/members";
-import { listProjects } from "@/services/projects";
-import { listTasks } from "@/services/tasks";
-import type { Member, ProjectMember, ProjectRole } from "@/types/member";
+import type { ProjectMember } from "@/types/member";
 import type { Project } from "@/types/project";
-import type { Task } from "@/types/task";
 import { countActiveFilters, indexById } from "@/utils/collection";
 import { formatShortDate } from "@/utils/date";
-import { fetchAllPages } from "@/utils/pagination";
 import {
   getProjectPermissions,
   PERMISSION_DENIED,
 } from "@/utils/Permissions.ts";
+import {
+  buildMemberRows,
+  filterMemberRows,
+  loadMembersPageData,
+  type MemberFilters,
+  type MemberRow,
+  type MembersPageData,
+} from "./memberData";
 import "./index.css";
-
-interface MembersPageData {
-  tasks: Task[];
-  projects: Project[];
-  members: Member[];
-}
-
-interface MemberFilters {
-  keyword?: string;
-  projectId?: string;
-  role?: ProjectRole;
-}
-
-interface MemberRow {
-  key: string;
-  projectId: string;
-  projectName: string;
-  member: Member;
-  role: ProjectRole;
-  addedAt: string;
-  taskCount: number;
-}
 
 const INITIAL_MEMBERS_PAGE_DATA: MembersPageData = {
   tasks: [],
   projects: [],
   members: [],
 };
-
-async function loadMembersPageData(pageSize: number): Promise<MembersPageData> {
-  const [taskResult, projectResult, members] = await Promise.all([
-    fetchAllPages((page, pageSize) => listTasks({ page, pageSize }), pageSize),
-    fetchAllPages(
-      (page, pageSize) => listProjects({ page, pageSize }),
-      pageSize,
-    ),
-    listMembers(),
-  ]);
-
-  return {
-    tasks: taskResult.items,
-    projects: projectResult.items,
-    members,
-  };
-}
 
 export default function MembersPage() {
   const { t } = useTranslation();
@@ -114,60 +78,17 @@ export default function MembersPage() {
     openEdit,
     close: closeEditor,
   } = useEntityEditor<MemberRow>();
-  const membersById = useMemo(() => indexById(members), [members]);
   const projectsById = useMemo(() => indexById(projects), [projects]);
 
-  const taskCountsByMembership = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const task of tasks) {
-      if (!task.assigneeId) continue;
-      const key = `${task.projectId}:${task.assigneeId}`;
-      counts.set(key, (counts.get(key) ?? 0) + 1);
-    }
-    return counts;
-  }, [tasks]);
+  const memberRows = useMemo(
+    () => buildMemberRows(projects, members, tasks),
+    [members, projects, tasks],
+  );
 
-  const memberRows = useMemo(() => {
-    const rows: MemberRow[] = [];
-    for (const project of projects) {
-      for (const projectMember of project.members) {
-        const member = membersById.get(projectMember.memberId);
-        if (!member) continue;
-
-        const key = `${project.id}:${member.id}`;
-        rows.push({
-          key,
-          projectId: project.id,
-          projectName: project.name,
-          member,
-          role: projectMember.role,
-          addedAt: projectMember.addedAt,
-          taskCount: taskCountsByMembership.get(key) ?? 0,
-        });
-      }
-    }
-    return rows;
-  }, [membersById, projects, taskCountsByMembership]);
-
-  const filteredMemberRows = useMemo(() => {
-    const keyword = filters.keyword?.trim().toLowerCase();
-    return memberRows.filter((row) => {
-      const searchableText = [
-        row.member.name,
-        row.member.email,
-        row.member.department,
-        row.projectName,
-      ]
-        .join(" ")
-        .toLowerCase();
-
-      return (
-        (!keyword || searchableText.includes(keyword)) &&
-        (!filters.projectId || row.projectId === filters.projectId) &&
-        (!filters.role || row.role === filters.role)
-      );
-    });
-  }, [filters, memberRows]);
+  const filteredMemberRows = useMemo(
+    () => filterMemberRows(memberRows, filters),
+    [filters, memberRows],
+  );
 
   const activeFilterCount = useMemo(
     () => countActiveFilters(filters),
