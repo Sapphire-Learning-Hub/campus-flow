@@ -302,7 +302,13 @@ export function TaskFormDrawer({
             <Button onClick={close}>{t("common.close")}</Button>
           ) : (
             <Space>
-              <Button disabled={submitting || deleting} onClick={close}>
+              <Button
+                disabled={submitting || deleting}
+                onClick={() => {
+                  alert("你确定吗");
+                  close();
+                }}
+              >
                 {t("common.cancel")}
               </Button>
               <Button
@@ -354,6 +360,7 @@ export function TaskFormDrawer({
             }))}
             disabled={Boolean(initial) || submitting || deleting}
             onChange={(nextProjectId) => {
+              alert("你确认吗");
               const nextProject = projects.find(
                 (item) => item.id === nextProjectId,
               );
@@ -471,10 +478,7 @@ export function TaskFormDrawer({
           />
         </Form.Item>
         <div className="form-grid-2">
-          <Form.Item
-            name="startDate"
-            label={t("taskForm.fields.startDate")}
-          >
+          <Form.Item name="startDate" label={t("taskForm.fields.startDate")}>
             <DatePicker style={{ width: "100%" }} />
           </Form.Item>
           <Form.Item

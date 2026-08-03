@@ -40,6 +40,7 @@ import { listTasks } from "@/services/tasks";
 import type { Member } from "@/types/member";
 import type { Project } from "@/types/project";
 import type { TaskView } from "@/types/settings";
+import { TASK_STATUS_META } from "@/constants/status.ts";
 import type {
   Task,
   TaskPriority,
@@ -78,19 +79,6 @@ const PRIORITY_COLORS: Record<TaskPriority, string> = {
   medium: "blue",
   high: "orange",
   urgent: "red",
-};
-
-const STATUS_META: Record<
-  TaskStatus,
-  { color: string; className: string }
-> = {
-  pending: { color: "default", className: "pending" },
-  in_progress: {
-    color: "processing",
-    className: "in-progress",
-  },
-  review: { color: "warning", className: "review" },
-  done: { color: "success", className: "done" },
 };
 
 const FILTER_SELECT_PROPS = {
@@ -166,7 +154,7 @@ function PriorityTag({ priority }: { priority: TaskPriority }) {
 
 function StatusTag({ status }: { status: TaskStatus }) {
   const { t } = useTranslation();
-  const meta = STATUS_META[status];
+  const meta = TASK_STATUS_META[status];
   return <Tag color={meta.color}>{t(`options.taskStatus.${status}`)}</Tag>;
 }
 
@@ -185,9 +173,7 @@ function TaskCard({ task, project, member, editable, onEdit }: TaskCardProps) {
           {task.title}
         </button>
         <Button type="link" size="small" onClick={() => onEdit(task)}>
-          {editable
-            ? t("tasksPage.actions.edit")
-            : t("tasksPage.actions.view")}
+          {editable ? t("tasksPage.actions.edit") : t("tasksPage.actions.view")}
         </Button>
       </header>
 
@@ -255,7 +241,7 @@ function TaskBoard({
           <section className="task-column" key={column.value}>
             <header className="task-column-header">
               <span
-                className={`task-status-dot ${STATUS_META[column.value].className}`}
+                className={`task-status-dot ${TASK_STATUS_META[column.value].className}`}
               />
               <b>{column.label}</b>
               <strong>{columnTasks.length}</strong>

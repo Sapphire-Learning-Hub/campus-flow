@@ -50,6 +50,7 @@ import type { Member } from "@/types/member";
 import type { Project, ProjectStatus } from "@/types/project";
 import type { ProjectView } from "@/types/settings";
 import type { Task } from "@/types/task";
+import { PROJECT_STATUS_META } from "@/constants/status.ts";
 import { countActiveFilters, indexById } from "@/utils/collection";
 import { formatShortDate, isOverdue } from "@/utils/date";
 import {
@@ -58,15 +59,6 @@ import {
 } from "@/utils/Permissions.ts";
 import "./Project.css";
 
-const STATUS_META: Record<
-  ProjectStatus,
-  { color: string; className: string }
-> = {
-  planning: { color: "default", className: "planning" },
-  active: { color: "processing", className: "active" },
-  completed: { color: "success", className: "completed" },
-  archived: { color: "default", className: "archived" },
-};
 type DateSort = "createdAt" | "deadline" | "updatedAt";
 const FILTER_SELECT_PROPS = {
   allowClear: true,
@@ -132,10 +124,8 @@ function isProjectOverdue(project: Project) {
 
 function StatusTag({ status }: { status: ProjectStatus }) {
   const { t } = useTranslation();
-  const meta = STATUS_META[status];
-  return (
-    <Tag color={meta.color}>{t(`options.projectStatus.${status}`)}</Tag>
-  );
+  const meta = PROJECT_STATUS_META[status];
+  return <Tag color={meta.color}>{t(`options.projectStatus.${status}`)}</Tag>;
 }
 
 interface ProjectCardProps {
@@ -281,10 +271,7 @@ function ProjectBoard({
   const { projectStatusOptions } = useLocalizedOptions();
 
   return (
-    <div
-      className="project-board"
-      aria-label={t("projectsPage.boardLabel")}
-    >
+    <div className="project-board" aria-label={t("projectsPage.boardLabel")}>
       {projectStatusOptions.map((column) => {
         const columnProjects = projects.filter(
           (project) => project.status === column.value,
@@ -294,7 +281,7 @@ function ProjectBoard({
           <section className="project-column" key={column.value}>
             <header className="project-column-header">
               <span
-                className={`project-status-dot ${STATUS_META[column.value].className}`}
+                className={`project-status-dot ${PROJECT_STATUS_META[column.value].className}`}
               />
               <b>{column.label}</b>
               <strong>{columnProjects.length}</strong>
@@ -337,9 +324,7 @@ export default function ProjectsWorkspacePage() {
   const { settings: appSettings } = useSettings();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [view, setView] = useState<ProjectView>(
-    appSettings.defaultProjectView,
-  );
+  const [view, setView] = useState<ProjectView>(appSettings.defaultProjectView);
   const [filters, setFilters] = useState<ProjectFilters>(() => ({
     leaderId: searchParams.get("leaderId") || undefined,
   }));
@@ -350,9 +335,7 @@ export default function ProjectsWorkspacePage() {
       getApiErrorMessage(requestError, t("projectsPage.loadError")),
     [t],
   );
-  const dateSortOptions = useMemo<
-    Array<{ label: string; value: DateSort }>
-  >(
+  const dateSortOptions = useMemo<Array<{ label: string; value: DateSort }>>(
     () => [
       {
         label: t("projectsPage.sort.updatedAt"),

@@ -27,6 +27,7 @@ import type { Activity } from "@/types/activity";
 import type { Member } from "@/types/member";
 import type { Project } from "@/types/project";
 import type { Task } from "@/types/task";
+import { PROJECT_STATUS_META, TASK_STATUS_META } from "@/constants/status.ts";
 import { indexById } from "@/utils/collection";
 import { formatDate, isOverdue } from "@/utils/date";
 import {
@@ -80,13 +81,9 @@ export default function ProjectDetailPage() {
     [t],
   );
 
-  const {
-    data,
-    setData,
-    loading,
-    error,
-    reload,
-  } = useAsyncPageData<ProjectDetailData | undefined>({
+  const { data, setData, loading, error, reload } = useAsyncPageData<
+    ProjectDetailData | undefined
+  >({
     initialData: undefined,
     load: loadProjectDetail,
     getErrorMessage: getProjectDetailErrorMessage,
@@ -200,13 +197,6 @@ export default function ProjectDetailPage() {
     low: "default",
   };
 
-  const statusColor: Record<string, string> = {
-    pending: "default",
-    in_progress: "processing",
-    review: "warning",
-    done: "success",
-  };
-
   const stageColor: Record<string, string> = {
     discovery: "purple",
     design: "cyan",
@@ -303,7 +293,9 @@ export default function ProjectDetailPage() {
           </span>
           <small>{t("projectDetail.summary.openTasks")}</small>
           <strong>{openTasks}</strong>
-          <em>{t("projectDetail.summary.totalTasks", { count: totalTasks })}</em>
+          <em>
+            {t("projectDetail.summary.totalTasks", { count: totalTasks })}
+          </em>
         </article>
         <article>
           <span>
@@ -344,7 +336,7 @@ export default function ProjectDetailPage() {
             <div>
               <dt>{t("projectDetail.overview.status")}</dt>
               <dd>
-                <Tag color="processing">
+                <Tag color={PROJECT_STATUS_META[project.status].color}>
                   {t(`options.projectStatus.${project.status}`)}
                 </Tag>
               </dd>
@@ -430,9 +422,7 @@ export default function ProjectDetailPage() {
                       <small>{assignee?.name ?? t("common.unassigned")}</small>
                     </span>
                     <time
-                      className={
-                        isOverdue(task.deadline) ? "danger-text" : ""
-                      }
+                      className={isOverdue(task.deadline) ? "danger-text" : ""}
                     >
                       {formatDate(task.deadline)}
                     </time>
@@ -480,13 +470,19 @@ export default function ProjectDetailPage() {
                       <td>{task.title}</td>
                       <td>
                         {task.workItemType ? (
-                          <Tag>{t(`options.taskType.${task.workItemType}`)}</Tag>
+                          <Tag>
+                            {t(`options.taskType.${task.workItemType}`)}
+                          </Tag>
                         ) : (
                           <Tag>{t("common.unknown")}</Tag>
                         )}
                       </td>
                       <td>
-                        <Tag color={statusColor[task.status] ?? "default"}>
+                        <Tag
+                          color={
+                            TASK_STATUS_META[task.status].color ?? "default"
+                          }
+                        >
                           {t(`options.taskStatus.${task.status}`)}
                         </Tag>
                       </td>
