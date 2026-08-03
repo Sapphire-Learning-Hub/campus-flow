@@ -22,6 +22,7 @@ import {
   getProjectPermissions,
   PERMISSION_DENIED,
 } from "@/utils/Permissions.ts";
+import { getProjectValidationRules } from "@/utils/formRules";
 
 type ProjectFormModel = Pick<
   Project,
@@ -53,6 +54,7 @@ export function ProjectFormDrawer({
   const { projectStatusOptions } = useLocalizedOptions();
   const [form] = Form.useForm<ProjectFormModel>();
   const [submitting, setSubmitting] = useState(false);
+  const validationRules = getProjectValidationRules(t);
   const canEditProject = project
     ? getProjectPermissions(project, currentMemberId).canEditProject
     : true;
@@ -193,69 +195,35 @@ export function ProjectFormDrawer({
         <Form.Item
           name="name"
           label={t("projectForm.fields.name")}
-          rules={[
-            {
-              required: true,
-              message: t("projectForm.validation.nameRequired"),
-            },
-            {
-              min: 2,
-              max: 50,
-              message: t("projectForm.validation.nameLength"),
-            },
-          ]}
+          rules={validationRules.name}
         >
           <Input maxLength={50} showCount />
         </Form.Item>
         <Form.Item
           name="description"
           label={t("projectForm.fields.description")}
-          rules={[
-            {
-              required: true,
-              message: t("projectForm.validation.descriptionRequired"),
-            },
-            {
-              max: 300,
-              message: t("projectForm.validation.descriptionLength"),
-            },
-          ]}
+          rules={validationRules.description}
         >
           <Input.TextArea rows={4} maxLength={300} showCount />
         </Form.Item>
         <Form.Item
           name="status"
           label={t("projectForm.fields.status")}
-          rules={[
-            {
-              required: true,
-              message: t("projectForm.validation.statusRequired"),
-            },
-          ]}
+          rules={validationRules.status}
         >
           <Select options={projectStatusOptions} />
         </Form.Item>
         <Form.Item
           name="deadline"
           label={t("projectForm.fields.deadline")}
-          rules={[
-            {
-              required: true,
-              message: t("projectForm.validation.deadlineRequired"),
-            },
-          ]}
+          rules={validationRules.deadline}
         >
           <DatePicker style={{ width: "100%" }} />
         </Form.Item>
         <Form.Item
           name="color"
           label={t("projectForm.fields.color")}
-          rules={[
-            {
-              required: true,
-              message: t("projectForm.validation.colorRequired"),
-            },
-          ]}
+          rules={validationRules.color}
         >
           <Input type="color" style={{ width: 72 }} />
         </Form.Item>

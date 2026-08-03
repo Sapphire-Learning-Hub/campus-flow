@@ -25,6 +25,7 @@ import {
   getProjectPermissions,
   PERMISSION_DENIED,
 } from "@/utils/Permissions.ts";
+import { getTaskValidationRules } from "@/utils/formRules";
 import { DEFAULT_TASK_STAGE, DEFAULT_TASK_TYPE } from "@/utils/task";
 
 type TaskFormModel = Omit<TaskFormValues, "deadline" | "startDate"> & {
@@ -66,6 +67,7 @@ export function TaskFormDrawer({
   const [form] = Form.useForm<TaskFormModel>();
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const validationRules = getTaskValidationRules(t);
   const projectId = Form.useWatch("projectId", form);
   const startDate = Form.useWatch("startDate", form);
   const project = projects.find((item) => item.id === projectId);
@@ -358,12 +360,7 @@ export function TaskFormDrawer({
         <Form.Item
           name="projectId"
           label={t("taskForm.fields.project")}
-          rules={[
-            {
-              required: true,
-              message: t("taskForm.validation.projectRequired"),
-            },
-          ]}
+          rules={validationRules.projectId}
         >
           <Select
             placeholder={t("taskForm.placeholders.project")}
@@ -391,17 +388,7 @@ export function TaskFormDrawer({
         <Form.Item
           name="title"
           label={t("taskForm.fields.title")}
-          rules={[
-            {
-              required: true,
-              message: t("taskForm.validation.titleRequired"),
-            },
-            {
-              min: 2,
-              max: 80,
-              message: t("taskForm.validation.titleLength"),
-            },
-          ]}
+          rules={validationRules.title}
         >
           <Input
             placeholder={t("taskForm.placeholders.title")}
@@ -412,16 +399,7 @@ export function TaskFormDrawer({
         <Form.Item
           name="description"
           label={t("taskForm.fields.description")}
-          rules={[
-            {
-              required: true,
-              message: t("taskForm.validation.descriptionRequired"),
-            },
-            {
-              max: 500,
-              message: t("taskForm.validation.descriptionLength"),
-            },
-          ]}
+          rules={validationRules.description}
         >
           <Input.TextArea
             rows={4}
@@ -434,24 +412,14 @@ export function TaskFormDrawer({
           <Form.Item
             name="workItemType"
             label={t("taskForm.fields.type")}
-            rules={[
-              {
-                required: true,
-                message: t("taskForm.validation.typeRequired"),
-              },
-            ]}
+            rules={validationRules.workItemType}
           >
             <Select options={taskTypeOptions} />
           </Form.Item>
           <Form.Item
             name="stage"
             label={t("taskForm.fields.stage")}
-            rules={[
-              {
-                required: true,
-                message: t("taskForm.validation.stageRequired"),
-              },
-            ]}
+            rules={validationRules.stage}
           >
             <Select options={taskStageOptions} />
           </Form.Item>
@@ -460,24 +428,14 @@ export function TaskFormDrawer({
           <Form.Item
             name="status"
             label={t("taskForm.fields.status")}
-            rules={[
-              {
-                required: true,
-                message: t("taskForm.validation.statusRequired"),
-              },
-            ]}
+            rules={validationRules.status}
           >
             <Select options={taskStatusOptions} />
           </Form.Item>
           <Form.Item
             name="priority"
             label={t("taskForm.fields.priority")}
-            rules={[
-              {
-                required: true,
-                message: t("taskForm.validation.priorityRequired"),
-              },
-            ]}
+            rules={validationRules.priority}
           >
             <Select options={priorityOptions} />
           </Form.Item>
@@ -498,19 +456,7 @@ export function TaskFormDrawer({
             name="deadline"
             label={t("taskForm.fields.deadline")}
             dependencies={["startDate"]}
-            rules={[
-              ({ getFieldValue }) => ({
-                validator(_, value?: Dayjs) {
-                  const start = getFieldValue("startDate") as Dayjs | undefined;
-                  if (!start || !value || !value.isBefore(start, "day")) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(
-                    new Error(t("taskForm.validation.deadlineOrder")),
-                  );
-                },
-              }),
-            ]}
+            rules={validationRules.deadline}
           >
             <DatePicker
               style={{ width: "100%" }}

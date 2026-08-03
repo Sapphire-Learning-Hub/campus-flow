@@ -14,6 +14,7 @@ import {
   getProjectPermissions,
   PERMISSION_DENIED,
 } from "@/utils/Permissions.ts";
+import { getMemberValidationRules } from "@/utils/formRules";
 
 interface MemberFormDrawerProps {
   open: boolean;
@@ -44,6 +45,7 @@ export function MemberFormDrawer({
   const [form] = Form.useForm<ProjectMemberInput>();
   const [submitting, setSubmitting] = useState(false);
   const [removing, setRemoving] = useState(false);
+  const validationRules = getMemberValidationRules(t);
   const canManageMembers = getProjectPermissions(
     project,
     currentMemberId,
@@ -174,9 +176,7 @@ export function MemberFormDrawer({
 
   return (
     <Drawer
-      title={
-        initial ? t("memberForm.title.manage") : t("memberForm.title.add")
-      }
+      title={initial ? t("memberForm.title.manage") : t("memberForm.title.add")}
       size={440}
       open={open}
       onClose={close}
@@ -217,9 +217,7 @@ export function MemberFormDrawer({
           showIcon
           type="warning"
           title={
-            !project
-              ? t("memberForm.noProject")
-              : t("common.permissionDenied")
+            !project ? t("memberForm.noProject") : t("common.permissionDenied")
           }
           description={permissionDescription}
           style={{ marginBottom: 16 }}
@@ -234,12 +232,7 @@ export function MemberFormDrawer({
         <Form.Item
           name="memberId"
           label={t("memberForm.fields.member")}
-          rules={[
-            {
-              required: true,
-              message: t("memberForm.validation.memberRequired"),
-            },
-          ]}
+          rules={validationRules.memberId}
         >
           <Select
             showSearch={{ optionFilterProp: "label" }}
@@ -252,12 +245,7 @@ export function MemberFormDrawer({
         <Form.Item
           name="role"
           label={t("memberForm.fields.role")}
-          rules={[
-            {
-              required: true,
-              message: t("memberForm.validation.roleRequired"),
-            },
-          ]}
+          rules={validationRules.role}
         >
           <Select options={manageableRoleOptions} />
         </Form.Item>

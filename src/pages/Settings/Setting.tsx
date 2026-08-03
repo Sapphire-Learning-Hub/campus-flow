@@ -45,6 +45,10 @@ import type {
   ThemeMode,
 } from "@/types/settings";
 import type { AuthUser } from "@/types/user";
+import {
+  getProfileValidationRules,
+  getSecurityValidationRules,
+} from "@/utils/formRules";
 import "./index.css";
 
 const { Sider, Content } = Layout;
@@ -150,6 +154,7 @@ function ProfileSettingsContent({
   onSave: (values: SettingsFormValues) => Promise<void>;
 }) {
   const { t } = useTranslation();
+  const validationRules = getProfileValidationRules(t);
   const [form] = Form.useForm<SettingsFormValues>();
 
   useEffect(() => {
@@ -220,16 +225,7 @@ function ProfileSettingsContent({
         <Form.Item
           label={t("settings.profile.username")}
           name="username"
-          rules={[
-            {
-              required: true,
-              message: t("settings.profile.validation.usernameRequired"),
-            },
-            {
-              pattern: /^[a-zA-Z0-9_]{3,20}$/,
-              message: t("settings.profile.validation.usernamePattern"),
-            },
-          ]}
+          rules={validationRules.username}
         >
           <Input
             placeholder={t("settings.profile.placeholders.username")}
@@ -239,16 +235,7 @@ function ProfileSettingsContent({
         <Form.Item
           label={t("settings.profile.department")}
           name="department"
-          rules={[
-            {
-              required: true,
-              message: t("settings.profile.validation.departmentRequired"),
-            },
-            {
-              max: 30,
-              message: t("settings.profile.validation.departmentLength"),
-            },
-          ]}
+          rules={validationRules.department}
         >
           <Input
             placeholder={t("settings.profile.placeholders.department")}
@@ -258,16 +245,7 @@ function ProfileSettingsContent({
         <Form.Item
           label={t("settings.profile.email")}
           name="email"
-          rules={[
-            {
-              required: true,
-              message: t("settings.profile.validation.emailRequired"),
-            },
-            {
-              type: "email",
-              message: t("settings.profile.validation.emailInvalid"),
-            },
-          ]}
+          rules={validationRules.email}
         >
           <Input placeholder={t("settings.profile.placeholders.email")} />
         </Form.Item>
@@ -291,6 +269,7 @@ function SecuritySettingsContent({
   onSave: (values: PasswordFormValues) => Promise<boolean>;
 }) {
   const { t } = useTranslation();
+  const validationRules = getSecurityValidationRules(t);
   const [form] = Form.useForm<PasswordFormValues>();
   const newPassword = Form.useWatch("newPassword", form) ?? "";
   const strength = useMemo(
@@ -313,12 +292,7 @@ function SecuritySettingsContent({
       <Form.Item
         label={t("settings.security.currentPassword")}
         name="currentPassword"
-        rules={[
-          {
-            required: true,
-            message: t("settings.security.validation.currentRequired"),
-          },
-        ]}
+        rules={validationRules.currentPassword}
       >
         <Input.Password
           autoComplete="current-password"
@@ -329,27 +303,7 @@ function SecuritySettingsContent({
         label={t("settings.security.newPassword")}
         name="newPassword"
         dependencies={["currentPassword"]}
-        rules={[
-          {
-            required: true,
-            message: t("settings.security.validation.newRequired"),
-          },
-          {
-            min: 6,
-            max: 32,
-            message: t("settings.security.validation.newLength"),
-          },
-          ({ getFieldValue }) => ({
-            validator(_, value?: string) {
-              if (!value || value !== getFieldValue("currentPassword")) {
-                return Promise.resolve();
-              }
-              return Promise.reject(
-                new Error(t("settings.security.validation.samePassword")),
-              );
-            },
-          }),
-        ]}
+        rules={validationRules.newPassword}
       >
         <Input.Password
           autoComplete="new-password"
@@ -372,22 +326,7 @@ function SecuritySettingsContent({
         label={t("settings.security.confirmPassword")}
         name="confirmPassword"
         dependencies={["newPassword"]}
-        rules={[
-          {
-            required: true,
-            message: t("settings.security.validation.confirmRequired"),
-          },
-          ({ getFieldValue }) => ({
-            validator(_, value?: string) {
-              if (!value || value === getFieldValue("newPassword")) {
-                return Promise.resolve();
-              }
-              return Promise.reject(
-                new Error(t("settings.security.validation.mismatch")),
-              );
-            },
-          }),
-        ]}
+        rules={validationRules.confirmPassword}
       >
         <Input.Password
           autoComplete="new-password"

@@ -25,6 +25,7 @@ import { BrandMark } from "@/components/common/BrandMark";
 import type { RegisterPayload } from "@/types/user.ts";
 import { getApiErrorMessage } from "@/services/client.ts";
 import { register } from "@/services/auth.ts";
+import { getRegisterValidationRules } from "@/utils/formRules";
 import "./index.css";
 
 function getInternalPath(value: unknown): string | undefined {
@@ -50,6 +51,7 @@ const Register: React.FC = () => {
   const [form] = Form.useForm<RegisterProps>();
   const [submitted, setSubmitted] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
+  const validationRules = getRegisterValidationRules(t);
 
   const from =
     getInternalPath((location.state as { from?: string } | null)?.from) ??
@@ -113,10 +115,7 @@ const Register: React.FC = () => {
             <Form.Item
               name="name"
               label={t("auth.fields.name")}
-              rules={[
-                { required: true, message: t("auth.validation.nameRequired") },
-                { min: 2, max: 20, message: t("auth.validation.nameLength") },
-              ]}
+              rules={validationRules.name}
             >
               <Input
                 size="middle"
@@ -129,21 +128,7 @@ const Register: React.FC = () => {
             <Form.Item
               name="username"
               label={t("auth.fields.username")}
-              rules={[
-                {
-                  required: true,
-                  message: t("auth.validation.usernameRequired"),
-                },
-                {
-                  min: 3,
-                  max: 20,
-                  message: t("auth.validation.usernameLength"),
-                },
-                {
-                  pattern: /^[A-Za-z0-9_]+$/,
-                  message: t("auth.validation.usernamePattern"),
-                },
-              ]}
+              rules={validationRules.username}
             >
               <Input
                 size="middle"
@@ -157,10 +142,7 @@ const Register: React.FC = () => {
           <Form.Item
             name="email"
             label={t("auth.fields.email")}
-            rules={[
-              { required: true, message: t("auth.validation.emailRequired") },
-              { type: "email", message: t("auth.validation.emailInvalid") },
-            ]}
+            rules={validationRules.email}
           >
             <Input
               size="middle"
@@ -173,16 +155,7 @@ const Register: React.FC = () => {
           <Form.Item
             name="department"
             label={t("auth.fields.department")}
-            rules={[
-              {
-                required: true,
-                message: t("auth.validation.departmentRequired"),
-              },
-              {
-                max: 40,
-                message: t("auth.validation.departmentLength"),
-              },
-            ]}
+            rules={validationRules.department}
           >
             <Input
               size="middle"
@@ -196,17 +169,7 @@ const Register: React.FC = () => {
             <Form.Item
               name="password"
               label={t("auth.fields.password")}
-              rules={[
-                {
-                  required: true,
-                  message: t("auth.validation.passwordRequired"),
-                },
-                {
-                  min: 8,
-                  max: 72,
-                  message: t("auth.validation.passwordLength"),
-                },
-              ]}
+              rules={validationRules.password}
               hasFeedback
             >
               <Input.Password
@@ -222,20 +185,7 @@ const Register: React.FC = () => {
               label={t("auth.fields.confirmPassword")}
               dependencies={["password"]}
               hasFeedback
-              rules={[
-                {
-                  required: true,
-                  message: t("auth.validation.confirmPasswordRequired"),
-                },
-                ({ getFieldValue }) => ({
-                  validator: (_, value: string) =>
-                    !value || getFieldValue("password") === value
-                      ? Promise.resolve()
-                      : Promise.reject(
-                          new Error(t("auth.validation.passwordMismatch")),
-                        ),
-                }),
-              ]}
+              rules={validationRules.confirmPassword}
             >
               <Input.Password
                 size="middle"
@@ -255,16 +205,7 @@ const Register: React.FC = () => {
                 name="agreement"
                 valuePropName="checked"
                 className="agreement-form-item"
-                rules={[
-                  {
-                    validator: (_, checked: boolean) =>
-                      checked
-                        ? Promise.resolve()
-                        : Promise.reject(
-                            new Error(t("auth.validation.agreementRequired")),
-                          ),
-                  },
-                ]}
+                rules={validationRules.agreement}
               >
                 <Checkbox>{t("auth.register.agreement")}</Checkbox>
               </Form.Item>

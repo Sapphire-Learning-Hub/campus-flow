@@ -8,6 +8,7 @@ import "./index.css";
 import type { LoginPayload } from "@/types/user.ts";
 import { getApiErrorMessage } from "@/services/client.ts";
 import { login } from "@/services/auth.ts";
+import { getLoginValidationRules } from "@/utils/formRules";
 
 function getInternalPath(value: unknown): string | undefined {
   return typeof value === "string" &&
@@ -23,6 +24,7 @@ const Login: React.FC = () => {
   const location = useLocation();
   const { message } = App.useApp();
   const [submitted, setSubmitted] = useState<boolean>(false);
+  const validationRules = getLoginValidationRules(t);
   const from =
     getInternalPath(new URLSearchParams(location.search).get("redirectTo")) ??
     getInternalPath((location.state as { from?: string } | null)?.from) ??
@@ -58,9 +60,7 @@ const Login: React.FC = () => {
         <Form.Item
           name="username"
           label={t("auth.fields.username")}
-          rules={[
-            { required: true, message: t("auth.validation.usernameRequired") },
-          ]}
+          rules={validationRules.username}
         >
           <Input
             size="large"
@@ -71,10 +71,7 @@ const Login: React.FC = () => {
         <Form.Item
           name="password"
           label={t("auth.fields.password")}
-          rules={[
-            { required: true, message: t("auth.validation.passwordRequired") },
-            { min: 6, message: t("auth.validation.passwordMin") },
-          ]}
+          rules={validationRules.password}
         >
           <Input.Password
             size="large"
