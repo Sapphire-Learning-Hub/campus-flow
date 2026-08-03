@@ -133,66 +133,14 @@
 /* ===== Board ===== */
 .task-board {
   display: grid;
-  grid-template-columns: repeat(4, minmax(270px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  align-items: start;
   gap: 12px;
-  overflow-x: auto;
-  padding-bottom: 8px;
 }
 
-.task-column {
-  min-height: 570px;
-  padding: 10px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--surface-subtle);
-}
-
-.task-column-header {
-  display: grid;
-  grid-template-columns: 8px 1fr auto;
-  align-items: center;
-  gap: 8px;
-  min-height: 36px;
-  padding: 3px 5px 12px;
-}
-
-.task-column-header b {
-  color: var(--text-primary);
-  font-size: 13px;
-}
-
-.task-column-header strong {
-  min-width: 24px;
-  padding: 2px 7px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--surface);
-  color: var(--text-secondary);
-  font-size: 11px;
-  text-align: center;
-}
-
-.task-status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #98a2b3;
-}
-
-.task-status-dot.review {
-  background: #f59e0b;
-}
-
-.task-status-dot.done {
-  background: #10b981;
-}
-
-.task-column-content {
-  min-height: 510px;
-}
-
-.task-column-empty {
-  min-height: 120px;
+.task-board-empty {
+  grid-column: 1 / -1;
+  min-height: 180px;
   display: grid;
   place-items: center;
   border: 1px dashed var(--line-strong);
@@ -321,6 +269,12 @@
   margin-top: 10px;
 }
 
+.task-card-pagination {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
 @media (max-width: 1480px) {
   .task-filter-grid {
     grid-template-columns: minmax(260px, 2fr) repeat(4, minmax(120px, 1fr));
@@ -352,8 +306,7 @@
   }
 
   .task-board {
-    margin-right: -16px;
-    padding-right: 16px;
+    margin-right: 0;
   }
 }
 
