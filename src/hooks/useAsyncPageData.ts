@@ -33,29 +33,32 @@ export function useAsyncPageData<T>({
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string>();
   const mountedRef = useRef(false);
+  const requestRef = useRef(0);
 
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
+      requestRef.current += 1;
     };
   }, []);
 
   const execute = useCallback(
     async (background: boolean, isActive: () => boolean) => {
       if (!isActive()) return;
-
+      const request = ++requestRef.current;
       if (background) setRefreshing(true);
       else setLoading(true);
       setError(undefined);
 
       try {
         const result = await load();
-        if (isActive()) setData(result);
+        if (isActive() && request === requestRef.current) setData(result);
       } catch (requestError) {
-        if (isActive()) setError(getErrorMessage(requestError));
+        if (isActive() && request === requestRef.current)
+          setError(getErrorMessage(requestError));
       } finally {
-        if (isActive()) {
+        if (isActive() && request === requestRef.current) {
           setLoading(false);
           setRefreshing(false);
         }
