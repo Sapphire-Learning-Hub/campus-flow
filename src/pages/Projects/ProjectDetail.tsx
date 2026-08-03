@@ -27,7 +27,13 @@ import type { Activity } from "@/types/activity";
 import type { Member } from "@/types/member";
 import type { Project } from "@/types/project";
 import type { Task } from "@/types/task";
-import { PROJECT_STATUS_META, TASK_STATUS_META } from "@/constants/status.ts";
+import {
+  PROJECT_ROLE_META,
+  PROJECT_STATUS_META,
+  TASK_PRIORITY_META,
+  TASK_STAGE_META,
+  TASK_STATUS_META,
+} from "@/constants/status.ts";
 import { indexById } from "@/utils/collection";
 import { formatDate, isOverdue } from "@/utils/date";
 import {
@@ -189,20 +195,6 @@ export default function ProjectDetailPage() {
   const daysRemaining = project.deadline
     ? dayjs(project.deadline).startOf("day").diff(dayjs().startOf("day"), "day")
     : 0;
-
-  const priorityColor: Record<string, string> = {
-    urgent: "red",
-    high: "orange",
-    medium: "blue",
-    low: "default",
-  };
-
-  const stageColor: Record<string, string> = {
-    discovery: "purple",
-    design: "cyan",
-    delivery: "blue",
-    acceptance: "gold",
-  };
 
   const leader = membersById.get(project.leaderId);
 
@@ -480,7 +472,7 @@ export default function ProjectDetailPage() {
                       <td>
                         <Tag
                           color={
-                            TASK_STATUS_META[task.status].color ?? "default"
+                            TASK_STATUS_META[task.status].color
                           }
                         >
                           {t(`options.taskStatus.${task.status}`)}
@@ -488,7 +480,7 @@ export default function ProjectDetailPage() {
                       </td>
                       <td>
                         {task.stage ? (
-                          <Tag color={stageColor[task.stage] ?? "blue"}>
+                          <Tag color={TASK_STAGE_META[task.stage].color}>
                             {t(`options.taskStage.${task.stage}`)}
                           </Tag>
                         ) : (
@@ -496,7 +488,7 @@ export default function ProjectDetailPage() {
                         )}
                       </td>
                       <td>
-                        <Tag color={priorityColor[task.priority] ?? "default"}>
+                        <Tag color={TASK_PRIORITY_META[task.priority].color}>
                           {t(`options.priority.${task.priority}`)}
                         </Tag>
                       </td>
@@ -547,17 +539,7 @@ export default function ProjectDetailPage() {
                   <MemberAvatar member={member} size={56} />
                   <h3>{member?.name ?? t("common.unknown")}</h3>
                   <p>{member?.department ?? ""}</p>
-                  <Tag
-                    color={
-                      pm.role === "owner"
-                        ? "purple"
-                        : pm.role === "admin"
-                          ? "blue"
-                          : pm.role === "readonly"
-                            ? "default"
-                            : "green"
-                    }
-                  >
+                  <Tag color={PROJECT_ROLE_META[pm.role].color}>
                     {t(`options.role.${pm.role}`)}
                   </Tag>
                   <small>

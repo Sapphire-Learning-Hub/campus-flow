@@ -287,22 +287,6 @@
   transform: translateY(-50%);
 }
 
-.project-progress-state .status-active {
-  color: #0f8f66;
-}
-
-.project-progress-state .status-planning {
-  color: #4f6fc9;
-}
-
-.project-progress-state .status-completed {
-  color: #707887;
-}
-
-.project-progress-state .status-archived {
-  color: var(--text-tertiary);
-}
-
 .is-overdue {
   color: var(--danger) !important;
   font-weight: 650;

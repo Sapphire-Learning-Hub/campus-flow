@@ -13,6 +13,7 @@ import { MemberAvatar } from "@/components/common/MemberAvatar";
 import { PageHeader } from "@/components/common/PageHeader";
 import { PageState } from "@/components/common/PageState";
 import { MemberFormDrawer } from "@/components/members/MemberForm";
+import { PROJECT_ROLE_META } from "@/constants/status.ts";
 import { useAsyncPageData } from "@/hooks/useAsyncPageData";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useEntityEditor } from "@/hooks/useEntityEditor";
@@ -59,13 +60,6 @@ const INITIAL_MEMBERS_PAGE_DATA: MembersPageData = {
   tasks: [],
   projects: [],
   members: [],
-};
-
-const ROLE_COLORS: Record<ProjectRole, string> = {
-  owner: "purple",
-  admin: "blue",
-  member: "green",
-  readonly: "default",
 };
 
 async function loadMembersPageData(): Promise<MembersPageData> {
@@ -279,7 +273,7 @@ export default function MembersPage() {
         width: 120,
         render: (_, row) => {
           return (
-            <Tag color={ROLE_COLORS[row.role]}>
+            <Tag color={PROJECT_ROLE_META[row.role].color}>
               {t(`options.role.${row.role}`)}
             </Tag>
           );

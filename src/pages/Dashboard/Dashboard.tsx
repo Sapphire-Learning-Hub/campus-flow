@@ -21,6 +21,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { PageState } from "@/components/common/PageState";
 import { ProjectFormDrawer } from "@/components/projects/ProjectForm";
 import { TaskFormDrawer } from "@/components/tasks/TaskForm";
+import { PROJECT_STATUS_META } from "@/constants/status.ts";
 import { useAsyncPageData } from "@/hooks/useAsyncPageData";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useEntityEditor } from "@/hooks/useEntityEditor";
@@ -514,7 +515,10 @@ export default function DashboardPage() {
                           ? t("dashboard.deadline.overdueShort")
                           : formatShortDate(project.deadline)}
                       </time>
-                      <small className={`status-${project.status}`}>
+                      <small
+                        className={`project-status-text ${PROJECT_STATUS_META[project.status].className}`}
+                        style={{ color: PROJECT_STATUS_META[project.status].hex }}
+                      >
                         {t(`options.projectStatus.${project.status}`)}
                       </small>
                     </span>

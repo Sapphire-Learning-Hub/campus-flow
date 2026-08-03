@@ -40,7 +40,12 @@ import { listTasks } from "@/services/tasks";
 import type { Member } from "@/types/member";
 import type { Project } from "@/types/project";
 import type { TaskView } from "@/types/settings";
-import { TASK_STATUS_META } from "@/constants/status.ts";
+import {
+  TASK_PRIORITY_META,
+  TASK_STAGE_META,
+  TASK_STATUS_META,
+  TASK_TYPE_META,
+} from "@/constants/status.ts";
 import type {
   Task,
   TaskPriority,
@@ -57,29 +62,6 @@ import {
 } from "@/utils/Permissions.ts";
 import { getTaskStage, getTaskType, summarizeTasks } from "@/utils/task";
 import "./index.css";
-
-const TYPE_COLORS: Record<TaskType, string> = {
-  requirement: "purple",
-  design: "cyan",
-  development: "blue",
-  test: "gold",
-  bug: "red",
-  operation: "green",
-};
-
-const STAGE_COLORS: Record<TaskStage, string> = {
-  discovery: "default",
-  design: "cyan",
-  delivery: "geekblue",
-  acceptance: "gold",
-};
-
-const PRIORITY_COLORS: Record<TaskPriority, string> = {
-  low: "default",
-  medium: "blue",
-  high: "orange",
-  urgent: "red",
-};
 
 const FILTER_SELECT_PROPS = {
   allowClear: true,
@@ -133,20 +115,20 @@ interface TaskCardProps {
 
 function TypeTag({ type }: { type: TaskType }) {
   const { t } = useTranslation();
-  return <Tag color={TYPE_COLORS[type]}>{t(`options.taskType.${type}`)}</Tag>;
+  return <Tag color={TASK_TYPE_META[type].color}>{t(`options.taskType.${type}`)}</Tag>;
 }
 
 function StageTag({ stage }: { stage: TaskStage }) {
   const { t } = useTranslation();
   return (
-    <Tag color={STAGE_COLORS[stage]}>{t(`options.taskStage.${stage}`)}</Tag>
+    <Tag color={TASK_STAGE_META[stage].color}>{t(`options.taskStage.${stage}`)}</Tag>
   );
 }
 
 function PriorityTag({ priority }: { priority: TaskPriority }) {
   const { t } = useTranslation();
   return (
-    <Tag color={PRIORITY_COLORS[priority]}>
+    <Tag color={TASK_PRIORITY_META[priority].color}>
       {t(`options.priority.${priority}`)}
     </Tag>
   );
