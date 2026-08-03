@@ -13,6 +13,7 @@ import {
   App,
   Button,
   Input,
+  Pagination,
   Segmented,
   Select,
   Space,
@@ -21,7 +22,13 @@ import {
   Tooltip,
   type TableProps,
 } from "antd";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type SetStateAction,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router";
 import { MemberAvatar } from "@/components/common/MemberAvatar";
@@ -55,6 +62,7 @@ import type {
 } from "@/types/task";
 import { formatShortDate, isOverdue } from "@/utils/date";
 import { countActiveFilters, indexById } from "@/utils/collection";
+import { fetchAllPages } from "@/utils/pagination";
 import {
   canEditTask,
   getProjectPermissions,
@@ -81,28 +89,70 @@ interface TaskFilters {
 
 interface TasksPageData {
   tasks: Task[];
+  taskTotal: number;
+  taskSummary: ReturnType<typeof summarizeTasks>;
   projects: Project[];
   members: Member[];
 }
 
+interface TasksPageQuery {
+  page: number;
+  pageSize: number;
+  keyword?: string;
+  projectId?: string;
+  status?: TaskStatus;
+  priority?: TaskPriority;
+  assigneeId?: string;
+}
+
 const INITIAL_TASKS_PAGE_DATA: TasksPageData = {
   tasks: [],
+  taskTotal: 0,
+  taskSummary: summarizeTasks([]),
   projects: [],
   members: [],
 };
 
-async function loadTasksPageData(): Promise<TasksPageData> {
-  const [taskResult, projectResult, members] = await Promise.all([
-    listTasks({ pageSize: 100 }),
-    listProjects({ pageSize: 100 }),
-    listMembers(),
-  ]);
+async function loadTasksPageData(
+  query: TasksPageQuery,
+): Promise<TasksPageData> {
+  const allTaskResultPromise = fetchAllPages(
+    (page, pageSize) =>
+      listTasks({
+        page,
+        pageSize,
+        keyword: query.keyword,
+        projectId: query.projectId,
+        status: query.status,
+        priority: query.priority,
+        assigneeId: query.assigneeId,
+      }),
+    query.pageSize,
+  );
+  const [taskResult, allTaskResult, projectResult, members] = await Promise.all(
+    [
+      listTasks(query),
+      allTaskResultPromise,
+      fetchAllPages(
+        (page, pageSize) => listProjects({ page, pageSize }),
+        query.pageSize,
+      ),
+      listMembers(),
+    ],
+  );
 
   return {
     tasks: taskResult.items,
+    taskTotal: taskResult.total,
+    taskSummary: summarizeTasks(allTaskResult.items),
     projects: projectResult.items,
     members,
   };
+}
+
+function readPage(value: string | null) {
+  const page = Number(value);
+  return Number.isInteger(page) && page > 0 ? page : 1;
 }
 
 interface TaskCardProps {
@@ -115,13 +165,19 @@ interface TaskCardProps {
 
 function TypeTag({ type }: { type: TaskType }) {
   const { t } = useTranslation();
-  return <Tag color={TASK_TYPE_META[type].color}>{t(`options.taskType.${type}`)}</Tag>;
+  return (
+    <Tag color={TASK_TYPE_META[type].color}>
+      {t(`options.taskType.${type}`)}
+    </Tag>
+  );
 }
 
 function StageTag({ stage }: { stage: TaskStage }) {
   const { t } = useTranslation();
   return (
-    <Tag color={TASK_STAGE_META[stage].color}>{t(`options.taskStage.${stage}`)}</Tag>
+    <Tag color={TASK_STAGE_META[stage].color}>
+      {t(`options.taskStage.${stage}`)}
+    </Tag>
   );
 }
 
@@ -199,6 +255,7 @@ interface TaskBoardProps {
   tasks: Task[];
   projectsById: ReadonlyMap<string, Project>;
   membersById: ReadonlyMap<string, Member>;
+  emptyDescription: string;
   canEdit: (task: Task) => boolean;
   onEdit: (task: Task) => void;
 }
@@ -207,52 +264,30 @@ function TaskBoard({
   tasks,
   projectsById,
   membersById,
+  emptyDescription,
   canEdit,
   onEdit,
 }: TaskBoardProps) {
   const { t } = useTranslation();
-  const { taskStatusOptions } = useLocalizedOptions();
 
   return (
     <div className="task-board" aria-label={t("tasksPage.boardLabel")}>
-      {taskStatusOptions.map((column) => {
-        const columnTasks = tasks.filter(
-          (task) => task.status === column.value,
-        );
-        return (
-          <section className="task-column" key={column.value}>
-            <header className="task-column-header">
-              <span
-                className={`task-status-dot ${TASK_STATUS_META[column.value].className}`}
-              />
-              <b>{column.label}</b>
-              <strong>{columnTasks.length}</strong>
-            </header>
-            <div className="task-column-content">
-              {columnTasks.length ? (
-                columnTasks.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    project={projectsById.get(task.projectId)}
-                    member={
-                      task.assigneeId
-                        ? membersById.get(task.assigneeId)
-                        : undefined
-                    }
-                    editable={canEdit(task)}
-                    onEdit={onEdit}
-                  />
-                ))
-              ) : (
-                <div className="task-column-empty">
-                  {t("tasksPage.states.columnEmpty")}
-                </div>
-              )}
-            </div>
-          </section>
-        );
-      })}
+      {tasks.length ? (
+        tasks.map((task) => (
+          <TaskCard
+            key={task.id}
+            task={task}
+            project={projectsById.get(task.projectId)}
+            member={
+              task.assigneeId ? membersById.get(task.assigneeId) : undefined
+            }
+            editable={canEdit(task)}
+            onEdit={onEdit}
+          />
+        ))
+      ) : (
+        <div className="task-board-empty">{emptyDescription}</div>
+      )}
     </div>
   );
 }
@@ -269,6 +304,8 @@ export default function TasksWorkspacePage() {
   const currentUser = useCurrentUser();
   const { settings: appSettings } = useSettings();
   const [searchParams, setSearchParams] = useSearchParams();
+  const page = readPage(searchParams.get("page"));
+  const pageSize = appSettings.pageSize;
   const [view, setView] = useState<TaskView>(appSettings.defaultTaskView);
   const [filters, setFilters] = useState<TaskFilters>(() => ({
     projectId: searchParams.get("projectId") || undefined,
@@ -279,13 +316,64 @@ export default function TasksWorkspacePage() {
       getApiErrorMessage(requestError, t("tasksPage.loadError")),
     [t],
   );
+  const updatePage = useCallback(
+    (nextPage: number, replace = false) => {
+      const nextParams = new URLSearchParams(searchParams);
+      const normalizedPage = Math.max(1, Math.floor(nextPage));
+      if (normalizedPage === 1) nextParams.delete("page");
+      else nextParams.set("page", String(normalizedPage));
+      setSearchParams(nextParams, { replace });
+    },
+    [searchParams, setSearchParams],
+  );
+  const handlePageChange = useCallback(
+    (nextPage: number) => updatePage(nextPage),
+    [updatePage],
+  );
+  const resetPage = useCallback(() => {
+    if (page > 1) updatePage(1, true);
+  }, [page, updatePage]);
+  const updateFilters = useCallback(
+    (nextFilters: SetStateAction<TaskFilters>) => {
+      setFilters(nextFilters);
+      resetPage();
+    },
+    [resetPage],
+  );
+  const loadPage = useCallback(
+    () =>
+      loadTasksPageData({
+        page,
+        pageSize,
+        keyword: filters.keyword?.trim() || undefined,
+        projectId: filters.projectId,
+        status: filters.status,
+        priority: filters.priority,
+        assigneeId: filters.assigneeId,
+      }),
+    [
+      filters.assigneeId,
+      filters.keyword,
+      filters.priority,
+      filters.projectId,
+      filters.status,
+      page,
+      pageSize,
+    ],
+  );
   const { data, setData, loading, refreshing, error, reload, refresh } =
     useAsyncPageData({
       initialData: INITIAL_TASKS_PAGE_DATA,
-      load: loadTasksPageData,
+      load: loadPage,
       getErrorMessage: getTasksPageErrorMessage,
     });
-  const { tasks, projects, members } = data;
+  const { taskSummary, taskTotal, tasks, projects, members } = data;
+  useEffect(() => {
+    if (loading) return;
+
+    const lastPage = Math.max(1, Math.ceil(taskTotal / pageSize));
+    if (page > lastPage) updatePage(lastPage, true);
+  }, [loading, page, pageSize, taskTotal, updatePage]);
   const {
     open: drawerOpen,
     editingItem: editingTask,
@@ -296,7 +384,7 @@ export default function TasksWorkspacePage() {
 
   const projectsById = useMemo(() => indexById(projects), [projects]);
   const membersById = useMemo(() => indexById(members), [members]);
-  const summary = useMemo(() => summarizeTasks(tasks), [tasks]);
+  const summary = taskSummary;
   const creatableProjects = useMemo(
     () =>
       projects.filter(
@@ -411,20 +499,27 @@ export default function TasksWorkspacePage() {
               task.id === savedTask.id ? savedTask : task,
             )
           : [savedTask, ...current.tasks];
-        return { ...current, tasks };
+        return {
+          ...current,
+          taskTotal: taskExists ? current.taskTotal : current.taskTotal + 1,
+          tasks,
+        };
       });
+      void refresh();
     },
-    [setData],
+    [refresh, setData],
   );
 
   const handleTaskDeleted = useCallback(
     (taskId: string) => {
       setData((current) => ({
         ...current,
+        taskTotal: Math.max(0, current.taskTotal - 1),
         tasks: current.tasks.filter((task) => task.id !== taskId),
       }));
+      void refresh();
     },
-    [setData],
+    [refresh, setData],
   );
 
   const columns: TableProps<Task>["columns"] = useMemo(
@@ -528,12 +623,31 @@ export default function TasksWorkspacePage() {
     [isTaskEditable, membersById, openEdit, projectsById, t],
   );
 
+  const taskPagination = useMemo(
+    () => ({
+      current: page,
+      pageSize,
+      total: taskTotal,
+      hideOnSinglePage: true,
+      showSizeChanger: false,
+      showTotal: (total: number) =>
+        t("tasksPage.paginationTotal", { count: total }),
+      onChange: handlePageChange,
+    }),
+    [handlePageChange, page, pageSize, t, taskTotal],
+  );
+
   const taskContent =
     view === "card" ? (
       <TaskBoard
         tasks={filteredTasks}
         projectsById={projectsById}
         membersById={membersById}
+        emptyDescription={
+          tasks.length
+            ? t("tasksPage.states.noMatch")
+            : t("tasksPage.states.empty")
+        }
         canEdit={isTaskEditable}
         onEdit={openEdit}
       />
@@ -549,15 +663,16 @@ export default function TasksWorkspacePage() {
               ? "task-table-row-overdue"
               : ""
           }
-          pagination={{
-            pageSize: appSettings.pageSize,
-            showSizeChanger: false,
-            showTotal: (total) =>
-              t("tasksPage.paginationTotal", { count: total }),
-          }}
+          pagination={taskPagination}
         />
       </div>
     );
+  const taskCardPagination =
+    view === "card" ? (
+      <div className="task-card-pagination">
+        <Pagination {...taskPagination} />
+      </div>
+    ) : null;
 
   return (
     <div className="page-container tasks-workspace-page">
@@ -648,7 +763,7 @@ export default function TasksWorkspacePage() {
             value={filters.keyword}
             placeholder={t("tasksPage.filters.search")}
             onChange={(event) =>
-              setFilters((current) => ({
+              updateFilters((current) => ({
                 ...current,
                 keyword: event.target.value || undefined,
               }))
@@ -664,7 +779,7 @@ export default function TasksWorkspacePage() {
               value: project.id,
             }))}
             onChange={(projectId) => {
-              setFilters((current) => ({
+              updateFilters((current) => ({
                 ...current,
                 projectId,
               }));
@@ -677,7 +792,7 @@ export default function TasksWorkspacePage() {
             placeholder={t("tasksPage.filters.allTypes")}
             options={taskTypeOptions}
             onChange={(workItemType) =>
-              setFilters((current) => ({ ...current, workItemType }))
+              updateFilters((current) => ({ ...current, workItemType }))
             }
           />
           <Select
@@ -687,7 +802,7 @@ export default function TasksWorkspacePage() {
             placeholder={t("tasksPage.filters.allStages")}
             options={taskStageOptions}
             onChange={(stage) =>
-              setFilters((current) => ({ ...current, stage }))
+              updateFilters((current) => ({ ...current, stage }))
             }
           />
           <Select
@@ -697,7 +812,7 @@ export default function TasksWorkspacePage() {
             placeholder={t("tasksPage.filters.allStatuses")}
             options={taskStatusOptions}
             onChange={(status) =>
-              setFilters((current) => ({ ...current, status }))
+              updateFilters((current) => ({ ...current, status }))
             }
           />
           <Select
@@ -707,7 +822,7 @@ export default function TasksWorkspacePage() {
             placeholder={t("tasksPage.filters.allPriorities")}
             options={priorityOptions}
             onChange={(priority) =>
-              setFilters((current) => ({ ...current, priority }))
+              updateFilters((current) => ({ ...current, priority }))
             }
           />
           <Select
@@ -720,7 +835,7 @@ export default function TasksWorkspacePage() {
               value: member.id,
             }))}
             onChange={(assigneeId) =>
-              setFilters((current) => ({ ...current, assigneeId }))
+              updateFilters((current) => ({ ...current, assigneeId }))
             }
           />
           <Button
@@ -728,7 +843,7 @@ export default function TasksWorkspacePage() {
             danger={filters.overdueOnly}
             icon={<WarningFilled />}
             onClick={() =>
-              setFilters((current) => ({
+              updateFilters((current) => ({
                 ...current,
                 overdueOnly: !current.overdueOnly,
               }))
@@ -736,7 +851,10 @@ export default function TasksWorkspacePage() {
           >
             {t("tasksPage.filters.overdueOnly")}
           </Button>
-          <Button disabled={!activeFilterCount} onClick={() => setFilters({})}>
+          <Button
+            disabled={!activeFilterCount}
+            onClick={() => updateFilters({})}
+          >
             {t("tasksPage.actions.clear")}
             {activeFilterCount ? ` (${activeFilterCount})` : ""}
           </Button>
@@ -746,7 +864,7 @@ export default function TasksWorkspacePage() {
           <span>
             {t("tasksPage.resultSummary", {
               filtered: filteredTasks.length,
-              total: tasks.length,
+              total: taskTotal,
             })}
             {summary.overdue
               ? ` · ${t("tasksPage.overdueCount", {
@@ -776,7 +894,7 @@ export default function TasksWorkspacePage() {
       <PageState
         loading={loading}
         error={error}
-        empty={!filteredTasks.length}
+        empty={!filteredTasks.length && taskTotal === 0}
         loadingDescription={t("tasksPage.states.loading")}
         errorTitle={t("tasksPage.states.errorTitle")}
         emptyDescription={
@@ -787,7 +905,7 @@ export default function TasksWorkspacePage() {
         onRetry={reload}
         emptyAction={
           tasks.length ? (
-            <Button onClick={() => setFilters({})}>
+            <Button onClick={() => updateFilters({})}>
               {t("tasksPage.actions.clearFilters")}
             </Button>
           ) : (
@@ -802,6 +920,7 @@ export default function TasksWorkspacePage() {
         }
       >
         {taskContent}
+        {taskCardPagination}
       </PageState>
 
       <TaskFormDrawer

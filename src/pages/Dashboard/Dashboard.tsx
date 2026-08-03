@@ -25,6 +25,7 @@ import { PROJECT_STATUS_META } from "@/constants/status.ts";
 import { useAsyncPageData } from "@/hooks/useAsyncPageData";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useEntityEditor } from "@/hooks/useEntityEditor";
+import { useSettings } from "@/hooks/useSettings";
 import { listActivities } from "@/services/activities";
 import { getApiErrorMessage } from "@/services/client";
 import { listMembers } from "@/services/members";
@@ -41,6 +42,7 @@ import {
   formatShortDate,
   isOverdue,
 } from "@/utils/date";
+import { fetchAllPages } from "@/utils/pagination";
 import { getProjectPermissions, PERMISSION_DENIED } from "@/utils/Permissions";
 import "./index.css";
 
@@ -74,10 +76,13 @@ const ACTIVITY_ICONS: Record<ActivityKind, React.ReactNode> = {
   member_updated: <TeamOutlined />,
 };
 
-async function loadDashboardData(): Promise<DashboardData> {
+async function loadDashboardData(pageSize: number): Promise<DashboardData> {
   const [taskResult, projectResult, members, activities] = await Promise.all([
-    listTasks({ pageSize: 100 }),
-    listProjects({ pageSize: 100 }),
+    fetchAllPages((page, pageSize) => listTasks({ page, pageSize }), pageSize),
+    fetchAllPages(
+      (page, pageSize) => listProjects({ page, pageSize }),
+      pageSize,
+    ),
     listMembers(),
     listActivities({ limit: 8 }),
   ]);
@@ -136,16 +141,21 @@ export default function DashboardPage() {
   const { t } = useTranslation();
   const { message } = App.useApp();
   const currentUser = useCurrentUser();
+  const { settings: appSettings } = useSettings();
   const navigate = useNavigate();
   const getDashboardErrorMessage = useCallback(
     (requestError: unknown) =>
       getApiErrorMessage(requestError, t("dashboard.loadError")),
     [t],
   );
+  const loadPage = useCallback(
+    () => loadDashboardData(appSettings.pageSize),
+    [appSettings.pageSize],
+  );
   const { data, setData, loading, refreshing, error, reload, refresh } =
     useAsyncPageData({
       initialData: INITIAL_DATA,
-      load: loadDashboardData,
+      load: loadPage,
       getErrorMessage: getDashboardErrorMessage,
     });
   const { tasks, projects, members, activities } = data;

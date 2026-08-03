@@ -36,6 +36,7 @@ import {
 } from "@/constants/status.ts";
 import { indexById } from "@/utils/collection";
 import { formatDate, isOverdue } from "@/utils/date";
+import { fetchAllPages } from "@/utils/pagination";
 import {
   getProjectPermissions,
   PERMISSION_DENIED,
@@ -70,7 +71,9 @@ export default function ProjectDetailPage() {
     }
     return Promise.all([
       getProject(projectId),
-      listTasks({ projectId, pageSize: 100 }),
+      fetchAllPages((page, pageSize) =>
+        listTasks({ projectId, page, pageSize }),
+      ),
       listMembers({ projectId }),
       listActivities({ projectId, limit: 10 }),
     ]).then(([project, taskResult, members, activities]) => ({

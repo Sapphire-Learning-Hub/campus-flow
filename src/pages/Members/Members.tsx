@@ -28,6 +28,7 @@ import type { Project } from "@/types/project";
 import type { Task } from "@/types/task";
 import { countActiveFilters, indexById } from "@/utils/collection";
 import { formatShortDate } from "@/utils/date";
+import { fetchAllPages } from "@/utils/pagination";
 import {
   getProjectPermissions,
   PERMISSION_DENIED,
@@ -62,10 +63,13 @@ const INITIAL_MEMBERS_PAGE_DATA: MembersPageData = {
   members: [],
 };
 
-async function loadMembersPageData(): Promise<MembersPageData> {
+async function loadMembersPageData(pageSize: number): Promise<MembersPageData> {
   const [taskResult, projectResult, members] = await Promise.all([
-    listTasks({ pageSize: 100 }),
-    listProjects({ pageSize: 100 }),
+    fetchAllPages((page, pageSize) => listTasks({ page, pageSize }), pageSize),
+    fetchAllPages(
+      (page, pageSize) => listProjects({ page, pageSize }),
+      pageSize,
+    ),
     listMembers(),
   ]);
 
@@ -92,10 +96,14 @@ export default function MembersPage() {
       getApiErrorMessage(requestError, t("membersPage.loadError")),
     [t],
   );
+  const loadPage = useCallback(
+    () => loadMembersPageData(appSettings.pageSize),
+    [appSettings.pageSize],
+  );
   const { data, setData, loading, refreshing, error, reload, refresh } =
     useAsyncPageData({
       initialData: INITIAL_MEMBERS_PAGE_DATA,
-      load: loadMembersPageData,
+      load: loadPage,
       getErrorMessage: getMembersPageErrorMessage,
     });
   const { tasks, projects, members } = data;

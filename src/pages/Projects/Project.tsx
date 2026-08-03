@@ -15,6 +15,7 @@ import {
   App,
   Button,
   Input,
+  Pagination,
   Progress,
   Segmented,
   Select,
@@ -30,6 +31,7 @@ import {
   useMemo,
   useState,
   type CSSProperties,
+  type SetStateAction,
 } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router";
@@ -53,6 +55,7 @@ import type { Task } from "@/types/task";
 import { PROJECT_STATUS_META } from "@/constants/status.ts";
 import { countActiveFilters, indexById } from "@/utils/collection";
 import { formatShortDate, isOverdue } from "@/utils/date";
+import { fetchAllPages } from "@/utils/pagination";
 import {
   getProjectPermissions,
   PERMISSION_DENIED,
@@ -67,8 +70,18 @@ const FILTER_SELECT_PROPS = {
 
 interface ProjectsPageData {
   tasks: Task[];
+  taskTotal: number;
   projects: Project[];
+  projectTotal: number;
+  allProjects: Project[];
   members: Member[];
+}
+
+interface ProjectsPageQuery {
+  page: number;
+  pageSize: number;
+  keyword?: string;
+  status?: ProjectStatus;
 }
 
 interface ProjectFilters {
@@ -97,22 +110,51 @@ const EMPTY_METRICS: ProjectMetrics = {
 
 const INITIAL_PROJECTS_PAGE_DATA: ProjectsPageData = {
   tasks: [],
+  taskTotal: 0,
   projects: [],
+  projectTotal: 0,
+  allProjects: [],
   members: [],
 };
 
-async function loadProjectsPageData(): Promise<ProjectsPageData> {
-  const [taskResult, projectResult, members] = await Promise.all([
-    listTasks({ pageSize: 100 }),
-    listProjects({ pageSize: 100 }),
-    listMembers(),
-  ]);
+async function loadProjectsPageData(
+  query: ProjectsPageQuery,
+): Promise<ProjectsPageData> {
+  const taskResultPromise = fetchAllPages(
+    (page, pageSize) => listTasks({ page, pageSize }),
+    query.pageSize,
+  );
+  const allProjectResultPromise = fetchAllPages(
+    (page, pageSize) =>
+      listProjects({
+        page,
+        pageSize,
+        keyword: query.keyword,
+        status: query.status,
+      }),
+    query.pageSize,
+  );
+  const [taskResult, projectResult, allProjectResult, members] =
+    await Promise.all([
+      taskResultPromise,
+      listProjects(query),
+      allProjectResultPromise,
+      listMembers(),
+    ]);
 
   return {
     tasks: taskResult.items,
+    taskTotal: taskResult.total,
     projects: projectResult.items,
+    projectTotal: projectResult.total,
+    allProjects: allProjectResult.items,
     members,
   };
+}
+
+function readPage(value: string | null) {
+  const page = Number(value);
+  return Number.isInteger(page) && page > 0 ? page : 1;
 }
 
 function isProjectOverdue(project: Project) {
@@ -250,6 +292,7 @@ interface ProjectBoardProps {
   projects: Project[];
   membersById: ReadonlyMap<string, Member>;
   metricsByProjectId: ReadonlyMap<string, ProjectMetrics>;
+  emptyDescription: string;
   favoriteBusyId?: string;
   canEdit: (project: Project) => boolean;
   onEdit: (project: Project) => void;
@@ -261,6 +304,7 @@ function ProjectBoard({
   projects,
   membersById,
   metricsByProjectId,
+  emptyDescription,
   favoriteBusyId,
   canEdit,
   onEdit,
@@ -268,50 +312,26 @@ function ProjectBoard({
   onToggleFavorite,
 }: ProjectBoardProps) {
   const { t } = useTranslation();
-  const { projectStatusOptions } = useLocalizedOptions();
 
   return (
     <div className="project-board" aria-label={t("projectsPage.boardLabel")}>
-      {projectStatusOptions.map((column) => {
-        const columnProjects = projects.filter(
-          (project) => project.status === column.value,
-        );
-
-        return (
-          <section className="project-column" key={column.value}>
-            <header className="project-column-header">
-              <span
-                className={`project-status-dot ${PROJECT_STATUS_META[column.value].className}`}
-              />
-              <b>{column.label}</b>
-              <strong>{columnProjects.length}</strong>
-            </header>
-            <div className="project-column-content">
-              {columnProjects.length ? (
-                columnProjects.map((project) => (
-                  <ProjectCard
-                    key={project.id}
-                    project={project}
-                    member={membersById.get(project.leaderId)}
-                    metrics={
-                      metricsByProjectId.get(project.id) ?? EMPTY_METRICS
-                    }
-                    editable={canEdit(project)}
-                    favoriteBusy={favoriteBusyId === project.id}
-                    onEdit={onEdit}
-                    onOpenDetail={onOpenDetail}
-                    onToggleFavorite={onToggleFavorite}
-                  />
-                ))
-              ) : (
-                <div className="project-column-empty">
-                  {t("projectsPage.states.columnEmpty")}
-                </div>
-              )}
-            </div>
-          </section>
-        );
-      })}
+      {projects.length ? (
+        projects.map((project) => (
+          <ProjectCard
+            key={project.id}
+            project={project}
+            member={membersById.get(project.leaderId)}
+            metrics={metricsByProjectId.get(project.id) ?? EMPTY_METRICS}
+            editable={canEdit(project)}
+            favoriteBusy={favoriteBusyId === project.id}
+            onEdit={onEdit}
+            onOpenDetail={onOpenDetail}
+            onToggleFavorite={onToggleFavorite}
+          />
+        ))
+      ) : (
+        <div className="project-board-empty">{emptyDescription}</div>
+      )}
     </div>
   );
 }
@@ -324,6 +344,8 @@ export default function ProjectsWorkspacePage() {
   const { settings: appSettings } = useSettings();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const page = readPage(searchParams.get("page"));
+  const pageSize = appSettings.pageSize;
   const [view, setView] = useState<ProjectView>(appSettings.defaultProjectView);
   const [filters, setFilters] = useState<ProjectFilters>(() => ({
     leaderId: searchParams.get("leaderId") || undefined,
@@ -334,6 +356,30 @@ export default function ProjectsWorkspacePage() {
     (requestError: unknown) =>
       getApiErrorMessage(requestError, t("projectsPage.loadError")),
     [t],
+  );
+  const updatePage = useCallback(
+    (nextPage: number, replace = false) => {
+      const nextParams = new URLSearchParams(searchParams);
+      const normalizedPage = Math.max(1, Math.floor(nextPage));
+      if (normalizedPage === 1) nextParams.delete("page");
+      else nextParams.set("page", String(normalizedPage));
+      setSearchParams(nextParams, { replace });
+    },
+    [searchParams, setSearchParams],
+  );
+  const handlePageChange = useCallback(
+    (nextPage: number) => updatePage(nextPage),
+    [updatePage],
+  );
+  const resetPage = useCallback(() => {
+    if (page > 1) updatePage(1, true);
+  }, [page, updatePage]);
+  const updateFilters = useCallback(
+    (nextFilters: SetStateAction<ProjectFilters>) => {
+      setFilters(nextFilters);
+      resetPage();
+    },
+    [resetPage],
   );
   const dateSortOptions = useMemo<Array<{ label: string; value: DateSort }>>(
     () => [
@@ -352,13 +398,30 @@ export default function ProjectsWorkspacePage() {
     ],
     [t],
   );
+  const loadPage = useCallback(
+    () =>
+      loadProjectsPageData({
+        page,
+        pageSize,
+        keyword: filters.keyword?.trim() || undefined,
+        status: filters.status,
+      }),
+    [filters.keyword, filters.status, page, pageSize],
+  );
   const { data, setData, loading, refreshing, error, reload, refresh } =
     useAsyncPageData({
       initialData: INITIAL_PROJECTS_PAGE_DATA,
-      load: loadProjectsPageData,
+      load: loadPage,
       getErrorMessage: getProjectsPageErrorMessage,
     });
-  const { tasks, projects, members } = data;
+  const { taskTotal, tasks, projectTotal, projects, allProjects, members } =
+    data;
+  useEffect(() => {
+    if (loading) return;
+
+    const lastPage = Math.max(1, Math.ceil(projectTotal / pageSize));
+    if (page > lastPage) updatePage(lastPage, true);
+  }, [loading, page, pageSize, projectTotal, updatePage]);
   const {
     open: drawerOpen,
     editingItem: editingProject,
@@ -411,13 +474,14 @@ export default function ProjectsWorkspacePage() {
 
   const summary = useMemo(
     () => ({
-      total: projects.length,
-      active: projects.filter((project) => project.status === "active").length,
-      favorites: projects.filter((project) => project.favorite).length,
-      tasks: tasks.length,
-      risks: projects.filter(isProjectOverdue).length,
+      total: projectTotal,
+      active: allProjects.filter((project) => project.status === "active")
+        .length,
+      favorites: allProjects.filter((project) => project.favorite).length,
+      tasks: taskTotal,
+      risks: allProjects.filter(isProjectOverdue).length,
     }),
-    [projects, tasks.length],
+    [allProjects, projectTotal, taskTotal],
   );
 
   const isProjectEditable = useCallback(
@@ -503,7 +567,18 @@ export default function ProjectsWorkspacePage() {
               project.id === savedProject.id ? savedProject : project,
             )
           : [savedProject, ...current.projects];
-        return { ...current, projects: nextProjects };
+        return {
+          ...current,
+          projectTotal: projectExists
+            ? current.projectTotal
+            : current.projectTotal + 1,
+          projects: nextProjects,
+          allProjects: projectExists
+            ? current.allProjects.map((project) =>
+                project.id === savedProject.id ? savedProject : project,
+              )
+            : [savedProject, ...current.allProjects],
+        };
       });
     },
     [setData],
@@ -667,19 +742,22 @@ export default function ProjectsWorkspacePage() {
     ],
   );
 
+  const projectPagination = useMemo(
+    () => ({
+      current: page,
+      pageSize,
+      total: projectTotal,
+      hideOnSinglePage: true,
+      showSizeChanger: false,
+      showTotal: (total: number) =>
+        t("projectsPage.paginationTotal", { count: total }),
+      onChange: handlePageChange,
+    }),
+    [handlePageChange, page, pageSize, projectTotal, t],
+  );
+
   const projectContent =
-    view === "card" ? (
-      <ProjectBoard
-        projects={filteredProjects}
-        membersById={membersById}
-        metricsByProjectId={metricsByProjectId}
-        favoriteBusyId={favoriteBusyId}
-        canEdit={isProjectEditable}
-        onEdit={openEdit}
-        onOpenDetail={openProjectDetail}
-        onToggleFavorite={(project) => void handleToggleFavorite(project)}
-      />
-    ) : (
+    view === "list" ? (
       <div className="project-table-panel">
         <Table
           rowKey="id"
@@ -689,15 +767,32 @@ export default function ProjectsWorkspacePage() {
           rowClassName={(project) =>
             isProjectOverdue(project) ? "project-table-row-overdue" : ""
           }
-          pagination={{
-            pageSize: appSettings.pageSize,
-            showSizeChanger: false,
-            showTotal: (total) =>
-              t("projectsPage.paginationTotal", { count: total }),
-          }}
+          pagination={projectPagination}
         />
       </div>
+    ) : (
+      <ProjectBoard
+        projects={filteredProjects}
+        membersById={membersById}
+        metricsByProjectId={metricsByProjectId}
+        emptyDescription={
+          projects.length
+            ? t("projectsPage.states.noMatch")
+            : t("projectsPage.states.empty")
+        }
+        favoriteBusyId={favoriteBusyId}
+        canEdit={isProjectEditable}
+        onEdit={openEdit}
+        onOpenDetail={openProjectDetail}
+        onToggleFavorite={(project) => void handleToggleFavorite(project)}
+      />
     );
+  const projectCardPagination =
+    view === "card" ? (
+      <div className="project-card-pagination">
+        <Pagination {...projectPagination} />
+      </div>
+    ) : null;
 
   return (
     <div className="page-container projects-workspace-page">
@@ -785,7 +880,7 @@ export default function ProjectsWorkspacePage() {
             value={filters.keyword}
             placeholder={t("projectsPage.filters.search")}
             onChange={(event) =>
-              setFilters((current) => ({
+              updateFilters((current) => ({
                 ...current,
                 keyword: event.target.value || undefined,
               }))
@@ -798,7 +893,7 @@ export default function ProjectsWorkspacePage() {
             placeholder={t("projectsPage.filters.allStatuses")}
             options={projectStatusOptions}
             onChange={(status) =>
-              setFilters((current) => ({ ...current, status }))
+              updateFilters((current) => ({ ...current, status }))
             }
           />
           <Select
@@ -818,14 +913,14 @@ export default function ProjectsWorkspacePage() {
               value: member.id,
             }))}
             onChange={(leaderId) =>
-              setFilters((current) => ({ ...current, leaderId }))
+              updateFilters((current) => ({ ...current, leaderId }))
             }
           />
           <Button
             type={filters.favoriteOnly ? "primary" : "default"}
             icon={<StarFilled />}
             onClick={() =>
-              setFilters((current) => ({
+              updateFilters((current) => ({
                 ...current,
                 favoriteOnly: !current.favoriteOnly,
               }))
@@ -838,7 +933,7 @@ export default function ProjectsWorkspacePage() {
             danger={filters.overdueOnly}
             icon={<WarningFilled />}
             onClick={() =>
-              setFilters((current) => ({
+              updateFilters((current) => ({
                 ...current,
                 overdueOnly: !current.overdueOnly,
               }))
@@ -846,7 +941,10 @@ export default function ProjectsWorkspacePage() {
           >
             {t("projectsPage.filters.overdueOnly")}
           </Button>
-          <Button disabled={!activeFilterCount} onClick={() => setFilters({})}>
+          <Button
+            disabled={!activeFilterCount}
+            onClick={() => updateFilters({})}
+          >
             {t("projectsPage.actions.clear")}
             {activeFilterCount ? ` (${activeFilterCount})` : ""}
           </Button>
@@ -856,7 +954,7 @@ export default function ProjectsWorkspacePage() {
           <span>
             {t("projectsPage.resultSummary", {
               filtered: filteredProjects.length,
-              total: projects.length,
+              total: projectTotal,
             })}
             {summary.favorites
               ? ` · ${t("projectsPage.favoriteCount", {
@@ -886,7 +984,7 @@ export default function ProjectsWorkspacePage() {
       <PageState
         loading={loading}
         error={error}
-        empty={!filteredProjects.length}
+        empty={!filteredProjects.length && projectTotal === 0}
         loadingDescription={t("projectsPage.states.loading")}
         errorTitle={t("projectsPage.states.errorTitle")}
         emptyDescription={
@@ -897,7 +995,7 @@ export default function ProjectsWorkspacePage() {
         onRetry={reload}
         emptyAction={
           projects.length ? (
-            <Button onClick={() => setFilters({})}>
+            <Button onClick={() => updateFilters({})}>
               {t("projectsPage.actions.clearFilters")}
             </Button>
           ) : (
@@ -912,6 +1010,7 @@ export default function ProjectsWorkspacePage() {
         }
       >
         {projectContent}
+        {projectCardPagination}
       </PageState>
 
       <ProjectFormDrawer
