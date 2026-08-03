@@ -47,6 +47,11 @@
     "reload": "Reload",
     "cancel": "Cancel",
     "close": "Close",
+    "discard": {
+      "title": "Discard unsaved changes?",
+      "confirm": "You have unsaved changes. Closing will lose them.",
+      "ok": "Discard changes"
+    },
     "permissionDenied": "Permission denied",
     "unassigned": "Unassigned",
     "notSet": "Not set",

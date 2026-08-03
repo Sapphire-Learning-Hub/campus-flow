@@ -177,8 +177,22 @@ export function TaskFormDrawer({
 
   const close = () => {
     if (submitting || deleting) return;
-    form.resetFields();
-    onClose();
+    if (!form.isFieldsTouched()) {
+      form.resetFields();
+      onClose();
+      return;
+    }
+    modal.confirm({
+      title: t("common.discard.title"),
+      content: t("common.discard.confirm"),
+      okText: t("common.discard.ok"),
+      cancelText: t("common.cancel"),
+      okButtonProps: { danger: true },
+      onOk() {
+        form.resetFields();
+        onClose();
+      },
+    });
   };
 
   const handleSubmit = async (values: TaskFormModel) => {
@@ -305,7 +319,6 @@ export function TaskFormDrawer({
               <Button
                 disabled={submitting || deleting}
                 onClick={() => {
-                  alert("你确定吗");
                   close();
                 }}
               >

@@ -75,8 +75,22 @@ export function MemberFormDrawer({
 
   const close = () => {
     if (submitting || removing) return;
-    form.resetFields();
-    onClose();
+    if (!form.isFieldsTouched()) {
+      form.resetFields();
+      onClose();
+      return;
+    }
+    modal.confirm({
+      title: t("common.discard.title"),
+      content: t("common.discard.confirm"),
+      okText: t("common.discard.ok"),
+      cancelText: t("common.cancel"),
+      okButtonProps: { danger: true },
+      onOk() {
+        form.resetFields();
+        onClose();
+      },
+    });
   };
 
   const handleSubmit = async (values: ProjectMemberInput) => {

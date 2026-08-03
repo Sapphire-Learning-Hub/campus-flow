@@ -47,6 +47,11 @@
     "reload": "重新加载",
     "cancel": "取消",
     "close": "关闭",
+    "discard": {
+      "title": "放弃未保存的修改？",
+      "confirm": "当前修改尚未保存，关闭后修改将丢失。",
+      "ok": "放弃修改"
+    },
     "permissionDenied": "权限不足",
     "unassigned": "未分配",
     "notSet": "未设置",

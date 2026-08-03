@@ -49,7 +49,7 @@ export function ProjectFormDrawer({
   onSaved,
 }: ProjectFormDrawerProps) {
   const { t } = useTranslation();
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const { projectStatusOptions } = useLocalizedOptions();
   const [form] = Form.useForm<ProjectFormModel>();
   const [submitting, setSubmitting] = useState(false);
@@ -74,8 +74,22 @@ export function ProjectFormDrawer({
 
   const close = () => {
     if (submitting) return;
-    form.resetFields();
-    onClose();
+    if (!form.isFieldsTouched()) {
+      form.resetFields();
+      onClose();
+      return;
+    }
+    modal.confirm({
+      title: t("common.discard.title"),
+      content: t("common.discard.confirm"),
+      okText: t("common.discard.ok"),
+      cancelText: t("common.cancel"),
+      okButtonProps: { danger: true },
+      onOk() {
+        form.resetFields();
+        onClose();
+      },
+    });
   };
 
   const handleSubmit = async (values: ProjectFormModel) => {
