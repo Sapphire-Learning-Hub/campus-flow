@@ -465,7 +465,7 @@
       "validation": {
         "currentRequired": "请输入当前密码",
         "newRequired": "请输入新密码",
-        "newLength": "新密码应为 6–32 位",
+        "newLength": "新密码应为 8–72 位",
         "samePassword": "新密码不能与当前密码相同",
         "confirmRequired": "请再次输入新密码",
         "mismatch": "两次输入的密码不一致"
@@ -484,7 +484,7 @@
         "strong": "强"
       },
       "guidance": {
-        "length": "至少 6 位，最长 32 位",
+        "length": "至少 8 位，最长 72 位",
         "avoidWeak": "避免使用连续数字或重复字符",
         "session": "修改成功后当前设备仍保持登录"
       },
@@ -742,7 +742,7 @@
       "username": "请输入用户名",
       "usernameRegister": "用于登录",
       "password": "请输入密码",
-      "passwordNew": "至少 6 位",
+      "passwordNew": "至少 8 位",
       "confirmPassword": "再次输入密码",
       "department": "例如：计算机学院"
     },

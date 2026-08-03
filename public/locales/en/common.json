@@ -477,7 +477,7 @@
       "validation": {
         "currentRequired": "Enter your current password",
         "newRequired": "Enter a new password",
-        "newLength": "New password must be 6–32 characters",
+        "newLength": "New password must be 8–72 characters",
         "samePassword": "New password must differ from the current password",
         "confirmRequired": "Enter the new password again",
         "mismatch": "The passwords do not match"
@@ -496,7 +496,7 @@
         "strong": "Strong"
       },
       "guidance": {
-        "length": "Use 6–32 characters",
+        "length": "Use 8–72 characters",
         "avoidWeak": "Avoid sequences and repeated characters",
         "session": "This device remains signed in after the change"
       },
@@ -763,7 +763,7 @@
       "username": "Enter your username",
       "usernameRegister": "Used to sign in",
       "password": "Enter your password",
-      "passwordNew": "At least 6 characters",
+      "passwordNew": "At least 8 characters",
       "confirmPassword": "Enter your password again",
       "department": "For example: School of Computing"
     },

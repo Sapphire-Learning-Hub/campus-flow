@@ -10,7 +10,9 @@ import { getApiErrorMessage } from "@/services/client.ts";
 import { login } from "@/services/auth.ts";
 
 function getInternalPath(value: unknown): string | undefined {
-  return typeof value === "string" && value.startsWith("/") && !value.startsWith("//")
+  return typeof value === "string" &&
+    value.startsWith("/") &&
+    !value.startsWith("//")
     ? value
     : undefined;
 }
@@ -46,8 +48,8 @@ const Login: React.FC = () => {
       <Form
         layout="vertical"
         initialValues={{
-          username: "admin",
-          password: "123456",
+          username: "",
+          password: "",
           remember: true,
         }}
         requiredMark={false}
@@ -56,7 +58,9 @@ const Login: React.FC = () => {
         <Form.Item
           name="username"
           label={t("auth.fields.username")}
-          rules={[{ required: true, message: t("auth.validation.usernameRequired") }]}
+          rules={[
+            { required: true, message: t("auth.validation.usernameRequired") },
+          ]}
         >
           <Input
             size="large"
