@@ -104,6 +104,7 @@ VITE_USE_MOCK=true
 | `readonly` | `123456` | 只读权限演示账号 |
 
 真实后端不会读取 `src/api/mock/database.ts`，也不会自动创建这些账号。
+
 ### 数据持久化
 
 | 数据                     | 真实后端模式                                                            | Mock 模式                                                            |
@@ -114,15 +115,18 @@ VITE_USE_MOCK=true
 | 主题、分页大小、默认视图 | `localStorage` 的 `campus-flow:settings`                                | 同左                                                                 |
 | 语言选择                 | `localStorage` 的 `campus-flow:language`                                | 同左                                                                 |
 
-
 ## 可用命令
 
 ```bash
 npm run dev      # 启动开发服务器
 npm run build    # 执行 TypeScript 项目构建并生成生产产物
 npm run lint     # 运行 ESLint
+npm run format   # 使用 Prettier 格式化项目文件
+npm run format:check # 检查项目文件是否符合 Prettier 规范
 npm run preview  # 本地预览生产构建
 ```
+
+提交代码时，Husky 的 `pre-commit` 钩子会通过 lint-staged 对暂存的可格式化文件自动运行 Prettier。
 
 ## 页面与路由
 

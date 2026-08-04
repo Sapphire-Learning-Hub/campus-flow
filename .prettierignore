@@ -1,0 +1,43 @@
+# 依赖目录
+node_modules
+
+# 构建产物
+dist
+coverage
+
+# 缓存
+.cache
+.turbo
+
+# 日志
+*.log
+
+# 锁文件通常不主动格式化
+package-lock.json
+pnpm-lock.yaml
+
+# 自动生成文件
+src/generated
+public/mockServiceWorker.js
+*.min.css
+
+# 环境变量
+.env
+.env.*
+
+# 本地工具与编辑器元数据
+.idea
+.playwright-cli
+.agents
+.reasonix
+.codegraph
+.husky/_
+
+# 本地运行与构建产物
+output
+dist-ssr
+logs
+*.local
+
+# 未纳入版本控制的外部需求资料
+需求文档.md
