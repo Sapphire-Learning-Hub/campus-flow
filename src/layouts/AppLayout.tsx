@@ -27,6 +27,7 @@ import {
   type MenuProps,
   Switch,
   Flex,
+  AutoComplete,
 } from "antd";
 import {
   useEffect,
@@ -50,6 +51,9 @@ import "./AppLayout.css";
 import type { AuthUser } from "@/types/user.ts";
 import type { AppLayoutContext } from "@/hooks/useCurrentUser";
 import { useSettings } from "@/hooks/useSettings.ts";
+import { listMembers } from "@/services/members.ts";
+import { listTasks } from "@/services/tasks.ts";
+import { listProjects } from "@/services/projects.ts";
 const { Header, Sider, Content } = Layout;
 const MOBILE_LAYOUT_QUERY = "(max-width: 768px)";
 
@@ -87,7 +91,14 @@ function CurrentUserAvatar({
     </Avatar>
   );
 }
-
+type GlobalSearchItem = {
+  key: string;
+  type: "project" | "task" | "member";
+  id: string;
+  title: string;
+  description?: string;
+  path: string;
+};
 export function AppLayout() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -99,12 +110,100 @@ export function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const { settings, updateSettings } = useSettings();
+  const [keyword, setKeyword] = useState("");
+  const [searchItems, setSearchItems] = useState<GlobalSearchItem[]>([]);
+  const [searching, setSearching] = useState(false);
+  const requestRef = useRef(0);
   const rootPath = `/${location.pathname.split("/").filter(Boolean)[0] ?? "dashboard"}`;
   const isMobile = useSyncExternalStore(
     subscribeToMobileLayout,
     getMobileLayoutSnapshot,
     getServerMobileLayoutSnapshot,
   );
+  async function searchGlobal(keyword: string) {
+    const query = keyword.trim();
+    if (!query) return [];
+    const [projectResult, taskResult, members] = await Promise.all([
+      listProjects({
+        keyword: query,
+        page: 1,
+        pageSize: 5,
+      }),
+      listTasks({
+        keyword: query,
+        page: 1,
+        pageSize: 5,
+      }),
+      listMembers(),
+    ]);
+
+    const normalizedQuery = query.toLowerCase();
+
+    const projectItems = projectResult.items.map((project) => ({
+      key: `project:${project.id}`,
+      type: "project" as const,
+      id: project.id,
+      title: project.name,
+      description: project.description,
+      path: `/projects/${project.id}`,
+    }));
+
+    const taskItems = taskResult.items.map((task) => ({
+      key: `task:${task.id}`,
+      type: "task" as const,
+      id: task.id,
+      title: task.title,
+      description: task.description,
+      path: `/tasks?keyword=${encodeURIComponent(task.title)}`,
+    }));
+
+    const memberItems = members
+      .filter((member) =>
+        `${member.name} ${member.email} ${member.department}`
+          .toLowerCase()
+          .includes(normalizedQuery),
+      )
+      .slice(0, 5)
+      .map((member) => ({
+        key: `member:${member.id}`,
+        type: "member" as const,
+        id: member.id,
+        title: member.name,
+        description: `${member.email} · ${member.department}`,
+        path: `/members?keyword=${encodeURIComponent(member.name)}`,
+      }));
+
+    return [...projectItems, ...taskItems, ...memberItems];
+  }
+  useEffect(() => {
+    requestRef.current += 1;
+    const request = requestRef.current;
+    const query = keyword.trim();
+    if (!query) {
+      return;
+    }
+    let active = true;
+    const timer = window.setTimeout(() => {
+      setSearching(true);
+      void searchGlobal(query)
+        .then((items) => {
+          if (active && request === requestRef.current) setSearchItems(items);
+        })
+        .catch((error: unknown) => {
+          if (active && request === requestRef.current) {
+            console.error("全局搜索失败：", error);
+            setSearchItems([]);
+          }
+        })
+        .finally(() => {
+          if (active && request === requestRef.current) setSearching(false);
+        });
+    }, 250);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [keyword]);
   const isLight = settings.themeMode === "light";
   const navItems = useMemo<MenuProps["items"]>(
     () => [
@@ -280,13 +379,38 @@ export function AppLayout() {
             <Breadcrumb className="header-breadcrumb" items={breadcrumbItems} />
           </Space>
           <div className="header-actions">
-            <Input
-              className="global-search"
-              prefix={<SearchOutlined />}
-              suffix={<span className="search-shortcut">Ctrl K</span>}
-              placeholder={t("header.searchPlaceholder")}
-              aria-label={t("header.globalSearch")}
-            />
+            <AutoComplete
+              className="global-search-autocomplete"
+              value={keyword}
+              style={{ width: 380 }}
+              options={searchItems.map((item) => ({
+                value: item.key,
+                label: (
+                  <div>
+                    <strong>{item.title}</strong>
+                    <div>{item.description}</div>
+                  </div>
+                ),
+              }))}
+              onChange={setKeyword}
+              onSelect={(value) => {
+                const selected = searchItems.find((item) => item.key === value);
+                if (!selected) return;
+                setKeyword("");
+                setSearchItems([]);
+                navigate(selected.path);
+              }}
+              allowClear
+              notFoundContent={searching ? "正在搜索..." : "没有匹配结果"}
+            >
+              <Input
+                className="global-search-input"
+                prefix={<SearchOutlined />}
+                placeholder={t("header.searchPlaceholder")}
+                aria-label={t("header.globalSearch")}
+              />
+            </AutoComplete>
+
             <Tooltip title={t("header.quickCreate")}>
               <Button
                 className="header-icon-btn header-create-btn"
