@@ -1,9 +1,4 @@
-import {
-  BgColorsOutlined,
-  LockOutlined,
-  SettingOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
+import { BgColorsOutlined, LockOutlined, SettingOutlined, UserOutlined } from "@ant-design/icons";
 import {
   App,
   Card,
@@ -55,8 +50,7 @@ function useMediaQuery(query: string) {
 
   useEffect(() => {
     const mediaQuery = window.matchMedia(query);
-    const handleChange = (event: MediaQueryListEvent) =>
-      setMatches(event.matches);
+    const handleChange = (event: MediaQueryListEvent) => setMatches(event.matches);
 
     mediaQuery.addEventListener("change", handleChange);
     return () => mediaQuery.removeEventListener("change", handleChange);
@@ -73,9 +67,7 @@ export default function SettingsPage() {
   const revalidator = useRevalidator();
   const isMobile = useMediaQuery(MOBILE_SETTINGS_QUERY);
   const [activeTab, setActiveTab] = useState<TabKey>("profile");
-  const [mobileActivePanel, setMobileActivePanel] = useState<
-    TabKey | undefined
-  >("profile");
+  const [mobileActivePanel, setMobileActivePanel] = useState<TabKey | undefined>("profile");
   const [avatar, setAvatar] = useState(user.avatar);
   const [profileSubmitting, setProfileSubmitting] = useState(false);
   const [passwordSubmitting, setPasswordSubmitting] = useState(false);
@@ -109,14 +101,11 @@ export default function SettingsPage() {
     [t],
   );
   const menuItems = useMemo<MenuProps["items"]>(
-    () =>
-      settingsSections.map(({ key, icon, label }) => ({ key, icon, label })),
+    () => settingsSections.map(({ key, icon, label }) => ({ key, icon, label })),
     [settingsSections],
   );
 
-  const handleAvatarSelect: NonNullable<UploadProps["beforeUpload"]> = (
-    file,
-  ) => {
+  const handleAvatarSelect: NonNullable<UploadProps["beforeUpload"]> = (file) => {
     if (!["image/jpeg", "image/png"].includes(file.type)) {
       message.error(t("settings.profile.messages.fileType"));
       return Upload.LIST_IGNORE;
@@ -146,9 +135,7 @@ export default function SettingsPage() {
       await revalidator.revalidate();
       message.success(t("settings.profile.messages.saved"));
     } catch (error) {
-      message.error(
-        getApiErrorMessage(error, t("settings.profile.messages.saveFailed")),
-      );
+      message.error(getApiErrorMessage(error, t("settings.profile.messages.saveFailed")));
     } finally {
       setProfileSubmitting(false);
     }
@@ -165,9 +152,7 @@ export default function SettingsPage() {
       message.success(t("settings.security.messages.saved"));
       return true;
     } catch (error) {
-      message.error(
-        getApiErrorMessage(error, t("settings.security.messages.saveFailed")),
-      );
+      message.error(getApiErrorMessage(error, t("settings.security.messages.saveFailed")));
       return false;
     } finally {
       setPasswordSubmitting(false);
@@ -195,10 +180,7 @@ export default function SettingsPage() {
       />
     ),
     security: (
-      <SecuritySettingsContent
-        submitting={passwordSubmitting}
-        onSave={handleChangePassword}
-      />
+      <SecuritySettingsContent submitting={passwordSubmitting} onSave={handleChangePassword} />
     ),
     appearance: (
       <AppearanceSettingsContent
@@ -236,9 +218,7 @@ export default function SettingsPage() {
     }),
   );
 
-  const activeSection = settingsSections.find(
-    (section) => section.key === activeTab,
-  )!;
+  const activeSection = settingsSections.find((section) => section.key === activeTab)!;
 
   return (
     <div className="page-container settings-page">
@@ -256,9 +236,7 @@ export default function SettingsPage() {
           expandIconPlacement="end"
           activeKey={mobileActivePanel ? [mobileActivePanel] : []}
           items={mobileItems}
-          onChange={(keys) =>
-            setMobileActivePanel(keys[0] as TabKey | undefined)
-          }
+          onChange={(keys) => setMobileActivePanel(keys[0] as TabKey | undefined)}
         />
       ) : (
         <Layout className="settings-layout">

@@ -1,13 +1,7 @@
 import { http } from "@/utils/request";
 import { unwrap } from "./client";
 import type { ApiResponse, PaginatedResult } from "@/types/common";
-import type {
-  Task,
-  TaskFormValues,
-  TaskPatch,
-  TaskPriority,
-  TaskStatus,
-} from "@/types/task";
+import type { Task, TaskFormValues, TaskPatch, TaskPriority, TaskStatus } from "@/types/task";
 
 export interface TaskListQuery {
   keyword?: string;
@@ -19,12 +13,8 @@ export interface TaskListQuery {
   pageSize?: number;
 }
 
-export function listTasks(
-  params: TaskListQuery = {},
-): Promise<PaginatedResult<Task>> {
-  return unwrap(
-    http.get<ApiResponse<PaginatedResult<Task>>>("/tasks", { params }),
-  );
+export function listTasks(params: TaskListQuery = {}): Promise<PaginatedResult<Task>> {
+  return unwrap(http.get<ApiResponse<PaginatedResult<Task>>>("/tasks", { params }));
 }
 
 export function createTask(values: TaskFormValues): Promise<Task> {

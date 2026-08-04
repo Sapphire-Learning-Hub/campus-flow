@@ -55,8 +55,7 @@ export function useAsyncPageData<T>({
         const result = await load();
         if (isActive() && request === requestRef.current) setData(result);
       } catch (requestError) {
-        if (isActive() && request === requestRef.current)
-          setError(getErrorMessage(requestError));
+        if (isActive() && request === requestRef.current) setError(getErrorMessage(requestError));
       } finally {
         if (isActive() && request === requestRef.current) {
           setLoading(false);
@@ -77,14 +76,8 @@ export function useAsyncPageData<T>({
     };
   }, [execute]);
 
-  const reload = useCallback(
-    () => execute(false, () => mountedRef.current),
-    [execute],
-  );
-  const refresh = useCallback(
-    () => execute(true, () => mountedRef.current),
-    [execute],
-  );
+  const reload = useCallback(() => execute(false, () => mountedRef.current), [execute]);
+  const refresh = useCallback(() => execute(true, () => mountedRef.current), [execute]);
 
   return {
     data,

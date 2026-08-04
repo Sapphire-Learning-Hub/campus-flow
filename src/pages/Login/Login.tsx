@@ -11,9 +11,7 @@ import { login } from "@/services/auth.ts";
 import { getLoginValidationRules } from "@/utils/formRules";
 
 function getInternalPath(value: unknown): string | undefined {
-  return typeof value === "string" &&
-    value.startsWith("/") &&
-    !value.startsWith("//")
+  return typeof value === "string" && value.startsWith("/") && !value.startsWith("//")
     ? value
     : undefined;
 }
@@ -82,13 +80,7 @@ const Login: React.FC = () => {
         <Form.Item name="remember" valuePropName="checked">
           <Checkbox>{t("auth.remember")}</Checkbox>
         </Form.Item>
-        <Button
-          type="primary"
-          size="large"
-          htmlType="submit"
-          loading={submitted}
-          block
-        >
+        <Button type="primary" size="large" htmlType="submit" loading={submitted} block>
           {t("auth.login.submit")}
         </Button>
         <p className="autu-switch">

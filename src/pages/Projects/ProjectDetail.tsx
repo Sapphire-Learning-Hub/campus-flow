@@ -30,10 +30,7 @@ import {
 } from "@/constants/status.ts";
 import { indexById } from "@/utils/collection";
 import { formatDate, isOverdue } from "@/utils/date";
-import {
-  getProjectPermissions,
-  PERMISSION_DENIED,
-} from "@/utils/Permissions.ts";
+import { getProjectPermissions, PERMISSION_DENIED } from "@/utils/Permissions.ts";
 import {
   loadProjectDetailData,
   summarizeProjectDetail,
@@ -62,26 +59,22 @@ export default function ProjectDetailPage() {
   );
 
   const getProjectDetailErrorMessage = useCallback(
-    (requestError: unknown) =>
-      getApiErrorMessage(requestError, t("projectDetail.loadError")),
+    (requestError: unknown) => getApiErrorMessage(requestError, t("projectDetail.loadError")),
     [t],
   );
 
-  const { data, setData, loading, error, reload } = useAsyncPageData<
-    ProjectDetailData | undefined
-  >({
-    initialData: undefined,
-    load: loadProjectDetail,
-    getErrorMessage: getProjectDetailErrorMessage,
-  });
+  const { data, setData, loading, error, reload } = useAsyncPageData<ProjectDetailData | undefined>(
+    {
+      initialData: undefined,
+      load: loadProjectDetail,
+      getErrorMessage: getProjectDetailErrorMessage,
+    },
+  );
 
   const project = data?.project;
   const tasks = data?.tasks ?? [];
   const activities = data?.activities ?? [];
-  const membersById = useMemo(
-    () => indexById(data?.members ?? []),
-    [data?.members],
-  );
+  const membersById = useMemo(() => indexById(data?.members ?? []), [data?.members]);
 
   if (loading || error || !project) {
     return (
@@ -140,21 +133,14 @@ export default function ProjectDetailPage() {
           message.success(t("projectDetail.messages.deleted"));
           navigate("/projects", { replace: true });
         } catch (requestError) {
-          message.error(
-            getApiErrorMessage(
-              requestError,
-              t("projectDetail.messages.deleteFailed"),
-            ),
-          );
+          message.error(getApiErrorMessage(requestError, t("projectDetail.messages.deleteFailed")));
           throw requestError;
         }
       },
     });
   };
   const handleProjectSaved = (savedProject: Project) => {
-    setData((current) =>
-      current ? { ...current, project: savedProject } : current,
-    );
+    setData((current) => (current ? { ...current, project: savedProject } : current));
     setEditorOpen(false);
   };
 
@@ -185,9 +171,7 @@ export default function ProjectDetailPage() {
         className="project-detail-hero"
         style={{ "--project-color": project.color } as React.CSSProperties}
       >
-        <span className="project-detail-symbol">
-          {project.name.slice(0, 1)}
-        </span>
+        <span className="project-detail-symbol">{project.name.slice(0, 1)}</span>
 
         <div className="project-detail-heading">
           <div>
@@ -205,11 +189,7 @@ export default function ProjectDetailPage() {
             <Button icon={<TeamOutlined />} onClick={handleManageMembers}>
               {t("projectDetail.actions.manageMembers")}
             </Button>
-            <Button
-              danger
-              icon={<DeleteOutlined />}
-              onClick={handleDeleteProject}
-            >
+            <Button danger icon={<DeleteOutlined />} onClick={handleDeleteProject}>
               {t("projectDetail.actions.delete")}
             </Button>
           </Space>
@@ -257,9 +237,7 @@ export default function ProjectDetailPage() {
           </span>
           <small>{t("projectDetail.summary.openTasks")}</small>
           <strong>{openTasks}</strong>
-          <em>
-            {t("projectDetail.summary.totalTasks", { count: totalTasks })}
-          </em>
+          <em>{t("projectDetail.summary.totalTasks", { count: totalTasks })}</em>
         </article>
         <article>
           <span>
@@ -368,16 +346,11 @@ export default function ProjectDetailPage() {
           {(() => {
             const upcoming = [...tasks]
               .filter((task) => task.deadline && task.status !== "done")
-              .sort(
-                (a, b) =>
-                  dayjs(a.deadline).valueOf() - dayjs(b.deadline).valueOf(),
-              )
+              .sort((a, b) => dayjs(a.deadline).valueOf() - dayjs(b.deadline).valueOf())
               .slice(0, 4);
             return upcoming.length > 0 ? (
               upcoming.map((task) => {
-                const assignee = task.assigneeId
-                  ? membersById.get(task.assigneeId)
-                  : undefined;
+                const assignee = task.assigneeId ? membersById.get(task.assigneeId) : undefined;
                 return (
                   <div key={task.id}>
                     <CalendarOutlined />
@@ -385,9 +358,7 @@ export default function ProjectDetailPage() {
                       <b>{task.title}</b>
                       <small>{assignee?.name ?? t("common.unassigned")}</small>
                     </span>
-                    <time
-                      className={isOverdue(task.deadline) ? "danger-text" : ""}
-                    >
+                    <time className={isOverdue(task.deadline) ? "danger-text" : ""}>
                       {formatDate(task.deadline)}
                     </time>
                   </div>
@@ -426,17 +397,13 @@ export default function ProjectDetailPage() {
             <tbody>
               {tasks.length > 0 ? (
                 tasks.map((task) => {
-                  const assignee = task.assigneeId
-                    ? membersById.get(task.assigneeId)
-                    : undefined;
+                  const assignee = task.assigneeId ? membersById.get(task.assigneeId) : undefined;
                   return (
                     <tr key={task.id}>
                       <td>{task.title}</td>
                       <td>
                         {task.workItemType ? (
-                          <Tag>
-                            {t(`options.taskType.${task.workItemType}`)}
-                          </Tag>
+                          <Tag>{t(`options.taskType.${task.workItemType}`)}</Tag>
                         ) : (
                           <Tag>{t("common.unknown")}</Tag>
                         )}
@@ -507,9 +474,7 @@ export default function ProjectDetailPage() {
                   <MemberAvatar member={member} size={56} />
                   <h3>{member?.name ?? t("common.unknown")}</h3>
                   <p>{member?.department ?? ""}</p>
-                  <Tag color={PROJECT_ROLE_META[pm.role].color}>
-                    {t(`options.role.${pm.role}`)}
-                  </Tag>
+                  <Tag color={PROJECT_ROLE_META[pm.role].color}>{t(`options.role.${pm.role}`)}</Tag>
                   <small>
                     {t("projectDetail.members.taskCount", {
                       count: memberTaskCount,
@@ -543,8 +508,7 @@ export default function ProjectDetailPage() {
                   <MemberAvatar member={actor} size={30} />
                   <div>
                     <p>
-                      <b>{actor?.name ?? t("common.unknown")}</b>{" "}
-                      {activity.content}
+                      <b>{actor?.name ?? t("common.unknown")}</b> {activity.content}
                     </p>
                     <small>{formatDate(activity.createdAt)}</small>
                   </div>

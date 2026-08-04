@@ -40,15 +40,10 @@ function recordTask(summary: Omit<TaskSummary, "progress">, task: Task): void {
   if (isOverdue(task.deadline, completed)) summary.overdue += 1;
 }
 
-function finalizeTaskSummary(
-  summary: Omit<TaskSummary, "progress">,
-): TaskSummary {
+function finalizeTaskSummary(summary: Omit<TaskSummary, "progress">): TaskSummary {
   return {
     ...summary,
-    progress:
-      summary.total === 0
-        ? 0
-        : Math.round((summary.completed / summary.total) * 100),
+    progress: summary.total === 0 ? 0 : Math.round((summary.completed / summary.total) * 100),
   };
 }
 export function summarizeTasks(tasks: ReadonlyArray<Task>): TaskSummary {

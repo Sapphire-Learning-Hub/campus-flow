@@ -37,9 +37,7 @@ describe("受保护路由", () => {
     vi.mocked(getAccessToken).mockReturnValue(null);
 
     const response = await captureRedirect(
-      ProtectedRouter(
-        routeArgs("https://campus-flow.test/tasks?page=2#filters"),
-      ),
+      ProtectedRouter(routeArgs("https://campus-flow.test/tasks?page=2#filters")),
     );
 
     expect(response.status).toBe(302);
@@ -60,9 +58,7 @@ describe("受保护路由", () => {
     );
 
     expect(clearAccessToken).toHaveBeenCalledOnce();
-    expect(response.headers.get("Location")).toBe(
-      "/login?redirectTo=%2Fdashboard",
-    );
+    expect(response.headers.get("Location")).toBe("/login?redirectTo=%2Fdashboard");
   });
 
   it("返回当前用户并透传非认证错误", async () => {
@@ -77,15 +73,15 @@ describe("受保护路由", () => {
     };
     vi.mocked(getCurrentUser).mockResolvedValueOnce(user);
 
-    await expect(
-      ProtectedRouter(routeArgs("https://campus-flow.test/dashboard")),
-    ).resolves.toEqual(user);
+    await expect(ProtectedRouter(routeArgs("https://campus-flow.test/dashboard"))).resolves.toEqual(
+      user,
+    );
 
     const networkError = new Error("网络不可用");
     vi.mocked(getCurrentUser).mockRejectedValueOnce(networkError);
-    await expect(
-      ProtectedRouter(routeArgs("https://campus-flow.test/dashboard")),
-    ).rejects.toBe(networkError);
+    await expect(ProtectedRouter(routeArgs("https://campus-flow.test/dashboard"))).rejects.toBe(
+      networkError,
+    );
     expect(clearAccessToken).not.toHaveBeenCalled();
   });
 });

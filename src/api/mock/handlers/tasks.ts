@@ -29,10 +29,7 @@ export const taskHandlers = [
     const pageSize = readPositiveInteger(url.searchParams.get("pageSize"), 20);
     const accessibleProjectIds = new Set(
       mockDatabase.projects
-        .filter(
-          (project) =>
-            getProjectPermissions(project, user.memberId).canViewProject,
-        )
+        .filter((project) => getProjectPermissions(project, user.memberId).canViewProject)
         .map((project) => project.id),
     );
     const filtered = mockDatabase.tasks.filter((task) => {
@@ -64,13 +61,9 @@ export const taskHandlers = [
     const user = findAuthorizedUser(request);
     if (!user) return fail("请先登录", 401);
 
-    const task = mockDatabase.tasks.find(
-      (item) => item.id === String(params.taskId),
-    );
+    const task = mockDatabase.tasks.find((item) => item.id === String(params.taskId));
     if (!task) return fail("任务不存在", 404);
-    const project = mockDatabase.projects.find(
-      (item) => item.id === task.projectId,
-    );
+    const project = mockDatabase.projects.find((item) => item.id === task.projectId);
     if (!getProjectPermissions(project, user.memberId).canViewProject) {
       return fail(PERMISSION_DENIED.viewProject, 403);
     }
@@ -83,9 +76,7 @@ export const taskHandlers = [
     if (!user) return fail("请先登录", 401);
 
     const values = (await request.json()) as TaskFormValues;
-    const project = mockDatabase.projects.find(
-      (item) => item.id === values.projectId,
-    );
+    const project = mockDatabase.projects.find((item) => item.id === values.projectId);
     if (!project) return fail("所属项目不存在", 400);
     if (!getProjectPermissions(project, user.memberId).canCreateTask) {
       return fail(PERMISSION_DENIED.createTask, 403);
@@ -121,20 +112,15 @@ export const taskHandlers = [
     const user = findAuthorizedUser(request);
     if (!user) return fail("请先登录", 401);
 
-    const task = mockDatabase.tasks.find(
-      (item) => item.id === String(params.taskId),
-    );
+    const task = mockDatabase.tasks.find((item) => item.id === String(params.taskId));
     if (!task) return fail("任务不存在", 404);
-    const project = mockDatabase.projects.find(
-      (item) => item.id === task.projectId,
-    );
+    const project = mockDatabase.projects.find((item) => item.id === task.projectId);
     if (!canEditTask(project, user.memberId, task)) {
       return fail(PERMISSION_DENIED.editTask, 403);
     }
 
     const patch = (await request.json()) as TaskPatch;
-    const nextAssigneeId =
-      patch.assigneeId === undefined ? task.assigneeId : patch.assigneeId;
+    const nextAssigneeId = patch.assigneeId === undefined ? task.assigneeId : patch.assigneeId;
     if (!canAssignTaskTo(project, user.memberId, nextAssigneeId)) {
       return fail(PERMISSION_DENIED.assignTask, 403);
     }
@@ -155,14 +141,10 @@ export const taskHandlers = [
     const user = findAuthorizedUser(request);
     if (!user) return fail("请先登录", 401);
 
-    const index = mockDatabase.tasks.findIndex(
-      (item) => item.id === String(params.taskId),
-    );
+    const index = mockDatabase.tasks.findIndex((item) => item.id === String(params.taskId));
     if (index === -1) return fail("任务不存在", 404);
     const task = mockDatabase.tasks[index];
-    const project = mockDatabase.projects.find(
-      (item) => item.id === task.projectId,
-    );
+    const project = mockDatabase.projects.find((item) => item.id === task.projectId);
     if (!canDeleteTask(project, user.memberId)) {
       return fail(PERMISSION_DENIED.deleteTask, 403);
     }

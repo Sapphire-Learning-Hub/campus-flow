@@ -8,11 +8,7 @@ interface MemberAvatarProps {
   showName?: boolean;
 }
 
-export function MemberAvatar({
-  member,
-  size = "default",
-  showName = false,
-}: MemberAvatarProps) {
+export function MemberAvatar({ member, size = "default", showName = false }: MemberAvatarProps) {
   const { t } = useTranslation();
   const displayName = member?.name ?? t("common.unassigned");
   const avatar = (

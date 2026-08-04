@@ -14,9 +14,7 @@ export async function fetchAllPages<T>(
   if (totalPages <= 1) return firstPage;
 
   const remainingPages = await Promise.all(
-    Array.from({ length: totalPages - 1 }, (_, index) =>
-      loadPage(index + 2, resolvedPageSize),
-    ),
+    Array.from({ length: totalPages - 1 }, (_, index) => loadPage(index + 2, resolvedPageSize)),
   );
 
   return {

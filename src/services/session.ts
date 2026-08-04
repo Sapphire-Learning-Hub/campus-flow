@@ -7,9 +7,7 @@ function getStorage(kind: "local" | "session"): Storage | undefined {
 
 export function getAccessToken(): string | null {
   return (
-    getStorage("local")?.getItem(TOKEN_KEY) ??
-    getStorage("session")?.getItem(TOKEN_KEY) ??
-    null
+    getStorage("local")?.getItem(TOKEN_KEY) ?? getStorage("session")?.getItem(TOKEN_KEY) ?? null
   );
 }
 

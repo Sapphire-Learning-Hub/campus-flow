@@ -9,12 +9,7 @@ import { useTranslation } from "react-i18next";
 import type { CSSProperties } from "react";
 import { Button, Progress, Tag, Tooltip } from "antd";
 import { PERMISSION_DENIED } from "@/utils/Permissions.ts";
-import {
-  CalendarOutlined,
-  StarFilled,
-  StarOutlined,
-  WarningFilled,
-} from "@ant-design/icons";
+import { CalendarOutlined, StarFilled, StarOutlined, WarningFilled } from "@ant-design/icons";
 import { MemberAvatar } from "@/components/common/MemberAvatar.tsx";
 import { formatShortDate } from "@/utils/date.ts";
 import { PROJECT_STATUS_META } from "@/constants/status.ts";
@@ -79,9 +74,7 @@ function ProjectCard({
         </div>
         <Tooltip
           title={
-            editable
-              ? t("projectsPage.actions.toggleFavorite")
-              : PERMISSION_DENIED.editProject
+            editable ? t("projectsPage.actions.toggleFavorite") : PERMISSION_DENIED.editProject
           }
         >
           <Button
@@ -119,20 +112,14 @@ function ProjectCard({
           <span>{t("projectsPage.card.progress")}</span>
           <b>{metrics.progress}%</b>
         </div>
-        <Progress
-          percent={metrics.progress}
-          showInfo={false}
-          strokeColor={project.color}
-        />
+        <Progress percent={metrics.progress} showInfo={false} strokeColor={project.color} />
       </div>
 
       <footer className="project-card-footer">
         <MemberAvatar member={member} size={24} showName />
         <Tooltip
           title={
-            overdue
-              ? t("projectsPage.card.projectOverdue")
-              : t("projectsPage.columns.deadline")
+            overdue ? t("projectsPage.card.projectOverdue") : t("projectsPage.columns.deadline")
           }
         >
           <time className={overdue ? "danger-text" : undefined}>
@@ -173,9 +160,7 @@ export function ProjectBoard({
             key={project.id}
             project={project}
             member={membersById.get(project.leaderId)}
-            metrics={
-              metricsByProjectId.get(project.id) ?? EMPTY_PROJECT_METRICS
-            }
+            metrics={metricsByProjectId.get(project.id) ?? EMPTY_PROJECT_METRICS}
             editable={canEdit(project)}
             favoriteBusy={favoriteBusyId === project.id}
             onEdit={onEdit}

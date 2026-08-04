@@ -75,15 +75,11 @@ export function canEditTask(
 ): boolean {
   const permissions = getProjectPermissions(project, memberId);
   return (
-    permissions.canManageAllTasks ||
-    (permissions.role === "member" && task.assigneeId === memberId)
+    permissions.canManageAllTasks || (permissions.role === "member" && task.assigneeId === memberId)
   );
 }
 
-export function canDeleteTask(
-  project: Project | undefined,
-  memberId: string | undefined,
-): boolean {
+export function canDeleteTask(project: Project | undefined, memberId: string | undefined): boolean {
   return getProjectPermissions(project, memberId).canManageAllTasks;
 }
 

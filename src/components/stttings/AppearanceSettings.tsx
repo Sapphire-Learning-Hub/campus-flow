@@ -39,9 +39,7 @@ export function AppearanceSettingsContent({
         <Radio.Group
           className="theme-mode-group"
           value={themeMode}
-          onChange={(event) =>
-            onThemeModeChange(event.target.value as ThemeMode)
-          }
+          onChange={(event) => onThemeModeChange(event.target.value as ThemeMode)}
         >
           <Radio.Button value="light">
             <div className="theme-card">
@@ -82,15 +80,10 @@ export function AppearanceSettingsContent({
           <ColorPicker
             value={themeColor}
             showText
-            onChangeComplete={(color) =>
-              onThemeColorChange(color.toHexString())
-            }
+            onChangeComplete={(color) => onThemeColorChange(color.toHexString())}
           />
         </div>
-        <div
-          className="color-options"
-          aria-label={t("settings.appearance.recommendedColors")}
-        >
+        <div className="color-options" aria-label={t("settings.appearance.recommendedColors")}>
           {THEME_COLORS.map((color) => (
             <button
               key={color}

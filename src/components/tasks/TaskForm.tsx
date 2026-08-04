@@ -1,14 +1,4 @@
-import {
-  Alert,
-  App,
-  Button,
-  DatePicker,
-  Drawer,
-  Form,
-  Input,
-  Select,
-  Space,
-} from "antd";
+import { Alert, App, Button, DatePicker, Drawer, Form, Input, Select, Space } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -58,12 +48,8 @@ export function TaskFormDrawer({
 }: TaskFormDrawerProps) {
   const { t } = useTranslation();
   const { message, modal } = App.useApp();
-  const {
-    priorityOptions,
-    taskStageOptions,
-    taskStatusOptions,
-    taskTypeOptions,
-  } = useLocalizedOptions();
+  const { priorityOptions, taskStageOptions, taskStatusOptions, taskTypeOptions } =
+    useLocalizedOptions();
   const [form] = Form.useForm<TaskFormModel>();
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -72,27 +58,20 @@ export function TaskFormDrawer({
   const startDate = Form.useWatch("startDate", form);
   const project = projects.find((item) => item.id === projectId);
   const permissions = getProjectPermissions(project, currentMemberId);
-  const readOnly = initial
-    ? !canEditTask(project, currentMemberId, initial)
-    : false;
-  const canDeleteCurrentTask = initial
-    ? canDeleteTask(project, currentMemberId)
-    : false;
+  const readOnly = initial ? !canEditTask(project, currentMemberId, initial) : false;
+  const canDeleteCurrentTask = initial ? canDeleteTask(project, currentMemberId) : false;
 
   const creatableProjects = useMemo(
     () =>
       projects.filter(
         (item) =>
-          item.status !== "archived" &&
-          getProjectPermissions(item, currentMemberId).canCreateTask,
+          item.status !== "archived" && getProjectPermissions(item, currentMemberId).canCreateTask,
       ),
     [currentMemberId, projects],
   );
 
   const allowedMembers = useMemo(() => {
-    const projectMemberIds = new Set(
-      project?.members.map((item) => item.memberId) ?? [],
-    );
+    const projectMemberIds = new Set(project?.members.map((item) => item.memberId) ?? []);
     return members.filter((member) => projectMemberIds.has(member.id));
   }, [members, project]);
 
@@ -108,10 +87,7 @@ export function TaskFormDrawer({
       ? members.find((member) => member.id === initial.assigneeId)
       : undefined;
 
-    if (
-      initial?.assigneeId &&
-      !allowedMembers.some((member) => member.id === initial.assigneeId)
-    ) {
+    if (initial?.assigneeId && !allowedMembers.some((member) => member.id === initial.assigneeId)) {
       options.push({
         label: t("taskForm.removedAssignee", {
           name: currentAssignee?.name ?? t("taskForm.previousAssignee"),
@@ -120,14 +96,7 @@ export function TaskFormDrawer({
       });
     }
     return options;
-  }, [
-    allowedMembers,
-    currentMemberId,
-    initial,
-    members,
-    permissions.canManageAllTasks,
-    t,
-  ]);
+  }, [allowedMembers, currentMemberId, initial, members, permissions.canManageAllTasks, t]);
 
   useEffect(() => {
     if (!open) return;
@@ -144,22 +113,14 @@ export function TaskFormDrawer({
       return;
     }
 
-    const initialProjectId = creatableProjects.some(
-      (item) => item.id === defaultProjectId,
-    )
+    const initialProjectId = creatableProjects.some((item) => item.id === defaultProjectId)
       ? defaultProjectId
       : creatableProjects[0]?.id;
-    const initialProject = creatableProjects.find(
-      (item) => item.id === initialProjectId,
-    );
-    const initialPermissions = getProjectPermissions(
-      initialProject,
-      currentMemberId,
-    );
+    const initialProject = creatableProjects.find((item) => item.id === initialProjectId);
+    const initialPermissions = getProjectPermissions(initialProject, currentMemberId);
     form.setFieldsValue({
       projectId: initialProjectId,
-      assigneeId:
-        initialPermissions.role === "member" ? currentMemberId : undefined,
+      assigneeId: initialPermissions.role === "member" ? currentMemberId : undefined,
       workItemType: DEFAULT_TASK_TYPE,
       stage: DEFAULT_TASK_STAGE,
       status: "pending",
@@ -168,14 +129,7 @@ export function TaskFormDrawer({
       startDate: dayjs(),
       deadline: dayjs().add(7, "day"),
     });
-  }, [
-    creatableProjects,
-    currentMemberId,
-    defaultProjectId,
-    form,
-    initial,
-    open,
-  ]);
+  }, [creatableProjects, currentMemberId, defaultProjectId, form, initial, open]);
 
   const close = () => {
     if (submitting || deleting) return;
@@ -199,30 +153,20 @@ export function TaskFormDrawer({
 
   const handleSubmit = async (values: TaskFormModel) => {
     if (submitting || deleting) return;
-    const selectedProject = projects.find(
-      (item) => item.id === values.projectId,
-    );
-    const selectedPermissions = getProjectPermissions(
-      selectedProject,
-      currentMemberId,
-    );
+    const selectedProject = projects.find((item) => item.id === values.projectId);
+    const selectedPermissions = getProjectPermissions(selectedProject, currentMemberId);
     if (
       (initial && !canEditTask(selectedProject, currentMemberId, initial)) ||
       (!initial && !selectedPermissions.canCreateTask)
     ) {
-      message.error(
-        initial ? PERMISSION_DENIED.editTask : PERMISSION_DENIED.createTask,
-      );
+      message.error(initial ? PERMISSION_DENIED.editTask : PERMISSION_DENIED.createTask);
       return;
     }
     setSubmitting(true);
 
     const formValues: TaskFormValues = {
       ...values,
-      assigneeId:
-        selectedPermissions.role === "member"
-          ? currentMemberId
-          : values.assigneeId,
+      assigneeId: selectedPermissions.role === "member" ? currentMemberId : values.assigneeId,
       startDate: values.startDate?.format(DATE_FORMAT),
       deadline: values.deadline?.format(DATE_FORMAT),
     };
@@ -243,9 +187,7 @@ export function TaskFormDrawer({
       form.resetFields();
       onClose();
     } catch (requestError) {
-      message.error(
-        getApiErrorMessage(requestError, t("taskForm.messages.saveFailed")),
-      );
+      message.error(getApiErrorMessage(requestError, t("taskForm.messages.saveFailed")));
     } finally {
       setSubmitting(false);
     }
@@ -273,12 +215,7 @@ export function TaskFormDrawer({
           form.resetFields();
           onClose();
         } catch (requestError) {
-          message.error(
-            getApiErrorMessage(
-              requestError,
-              t("taskForm.messages.deleteFailed"),
-            ),
-          );
+          message.error(getApiErrorMessage(requestError, t("taskForm.messages.deleteFailed")));
           throw requestError;
         } finally {
           setDeleting(false);
@@ -304,12 +241,7 @@ export function TaskFormDrawer({
         <div className="entity-form-footer">
           <div>
             {initial && canDeleteCurrentTask ? (
-              <Button
-                danger
-                disabled={submitting}
-                loading={deleting}
-                onClick={confirmDelete}
-              >
+              <Button danger disabled={submitting} loading={deleting} onClick={confirmDelete}>
                 {t("taskForm.actions.delete")}
               </Button>
             ) : null}
@@ -332,9 +264,7 @@ export function TaskFormDrawer({
                 disabled={deleting}
                 onClick={() => form.submit()}
               >
-                {initial
-                  ? t("taskForm.actions.save")
-                  : t("taskForm.actions.create")}
+                {initial ? t("taskForm.actions.save") : t("taskForm.actions.create")}
               </Button>
             </Space>
           )}
@@ -371,13 +301,8 @@ export function TaskFormDrawer({
             disabled={Boolean(initial) || submitting || deleting}
             onChange={(nextProjectId) => {
               alert("你确认吗");
-              const nextProject = projects.find(
-                (item) => item.id === nextProjectId,
-              );
-              const nextPermissions = getProjectPermissions(
-                nextProject,
-                currentMemberId,
-              );
+              const nextProject = projects.find((item) => item.id === nextProjectId);
+              const nextPermissions = getProjectPermissions(nextProject, currentMemberId);
               form.setFieldValue(
                 "assigneeId",
                 nextPermissions.role === "member" ? currentMemberId : undefined,
@@ -385,16 +310,8 @@ export function TaskFormDrawer({
             }}
           />
         </Form.Item>
-        <Form.Item
-          name="title"
-          label={t("taskForm.fields.title")}
-          rules={validationRules.title}
-        >
-          <Input
-            placeholder={t("taskForm.placeholders.title")}
-            showCount
-            maxLength={80}
-          />
+        <Form.Item name="title" label={t("taskForm.fields.title")} rules={validationRules.title}>
+          <Input placeholder={t("taskForm.placeholders.title")} showCount maxLength={80} />
         </Form.Item>
         <Form.Item
           name="description"
@@ -416,11 +333,7 @@ export function TaskFormDrawer({
           >
             <Select options={taskTypeOptions} />
           </Form.Item>
-          <Form.Item
-            name="stage"
-            label={t("taskForm.fields.stage")}
-            rules={validationRules.stage}
-          >
+          <Form.Item name="stage" label={t("taskForm.fields.stage")} rules={validationRules.stage}>
             <Select options={taskStageOptions} />
           </Form.Item>
         </div>
@@ -460,9 +373,7 @@ export function TaskFormDrawer({
           >
             <DatePicker
               style={{ width: "100%" }}
-              disabledDate={(current) =>
-                Boolean(startDate && current.isBefore(startDate, "day"))
-              }
+              disabledDate={(current) => Boolean(startDate && current.isBefore(startDate, "day"))}
             />
           </Form.Item>
         </div>

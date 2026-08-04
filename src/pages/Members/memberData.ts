@@ -28,15 +28,10 @@ export interface MemberRow {
   taskCount: number;
 }
 
-export async function loadMembersPageData(
-  pageSize: number,
-): Promise<MembersPageData> {
+export async function loadMembersPageData(pageSize: number): Promise<MembersPageData> {
   const [taskResult, projectResult, members] = await Promise.all([
     fetchAllPages((page, pageSize) => listTasks({ page, pageSize }), pageSize),
-    fetchAllPages(
-      (page, pageSize) => listProjects({ page, pageSize }),
-      pageSize,
-    ),
+    fetchAllPages((page, pageSize) => listProjects({ page, pageSize }), pageSize),
     listMembers(),
   ]);
 

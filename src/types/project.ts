@@ -24,6 +24,4 @@ export type ProjectFormValues = Pick<
   memberIds: EntityId[];
 };
 
-export type ProjectPatch = Partial<
-  Omit<Project, "id" | "createdAt" | "leaderId" | "members">
->;
+export type ProjectPatch = Partial<Omit<Project, "id" | "createdAt" | "leaderId" | "members">>;

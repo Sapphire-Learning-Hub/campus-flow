@@ -4,13 +4,7 @@ import { Button, Tag, Tooltip } from "antd";
 import { getTaskStage, getTaskType } from "@/utils/task.ts";
 import { MemberAvatar } from "@/components/common/MemberAvatar.tsx";
 import { WarningFilled } from "@ant-design/icons";
-import type {
-  Task,
-  TaskPriority,
-  TaskStage,
-  TaskStatus,
-  TaskType,
-} from "@/types/task.ts";
+import type { Task, TaskPriority, TaskStage, TaskStatus, TaskType } from "@/types/task.ts";
 import type { Project } from "@/types/project.ts";
 import type { Member } from "@/types/member.ts";
 import {
@@ -37,29 +31,17 @@ interface TaskBoardProps {
 }
 export function TypeTag({ type }: { type: TaskType }) {
   const { t } = useTranslation();
-  return (
-    <Tag color={TASK_TYPE_META[type].color}>
-      {t(`options.taskType.${type}`)}
-    </Tag>
-  );
+  return <Tag color={TASK_TYPE_META[type].color}>{t(`options.taskType.${type}`)}</Tag>;
 }
 
 export function StageTag({ stage }: { stage: TaskStage }) {
   const { t } = useTranslation();
-  return (
-    <Tag color={TASK_STAGE_META[stage].color}>
-      {t(`options.taskStage.${stage}`)}
-    </Tag>
-  );
+  return <Tag color={TASK_STAGE_META[stage].color}>{t(`options.taskStage.${stage}`)}</Tag>;
 }
 
 export function PriorityTag({ priority }: { priority: TaskPriority }) {
   const { t } = useTranslation();
-  return (
-    <Tag color={TASK_PRIORITY_META[priority].color}>
-      {t(`options.priority.${priority}`)}
-    </Tag>
-  );
+  return <Tag color={TASK_PRIORITY_META[priority].color}>{t(`options.priority.${priority}`)}</Tag>;
 }
 
 export function StatusTag({ status }: { status: TaskStatus }) {
@@ -75,11 +57,7 @@ function TaskCard({ task, project, member, editable, onEdit }: TaskCardProps) {
   return (
     <article className={`task-card${overdue ? " is-overdue" : ""}`}>
       <header className="task-card-header">
-        <button
-          type="button"
-          className="task-card-title"
-          onClick={() => onEdit(task)}
-        >
+        <button type="button" className="task-card-title" onClick={() => onEdit(task)}>
           {task.title}
         </button>
         <Button type="link" size="small" onClick={() => onEdit(task)}>
@@ -102,13 +80,7 @@ function TaskCard({ task, project, member, editable, onEdit }: TaskCardProps) {
 
       <footer className="task-card-footer">
         <MemberAvatar member={member} size={24} showName />
-        <Tooltip
-          title={
-            overdue
-              ? t("tasksPage.card.overdue")
-              : t("tasksPage.columns.schedule")
-          }
-        >
+        <Tooltip title={overdue ? t("tasksPage.card.overdue") : t("tasksPage.columns.schedule")}>
           <time className={overdue ? "danger-text" : undefined}>
             {overdue ? <WarningFilled /> : null}
             {formatShortDate(task.deadline)}
@@ -141,9 +113,7 @@ export function TaskBoard({
             key={task.id}
             task={task}
             project={projectsById.get(task.projectId)}
-            member={
-              task.assigneeId ? membersById.get(task.assigneeId) : undefined
-            }
+            member={task.assigneeId ? membersById.get(task.assigneeId) : undefined}
             editable={canEdit(task)}
             onEdit={onEdit}
           />

@@ -12,16 +12,13 @@ function ThemedApplication() {
   const { settings: appSettings } = useSettings();
   const { i18n } = useTranslation();
   const isDark = resolveThemeMode(appSettings.themeMode) === "dark";
-  const antdLocale =
-    normalizeLanguage(i18n.resolvedLanguage) === "zh-CN" ? zhCN : enUS;
+  const antdLocale = normalizeLanguage(i18n.resolvedLanguage) === "zh-CN" ? zhCN : enUS;
 
   return (
     <ConfigProvider
       locale={antdLocale}
       theme={{
-        algorithm: isDark
-          ? antdTheme.darkAlgorithm
-          : antdTheme.defaultAlgorithm,
+        algorithm: isDark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
         token: {
           colorPrimary: appSettings.themeColor,
           borderRadius: 8,

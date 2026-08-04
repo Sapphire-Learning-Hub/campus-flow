@@ -25,13 +25,7 @@ describe("分页加载", () => {
       [2, 2],
       [3, 2],
     ]);
-    expect(result.items).toEqual([
-      "task-1",
-      "task-2",
-      "task-3",
-      "task-4",
-      "task-5",
-    ]);
+    expect(result.items).toEqual(["task-1", "task-2", "task-3", "task-4", "task-5"]);
     expect(result.total).toBe(5);
   });
 

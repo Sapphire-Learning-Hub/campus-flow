@@ -63,11 +63,7 @@ export function ProjectList({
         key: "leader",
         width: 120,
         render: (_, project) => (
-          <MemberAvatar
-            member={membersById.get(project.leaderId)}
-            size={24}
-            showName
-          />
+          <MemberAvatar member={membersById.get(project.leaderId)} size={24} showName />
         ),
       },
       {
@@ -75,15 +71,10 @@ export function ProjectList({
         key: "progress",
         width: 150,
         render: (_, project) => {
-          const metrics =
-            metricsByProjectId.get(project.id) ?? EMPTY_PROJECT_METRICS;
+          const metrics = metricsByProjectId.get(project.id) ?? EMPTY_PROJECT_METRICS;
           return (
             <span className="project-progress-cell">
-              <Progress
-                percent={metrics.progress}
-                size="small"
-                strokeColor={project.color}
-              />
+              <Progress percent={metrics.progress} size="small" strokeColor={project.color} />
             </span>
           );
         },
@@ -93,8 +84,7 @@ export function ProjectList({
         key: "tasks",
         width: 145,
         render: (_, project) => {
-          const metrics =
-            metricsByProjectId.get(project.id) ?? EMPTY_PROJECT_METRICS;
+          const metrics = metricsByProjectId.get(project.id) ?? EMPTY_PROJECT_METRICS;
           return (
             <span className="project-task-count">
               <b>{metrics.open}</b> {t("projectsPage.card.incomplete")}
@@ -111,8 +101,7 @@ export function ProjectList({
         title: t("projectsPage.columns.members"),
         key: "members",
         width: 75,
-        render: (_, project) =>
-          t("projectsPage.personCount", { count: project.members.length }),
+        render: (_, project) => t("projectsPage.personCount", { count: project.members.length }),
       },
       {
         title: t("projectsPage.columns.deadline"),
@@ -135,17 +124,11 @@ export function ProjectList({
         width: 130,
         render: (_, project) => (
           <Space size={0}>
-            <Button
-              type="link"
-              size="small"
-              onClick={() => onOpenDetail(project)}
-            >
+            <Button type="link" size="small" onClick={() => onOpenDetail(project)}>
               {t("projectsPage.actions.details")}
             </Button>
             <Button type="link" size="small" onClick={() => onEdit(project)}>
-              {canEdit(project)
-                ? t("projectsPage.actions.edit")
-                : t("projectsPage.actions.view")}
+              {canEdit(project) ? t("projectsPage.actions.edit") : t("projectsPage.actions.view")}
             </Button>
           </Space>
         ),
@@ -160,9 +143,7 @@ export function ProjectList({
       columns={columns}
       dataSource={projects}
       scroll={{ x: 1110 }}
-      rowClassName={(project) =>
-        isProjectOverdue(project) ? "project-table-row-overdue" : ""
-      }
+      rowClassName={(project) => (isProjectOverdue(project) ? "project-table-row-overdue" : "")}
       pagination={pagination}
     />
   );

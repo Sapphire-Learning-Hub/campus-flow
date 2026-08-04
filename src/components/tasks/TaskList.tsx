@@ -1,12 +1,7 @@
 import { Button, Table, type TableProps } from "antd";
 import { formatShortDate, isOverdue } from "@/utils/date.ts";
 import { useMemo } from "react";
-import {
-  PriorityTag,
-  StageTag,
-  StatusTag,
-  TypeTag,
-} from "@/components/tasks/TaskBoard.tsx";
+import { PriorityTag, StageTag, StatusTag, TypeTag } from "@/components/tasks/TaskBoard.tsx";
 import { WarningFilled } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 
@@ -46,9 +41,7 @@ export function TaskList({
             <button type="button" onClick={() => onEdit(task)}>
               {task.title}
             </button>
-            {task.tags.length ? (
-              <small>{task.tags.map((tag) => `#${tag}`).join(" ")}</small>
-            ) : null}
+            {task.tags.length ? <small>{task.tags.map((tag) => `#${tag}`).join(" ")}</small> : null}
           </div>
         ),
       },
@@ -96,9 +89,7 @@ export function TaskList({
         width: 105,
         render: (_, task) => (
           <MemberAvatar
-            member={
-              task.assigneeId ? membersById.get(task.assigneeId) : undefined
-            }
+            member={task.assigneeId ? membersById.get(task.assigneeId) : undefined}
             size={24}
             showName
           />
@@ -113,8 +104,7 @@ export function TaskList({
           return (
             <span className={overdue ? "danger-text" : undefined}>
               {overdue ? <WarningFilled /> : null}
-              {formatShortDate(task.startDate)} -{" "}
-              {formatShortDate(task.deadline)}
+              {formatShortDate(task.startDate)} - {formatShortDate(task.deadline)}
             </span>
           );
         },
@@ -126,9 +116,7 @@ export function TaskList({
         width: 65,
         render: (_, task) => (
           <Button type="link" size="small" onClick={() => onEdit(task)}>
-            {canEdit(task)
-              ? t("tasksPage.actions.edit")
-              : t("tasksPage.actions.view")}
+            {canEdit(task) ? t("tasksPage.actions.edit") : t("tasksPage.actions.view")}
           </Button>
         ),
       },
@@ -142,9 +130,7 @@ export function TaskList({
       dataSource={tasks}
       scroll={{ x: 1060 }}
       rowClassName={(task) =>
-        isOverdue(task.deadline, task.status === "done")
-          ? "task-table-row-overdue"
-          : ""
+        isOverdue(task.deadline, task.status === "done") ? "task-table-row-overdue" : ""
       }
       pagination={pagination}
     />

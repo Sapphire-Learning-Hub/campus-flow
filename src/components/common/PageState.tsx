@@ -55,10 +55,7 @@ export function PageState({
   if (empty) {
     return (
       <div className="page-empty-panel">
-        <Empty
-          image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description={emptyDescription}
-        >
+        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={emptyDescription}>
           {emptyAction}
         </Empty>
       </div>

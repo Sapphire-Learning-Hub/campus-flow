@@ -485,10 +485,7 @@
   }
 
   .project-progress-row {
-    grid-template-columns: 7px minmax(150px, 1fr) minmax(112px, 0.65fr) minmax(
-        110px,
-        0.58fr
-      );
+    grid-template-columns: 7px minmax(150px, 1fr) minmax(112px, 0.65fr) minmax(110px, 0.58fr);
     padding-inline: 16px;
   }
 

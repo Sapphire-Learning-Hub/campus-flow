@@ -70,11 +70,7 @@
 .header-icon-btn:hover,
 .header-create-btn {
   color: var(--brand-primary) !important;
-  background: color-mix(
-    in srgb,
-    var(--brand-primary) 8%,
-    transparent
-  ) !important;
+  background: color-mix(in srgb, var(--brand-primary) 8%, transparent) !important;
 }
 .header-language-btn {
   min-width: 52px !important;

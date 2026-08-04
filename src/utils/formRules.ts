@@ -56,9 +56,7 @@ export interface SecurityValidationRules {
 
 export function getLoginValidationRules(t: Translate): LoginValidationRules {
   return {
-    username: [
-      { required: true, message: t("auth.validation.usernameRequired") },
-    ],
+    username: [{ required: true, message: t("auth.validation.usernameRequired") }],
     password: [
       { required: true, message: t("auth.validation.passwordRequired") },
       { min: 6, message: t("auth.validation.passwordMin") },
@@ -66,9 +64,7 @@ export function getLoginValidationRules(t: Translate): LoginValidationRules {
   };
 }
 
-export function getRegisterValidationRules(
-  t: Translate,
-): RegisterValidationRules {
+export function getRegisterValidationRules(t: Translate): RegisterValidationRules {
   return {
     name: [
       { required: true, message: t("auth.validation.nameRequired") },
@@ -133,9 +129,7 @@ export function getRegisterValidationRules(
   };
 }
 
-export function getProjectValidationRules(
-  t: Translate,
-): ProjectValidationRules {
+export function getProjectValidationRules(t: Translate): ProjectValidationRules {
   return {
     name: [
       {
@@ -253,9 +247,7 @@ export function getTaskValidationRules(t: Translate): TaskValidationRules {
   };
 }
 
-export function getProfileValidationRules(
-  t: Translate,
-): ProfileValidationRules {
+export function getProfileValidationRules(t: Translate): ProfileValidationRules {
   return {
     username: [
       {
@@ -290,9 +282,7 @@ export function getProfileValidationRules(
   };
 }
 
-export function getSecurityValidationRules(
-  t: Translate,
-): SecurityValidationRules {
+export function getSecurityValidationRules(t: Translate): SecurityValidationRules {
   return {
     currentPassword: [
       {
@@ -315,9 +305,7 @@ export function getSecurityValidationRules(
           if (!value || value !== getFieldValue("currentPassword")) {
             return Promise.resolve();
           }
-          return Promise.reject(
-            new Error(t("settings.security.validation.samePassword")),
-          );
+          return Promise.reject(new Error(t("settings.security.validation.samePassword")));
         },
       }),
     ],
@@ -331,9 +319,7 @@ export function getSecurityValidationRules(
           if (!value || value === getFieldValue("newPassword")) {
             return Promise.resolve();
           }
-          return Promise.reject(
-            new Error(t("settings.security.validation.mismatch")),
-          );
+          return Promise.reject(new Error(t("settings.security.validation.mismatch")));
         },
       }),
     ],

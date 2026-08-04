@@ -13,8 +13,7 @@ export interface MockDatabase {
   activities: Activity[];
 }
 
-const date = (offset: number) =>
-  dayjs().add(offset, "day").format("YYYY-MM-DD");
+const date = (offset: number) => dayjs().add(offset, "day").format("YYYY-MM-DD");
 const stamp = (offset: number, hour = 10) =>
   dayjs().add(offset, "day").hour(hour).minute(0).second(0).toISOString();
 
@@ -85,16 +84,14 @@ const members: Member[] = [
   },
 ];
 
-const projectMembers = (
-  items: Array<[string, "owner" | "admin" | "member" | "readonly"]>,
-) => items.map(([memberId, role]) => ({ memberId, role, addedAt: date(-120) }));
+const projectMembers = (items: Array<[string, "owner" | "admin" | "member" | "readonly"]>) =>
+  items.map(([memberId, role]) => ({ memberId, role, addedAt: date(-120) }));
 
 const projects: Project[] = [
   {
     id: "p1",
     name: "校园电商平台",
-    description:
-      "面向在校师生的可信二手交易平台，覆盖发布、交易、物流和信用评价。",
+    description: "面向在校师生的可信二手交易平台，覆盖发布、交易、物流和信用评价。",
     status: "active",
     leaderId: "m1",
     members: projectMembers([
@@ -234,26 +231,19 @@ const task = (
   priority,
   assigneeId,
   createdAt: date(-40),
-  startDate: date(
-    deadlineOffset === undefined ? -12 : Math.min(-1, deadlineOffset - 10),
-  ),
+  startDate: date(deadlineOffset === undefined ? -12 : Math.min(-1, deadlineOffset - 10)),
   deadline: deadlineOffset === undefined ? undefined : date(deadlineOffset),
   tags,
   updatedAt: stamp(-2),
 });
 
-function inferTaskType(
-  title: string,
-  tags: string[],
-): NonNullable<Task["workItemType"]> {
+function inferTaskType(title: string, tags: string[]): NonNullable<Task["workItemType"]> {
   const text = `${title} ${tags.join(" ")}`;
   if (text.includes("测试") || text.includes("验收")) return "test";
   if (text.includes("设计") || text.includes("原型")) return "design";
   if (text.includes("缺陷") || text.includes("回归")) return "bug";
-  if (text.includes("运营") || text.includes("专题") || text.includes("名单"))
-    return "operation";
-  if (text.includes("调研") || text.includes("需求") || text.includes("产品"))
-    return "requirement";
+  if (text.includes("运营") || text.includes("专题") || text.includes("名单")) return "operation";
+  if (text.includes("调研") || text.includes("需求") || text.includes("产品")) return "requirement";
   return "development";
 }
 
@@ -265,35 +255,22 @@ function inferTaskStage(status: Task["status"]): NonNullable<Task["stage"]> {
 }
 
 const tasks: Task[] = [
-  task("t1", "p1", "完成商品发布流程", "in_progress", "urgent", "m3", 1, [
-    "前端",
-    "核心流程",
-  ]),
+  task("t1", "p1", "完成商品发布流程", "in_progress", "urgent", "m3", 1, ["前端", "核心流程"]),
   task("t2", "p1", "交易订单状态机", "review", "high", "m2", 4, ["后端"]),
-  task("t3", "p1", "用户信用评价", "pending", "medium", undefined, 12, [
-    "产品",
-  ]),
+  task("t3", "p1", "用户信用评价", "pending", "medium", undefined, 12, ["产品"]),
   task("t4", "p1", "项目需求与原型评审", "done", "high", "m1", -42, ["设计"]),
   task("t5", "p1", "移动端响应式验收", "pending", "high", "m4", -2, ["测试"]),
-  task("t6", "p2", "提交活动审批原型", "in_progress", "high", "m5", 2, [
-    "原型",
-  ]),
+  task("t6", "p2", "提交活动审批原型", "in_progress", "high", "m5", 2, ["原型"]),
   task("t7", "p2", "整理社团招新名单", "pending", "medium", "m1", 6, ["运营"]),
   task("t8", "p2", "经费审批规则配置", "done", "high", "m2", -18, ["后端"]),
   task("t9", "p2", "成员权限矩阵", "review", "high", "m1", 9, ["权限"]),
-  task("t10", "p3", "题库数据模型设计", "in_progress", "high", "m7", 16, [
-    "数据",
-  ]),
+  task("t10", "p3", "题库数据模型设计", "in_progress", "high", "m7", 16, ["数据"]),
   task("t11", "p3", "智能组卷调研", "pending", "medium", "m1", 24, ["算法"]),
   task("t12", "p4", "预约流程回归测试", "done", "medium", "m8", -28, ["测试"]),
   task("t13", "p4", "发布复盘文档", "done", "low", "m1", -21, ["文档"]),
-  task("t14", "p5", "无障碍路线采集", "in_progress", "urgent", "m6", -1, [
-    "地图",
-  ]),
+  task("t14", "p5", "无障碍路线采集", "in_progress", "urgent", "m6", -1, ["地图"]),
   task("t15", "p5", "地点详情卡片", "review", "medium", "m7", 8, ["前端"]),
-  task("t16", "p5", "离线地图缓存", "pending", "low", undefined, undefined, [
-    "PWA",
-  ]),
+  task("t16", "p5", "离线地图缓存", "pending", "low", undefined, undefined, ["PWA"]),
   task("t17", "p6", "活动订阅筛选", "done", "high", "m2", -6, ["前端"]),
   task("t18", "p6", "提醒通知策略", "in_progress", "high", "m1", 3, ["通知"]),
   task("t19", "p6", "周末活动专题", "pending", "medium", "m8", 5, ["运营"]),

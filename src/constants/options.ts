@@ -1,16 +1,9 @@
 import type { SelectOption } from "@/types/common";
 import type { ProjectRole } from "@/types/member";
 import type { ProjectStatus } from "@/types/project";
-import type {
-  TaskPriority,
-  TaskStage,
-  TaskStatus,
-  TaskType,
-} from "@/types/task";
+import type { TaskPriority, TaskStage, TaskStatus, TaskType } from "@/types/task";
 
-export const PROJECT_STATUS_OPTIONS: Readonly<
-  Array<SelectOption<ProjectStatus>>
-> = [
+export const PROJECT_STATUS_OPTIONS: Readonly<Array<SelectOption<ProjectStatus>>> = [
   { label: "规划中", value: "planning" },
   { label: "进行中", value: "active" },
   { label: "已完成", value: "completed" },

@@ -67,20 +67,18 @@ export default function DashboardPage() {
   const { settings: appSettings } = useSettings();
   const navigate = useNavigate();
   const getDashboardErrorMessage = useCallback(
-    (requestError: unknown) =>
-      getApiErrorMessage(requestError, t("dashboard.loadError")),
+    (requestError: unknown) => getApiErrorMessage(requestError, t("dashboard.loadError")),
     [t],
   );
   const loadPage = useCallback(
     () => loadDashboardData(appSettings.pageSize),
     [appSettings.pageSize],
   );
-  const { data, setData, loading, refreshing, error, reload, refresh } =
-    useAsyncPageData({
-      initialData: INITIAL_DATA,
-      load: loadPage,
-      getErrorMessage: getDashboardErrorMessage,
-    });
+  const { data, setData, loading, refreshing, error, reload, refresh } = useAsyncPageData({
+    initialData: INITIAL_DATA,
+    load: loadPage,
+    getErrorMessage: getDashboardErrorMessage,
+  });
   const { tasks, projects, members, activities } = data;
   const {
     open: projectDrawerOpen,
@@ -179,9 +177,7 @@ export default function DashboardPage() {
   const handleProjectSaved = useCallback(
     (savedProject: Project) => {
       setData((current) => {
-        const exists = current.projects.some(
-          (project) => project.id === savedProject.id,
-        );
+        const exists = current.projects.some((project) => project.id === savedProject.id);
         return {
           ...current,
           projects: exists
@@ -203,9 +199,7 @@ export default function DashboardPage() {
         return {
           ...current,
           tasks: exists
-            ? current.tasks.map((task) =>
-                task.id === savedTask.id ? savedTask : task,
-              )
+            ? current.tasks.map((task) => (task.id === savedTask.id ? savedTask : task))
             : [savedTask, ...current.tasks],
         };
       });
@@ -244,11 +238,7 @@ export default function DashboardPage() {
               disabled={loading}
               onClick={() => void refresh()}
             />
-            <Button
-              icon={<PlusOutlined />}
-              disabled={loading}
-              onClick={handleOpenTaskCreate}
-            >
+            <Button icon={<PlusOutlined />} disabled={loading} onClick={handleOpenTaskCreate}>
               {t("dashboard.actions.createTask")}
             </Button>
             <Button
@@ -272,26 +262,14 @@ export default function DashboardPage() {
         emptyDescription={t("dashboard.states.empty")}
         onRetry={reload}
         emptyAction={
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={openProjectCreate}
-          >
+          <Button type="primary" icon={<PlusOutlined />} onClick={openProjectCreate}>
             {t("dashboard.actions.createProject")}
           </Button>
         }
       >
-        <section
-          className="metric-band"
-          aria-label={t("dashboard.metrics.regionLabel")}
-        >
+        <section className="metric-band" aria-label={t("dashboard.metrics.regionLabel")}>
           {metricItems.map((item) => (
-            <button
-              className="metric-item"
-              type="button"
-              key={item.label}
-              onClick={item.onClick}
-            >
+            <button className="metric-item" type="button" key={item.label} onClick={item.onClick}>
               <span className={`metric-icon ${item.tone}`}>{item.icon}</span>
               <span className="metric-copy">
                 <span className="metric-label">{item.label}</span>
@@ -331,8 +309,7 @@ export default function DashboardPage() {
                 const leader = membersById.get(project.leaderId);
                 const overdue = isOverdue(
                   project.deadline,
-                  project.status === "completed" ||
-                    project.status === "archived",
+                  project.status === "completed" || project.status === "archived",
                 );
 
                 return (
@@ -342,10 +319,7 @@ export default function DashboardPage() {
                     key={project.id}
                     onClick={() => navigate(`/projects/${project.id}`)}
                   >
-                    <span
-                      className="project-color"
-                      style={{ background: project.color }}
-                    />
+                    <span className="project-color" style={{ background: project.color }} />
                     <span className="project-progress-name">
                       <b>{project.name}</b>
                       <small>
@@ -396,9 +370,7 @@ export default function DashboardPage() {
               </div>
               <Button
                 type="link"
-                onClick={() =>
-                  navigate(`/tasks?assigneeId=${currentUser.memberId}`)
-                }
+                onClick={() => navigate(`/tasks?assigneeId=${currentUser.memberId}`)}
               >
                 {t("dashboard.actions.all")}
                 <ArrowRightOutlined />
@@ -417,9 +389,7 @@ export default function DashboardPage() {
                       key={task.id}
                       onClick={() => openTaskEdit(task)}
                     >
-                      <span
-                        className={`priority-rail priority-${task.priority}`}
-                      />
+                      <span className={`priority-rail priority-${task.priority}`} />
                       <span className="focus-task-copy">
                         <b>{task.title}</b>
                         <small>
@@ -429,9 +399,7 @@ export default function DashboardPage() {
                         </small>
                       </span>
                       <span className="focus-task-meta">
-                        <small
-                          className={`priority-text priority-${task.priority}`}
-                        >
+                        <small className={`priority-text priority-${task.priority}`}>
                           {t("dashboard.tasks.priority", {
                             priority: t(`options.priority.${task.priority}`),
                           })}

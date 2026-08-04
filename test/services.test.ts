@@ -74,12 +74,10 @@ describe("服务适配层", () => {
       .mockResolvedValueOnce({ data: apiResponse(projectResult) } as never)
       .mockResolvedValueOnce({ data: apiResponse(members) } as never);
 
-    await expect(
-      listProjects({ status: "active", page: 1, pageSize: 20 }),
-    ).resolves.toEqual(projectResult);
-    await expect(listMembers({ projectId: "project-1" })).resolves.toEqual(
-      members,
+    await expect(listProjects({ status: "active", page: 1, pageSize: 20 })).resolves.toEqual(
+      projectResult,
     );
+    await expect(listMembers({ projectId: "project-1" })).resolves.toEqual(members);
     expect(getSpy).toHaveBeenNthCalledWith(1, "/projects", {
       params: { status: "active", page: 1, pageSize: 20 },
     });
@@ -110,12 +108,9 @@ describe("服务适配层", () => {
       data: apiResponse(null),
       status: 422,
     } as never;
-    (error.response as { data: { message: string } }).data.message =
-      "用户名已存在";
+    (error.response as { data: { message: string } }).data.message = "用户名已存在";
 
     expect(getApiErrorMessage(error, "兜底错误")).toBe("用户名已存在");
-    expect(getApiErrorMessage(new Error("未知错误"), "兜底错误")).toBe(
-      "兜底错误",
-    );
+    expect(getApiErrorMessage(new Error("未知错误"), "兜底错误")).toBe("兜底错误");
   });
 });

@@ -1,10 +1,5 @@
 import { type ErrorKind, getErrorKind } from "@/routes/RouterError.ts";
-import {
-  useLocation,
-  useNavigate,
-  useRevalidator,
-  useRouteError,
-} from "react-router";
+import { useLocation, useNavigate, useRevalidator, useRouteError } from "react-router";
 import { useTranslation } from "react-i18next";
 import { clearAccessToken } from "@/services/session.ts";
 import { Button, Result, Space } from "antd";
@@ -83,10 +78,7 @@ export function ErrorBoundary() {
                 {t("routeError.actions.login")}
               </Button>
             ) : (
-              <Button
-                type={retryable ? "default" : "primary"}
-                onClick={handleBackToDashboard}
-              >
+              <Button type={retryable ? "default" : "primary"} onClick={handleBackToDashboard}>
                 {t("routeError.actions.back")}
               </Button>
             )}

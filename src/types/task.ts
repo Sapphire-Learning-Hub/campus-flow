@@ -2,13 +2,7 @@ import type { EntityId } from "./common";
 
 export type TaskStatus = "pending" | "in_progress" | "review" | "done";
 export type TaskPriority = "low" | "medium" | "high" | "urgent";
-export type TaskType =
-  | "requirement"
-  | "design"
-  | "development"
-  | "test"
-  | "bug"
-  | "operation";
+export type TaskType = "requirement" | "design" | "development" | "test" | "bug" | "operation";
 export type TaskStage = "discovery" | "design" | "delivery" | "acceptance";
 
 export interface Task {
@@ -30,13 +24,7 @@ export interface Task {
 
 export type TaskFormValues = Pick<
   Task,
-  | "projectId"
-  | "title"
-  | "description"
-  | "status"
-  | "priority"
-  | "deadline"
-  | "tags"
+  "projectId" | "title" | "description" | "status" | "priority" | "deadline" | "tags"
 > &
   Partial<Pick<Task, "workItemType" | "stage" | "startDate">> & {
     assigneeId?: EntityId;

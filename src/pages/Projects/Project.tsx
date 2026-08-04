@@ -7,13 +7,7 @@ import {
   WarningFilled,
 } from "@ant-design/icons";
 import { App, Button, Pagination, Space, Tooltip } from "antd";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type SetStateAction,
-} from "react";
+import { useCallback, useEffect, useMemo, useState, type SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -29,10 +23,7 @@ import { ProjectBoard } from "@/components/projects/ProjectBoard.tsx";
 import type { Project } from "@/types/project";
 import type { ProjectView } from "@/types/settings";
 import { indexById } from "@/utils/collection";
-import {
-  getProjectPermissions,
-  PERMISSION_DENIED,
-} from "@/utils/Permissions.ts";
+import { getProjectPermissions, PERMISSION_DENIED } from "@/utils/Permissions.ts";
 import {
   calculateProjectMetrics,
   filterProjects,
@@ -71,8 +62,7 @@ export default function ProjectsWorkspacePage() {
   const [sort, setSort] = useState<DateSort>("updatedAt");
   const [favoriteBusyId, setFavoriteBusyId] = useState<string>();
   const getProjectsPageErrorMessage = useCallback(
-    (requestError: unknown) =>
-      getApiErrorMessage(requestError, t("projectsPage.loadError")),
+    (requestError: unknown) => getApiErrorMessage(requestError, t("projectsPage.loadError")),
     [t],
   );
   const updatePage = useCallback(
@@ -85,10 +75,7 @@ export default function ProjectsWorkspacePage() {
     },
     [searchParams, setSearchParams],
   );
-  const handlePageChange = useCallback(
-    (nextPage: number) => updatePage(nextPage),
-    [updatePage],
-  );
+  const handlePageChange = useCallback((nextPage: number) => updatePage(nextPage), [updatePage]);
   const resetPage = useCallback(() => {
     if (page > 1) updatePage(1, true);
   }, [page, updatePage]);
@@ -109,14 +96,12 @@ export default function ProjectsWorkspacePage() {
       }),
     [filters.keyword, filters.status, page, pageSize],
   );
-  const { data, setData, loading, refreshing, error, reload, refresh } =
-    useAsyncPageData({
-      initialData: INITIAL_PROJECTS_PAGE_DATA,
-      load: loadPage,
-      getErrorMessage: getProjectsPageErrorMessage,
-    });
-  const { taskTotal, tasks, projectTotal, projects, allProjects, members } =
-    data;
+  const { data, setData, loading, refreshing, error, reload, refresh } = useAsyncPageData({
+    initialData: INITIAL_PROJECTS_PAGE_DATA,
+    load: loadPage,
+    getErrorMessage: getProjectsPageErrorMessage,
+  });
+  const { taskTotal, tasks, projectTotal, projects, allProjects, members } = data;
   useEffect(() => {
     if (loading) return;
 
@@ -143,8 +128,7 @@ export default function ProjectsWorkspacePage() {
   );
 
   const isProjectEditable = useCallback(
-    (project: Project) =>
-      getProjectPermissions(project, currentUser.memberId).canEditProject,
+    (project: Project) => getProjectPermissions(project, currentUser.memberId).canEditProject,
     [currentUser.memberId],
   );
 
@@ -180,9 +164,7 @@ export default function ProjectsWorkspacePage() {
   const handleProjectSaved = useCallback(
     (savedProject: Project) => {
       setData((current) => {
-        const projectExists = current.projects.some(
-          (project) => project.id === savedProject.id,
-        );
+        const projectExists = current.projects.some((project) => project.id === savedProject.id);
         const nextProjects = projectExists
           ? current.projects.map((project) =>
               project.id === savedProject.id ? savedProject : project,
@@ -190,9 +172,7 @@ export default function ProjectsWorkspacePage() {
           : [savedProject, ...current.projects];
         return {
           ...current,
-          projectTotal: projectExists
-            ? current.projectTotal
-            : current.projectTotal + 1,
+          projectTotal: projectExists ? current.projectTotal : current.projectTotal + 1,
           projects: nextProjects,
           allProjects: projectExists
             ? current.allProjects.map((project) =>
@@ -225,12 +205,7 @@ export default function ProjectsWorkspacePage() {
             : t("projectsPage.messages.unfavorited"),
         );
       } catch (requestError) {
-        message.error(
-          getApiErrorMessage(
-            requestError,
-            t("projectsPage.messages.favoriteFailed"),
-          ),
-        );
+        message.error(getApiErrorMessage(requestError, t("projectsPage.messages.favoriteFailed")));
       } finally {
         setFavoriteBusyId(undefined);
       }
@@ -245,8 +220,7 @@ export default function ProjectsWorkspacePage() {
       total: projectTotal,
       hideOnSinglePage: true,
       showSizeChanger: false,
-      showTotal: (total: number) =>
-        t("projectsPage.paginationTotal", { count: total }),
+      showTotal: (total: number) => t("projectsPage.paginationTotal", { count: total }),
       onChange: handlePageChange,
     }),
     [handlePageChange, page, pageSize, projectTotal, t],
@@ -259,9 +233,7 @@ export default function ProjectsWorkspacePage() {
         membersById={membersById}
         metricsByProjectId={metricsByProjectId}
         emptyDescription={
-          projects.length
-            ? t("projectsPage.states.noMatch")
-            : t("projectsPage.states.empty")
+          projects.length ? t("projectsPage.states.noMatch") : t("projectsPage.states.empty")
         }
         favoriteBusyId={favoriteBusyId}
         canEdit={isProjectEditable}
@@ -383,9 +355,7 @@ export default function ProjectsWorkspacePage() {
         loadingDescription={t("projectsPage.states.loading")}
         errorTitle={t("projectsPage.states.errorTitle")}
         emptyDescription={
-          projects.length
-            ? t("projectsPage.states.noMatch")
-            : t("projectsPage.states.empty")
+          projects.length ? t("projectsPage.states.noMatch") : t("projectsPage.states.empty")
         }
         onRetry={reload}
         emptyAction={
@@ -394,11 +364,7 @@ export default function ProjectsWorkspacePage() {
               {t("projectsPage.actions.clearFilters")}
             </Button>
           ) : (
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={handleOpenCreate}
-            >
+            <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenCreate}>
               {t("projectsPage.actions.createFirst")}
             </Button>
           )

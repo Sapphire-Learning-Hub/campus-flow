@@ -93,8 +93,7 @@ a {
   padding: 5px;
   border-radius: 8px;
   background: var(--brand-primary);
-  box-shadow: 0 8px 18px
-    color-mix(in srgb, var(--brand-primary) 18%, transparent);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--brand-primary) 18%, transparent);
 }
 
 .brand-symbol i {

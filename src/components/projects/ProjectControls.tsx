@@ -9,10 +9,7 @@ import {
 import type { Member } from "@/types/member.ts";
 import type { ProjectView } from "@/types/settings.ts";
 import { type SetStateAction, useMemo } from "react";
-import {
-  type DateSort,
-  type ProjectFilters,
-} from "@/pages/Projects/projectData.ts";
+import { type DateSort, type ProjectFilters } from "@/pages/Projects/projectData.ts";
 import { useLocalizedOptions } from "@/hooks/useLocalizedOptions.ts";
 import { countActiveFilters } from "@/utils/collection.ts";
 import { useTranslation } from "react-i18next";
@@ -66,10 +63,7 @@ export function ProjectControls({
     ],
     [t],
   );
-  const activeFilterCount = useMemo(
-    () => countActiveFilters(filters),
-    [filters],
-  );
+  const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
 
   return (
     <section
@@ -96,9 +90,7 @@ export function ProjectControls({
           value={filters.status}
           placeholder={t("projectsPage.filters.allStatuses")}
           options={projectStatusOptions}
-          onChange={(status) =>
-            onFiltersChange((current) => ({ ...current, status }))
-          }
+          onChange={(status) => onFiltersChange((current) => ({ ...current, status }))}
         />
         <Select
           aria-label={t("projectsPage.filters.sort")}
@@ -116,9 +108,7 @@ export function ProjectControls({
             label: member.name,
             value: member.id,
           }))}
-          onChange={(leaderId) =>
-            onFiltersChange((current) => ({ ...current, leaderId }))
-          }
+          onChange={(leaderId) => onFiltersChange((current) => ({ ...current, leaderId }))}
         />
         <Button
           type={filters.favoriteOnly ? "primary" : "default"}
@@ -145,10 +135,7 @@ export function ProjectControls({
         >
           {t("projectsPage.filters.overdueOnly")}
         </Button>
-        <Button
-          disabled={!activeFilterCount}
-          onClick={() => onFiltersChange({})}
-        >
+        <Button disabled={!activeFilterCount} onClick={() => onFiltersChange({})}>
           {t("projectsPage.actions.clear")}
           {activeFilterCount ? ` (${activeFilterCount})` : ""}
         </Button>

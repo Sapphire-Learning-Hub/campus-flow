@@ -8,9 +8,7 @@ import {
   getProjectPermissions,
 } from "@/utils/Permissions";
 
-function makeProject(
-  members: Array<[string, "owner" | "admin" | "member" | "readonly"]>,
-): Project {
+function makeProject(members: Array<[string, "owner" | "admin" | "member" | "readonly"]>): Project {
   return {
     id: "project-1",
     name: "校园项目",
@@ -101,9 +99,7 @@ describe("项目权限", () => {
       canCreateTask: true,
     });
     expect(canEditTask(project, "member-1", makeTask("member-1"))).toBe(true);
-    expect(canEditTask(project, "member-1", makeTask("another-member"))).toBe(
-      false,
-    );
+    expect(canEditTask(project, "member-1", makeTask("another-member"))).toBe(false);
     expect(canDeleteTask(project, "member-1")).toBe(false);
     expect(canAssignTaskTo(project, "member-1", "member-1")).toBe(true);
     expect(canAssignTaskTo(project, "member-1", "another-member")).toBe(false);
@@ -121,9 +117,7 @@ describe("项目权限", () => {
       canManageAllTasks: false,
       canCreateTask: false,
     });
-    expect(getProjectPermissions(project, "unknown").canViewProject).toBe(
-      false,
-    );
+    expect(getProjectPermissions(project, "unknown").canViewProject).toBe(false);
     expect(canEditTask(project, "readonly-1", makeTask())).toBe(false);
     expect(canDeleteTask(project, "unknown")).toBe(false);
   });

@@ -1,9 +1,4 @@
-import type {
-  AppSettings,
-  PageSize,
-  ThemeMode,
-  ViewMode,
-} from "@/types/settings";
+import type { AppSettings, PageSize, ThemeMode, ViewMode } from "@/types/settings";
 
 const SETTINGS_STORAGE_KEY = "campus-flow:settings";
 const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
@@ -44,8 +39,7 @@ function readStoredSettings(): AppSettings {
           ? stored.pageSize
           : DEFAULT_APP_SETTINGS.pageSize,
       defaultProjectView:
-        stored.defaultProjectView &&
-        VIEW_MODES.has(stored.defaultProjectView)
+        stored.defaultProjectView && VIEW_MODES.has(stored.defaultProjectView)
           ? stored.defaultProjectView
           : DEFAULT_APP_SETTINGS.defaultProjectView,
       defaultTaskView:
@@ -64,8 +58,7 @@ function notifyListeners() {
 
 export function resolveThemeMode(mode: ThemeMode): "light" | "dark" {
   if (mode !== "system") return mode;
-  return typeof window !== "undefined" &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches
+  return typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches
     ? "dark"
     : "light";
 }
@@ -73,10 +66,7 @@ export function resolveThemeMode(mode: ThemeMode): "light" | "dark" {
 export function applyAppearance(settings: AppSettings) {
   if (typeof document === "undefined") return;
   document.documentElement.dataset.theme = resolveThemeMode(settings.themeMode);
-  document.documentElement.style.setProperty(
-    "--brand-primary",
-    settings.themeColor,
-  );
+  document.documentElement.style.setProperty("--brand-primary", settings.themeColor);
 }
 
 export function getAppSettingsSnapshot(): AppSettings {
@@ -97,10 +87,7 @@ export function saveAppSettings(patch: Partial<AppSettings>): AppSettings {
   const nextSettings = { ...getAppSettingsSnapshot(), ...patch };
   currentSettings = nextSettings;
   if (typeof window !== "undefined") {
-    window.localStorage.setItem(
-      SETTINGS_STORAGE_KEY,
-      JSON.stringify(nextSettings),
-    );
+    window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(nextSettings));
   }
   applyAppearance(nextSettings);
   notifyListeners();
@@ -113,13 +100,11 @@ export function initializeAppSettings() {
 
   if (typeof window === "undefined" || systemThemeListenerAttached) return;
   systemThemeListenerAttached = true;
-  window
-    .matchMedia("(prefers-color-scheme: dark)")
-    .addEventListener("change", () => {
-      const current = getAppSettingsSnapshot();
-      if (current.themeMode !== "system") return;
-      currentSettings = { ...current };
-      applyAppearance(currentSettings);
-      notifyListeners();
-    });
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+    const current = getAppSettingsSnapshot();
+    if (current.themeMode !== "system") return;
+    currentSettings = { ...current };
+    applyAppearance(currentSettings);
+    notifyListeners();
+  });
 }

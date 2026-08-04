@@ -313,8 +313,7 @@
 
 .theme-mode-group .ant-radio-button-wrapper-checked {
   border-color: var(--brand-primary) !important;
-  box-shadow: 0 0 0 2px
-  color-mix(in srgb, var(--brand-primary) 12%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-primary) 12%, transparent);
 }
 
 .theme-card {

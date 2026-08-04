@@ -9,12 +9,9 @@ function LanguageSwitcher() {
   const { i18n, t } = useTranslation();
   const [switching, setSwitching] = useState(false);
   const currentLanguage = normalizeLanguage(i18n.resolvedLanguage);
-  const targetLanguage: SupportedLanguage =
-    currentLanguage === "zh-CN" ? "en" : "zh-CN";
+  const targetLanguage: SupportedLanguage = currentLanguage === "zh-CN" ? "en" : "zh-CN";
   const accessibleLabel =
-    targetLanguage === "zh-CN"
-      ? t("language.switchToChinese")
-      : t("language.switchToEnglish");
+    targetLanguage === "zh-CN" ? t("language.switchToChinese") : t("language.switchToEnglish");
 
   async function handleLanguageChange() {
     setSwitching(true);

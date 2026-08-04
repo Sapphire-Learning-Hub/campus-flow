@@ -1,9 +1,4 @@
-import {
-  PlusOutlined,
-  ReloadOutlined,
-  SearchOutlined,
-  TeamOutlined,
-} from "@ant-design/icons";
+import { PlusOutlined, ReloadOutlined, SearchOutlined, TeamOutlined } from "@ant-design/icons";
 import { App, Button, Input, Select, Space, Table, Tag, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -24,10 +19,7 @@ import type { ProjectMember } from "@/types/member";
 import type { Project } from "@/types/project";
 import { countActiveFilters, indexById } from "@/utils/collection";
 import { formatShortDate } from "@/utils/date";
-import {
-  getProjectPermissions,
-  PERMISSION_DENIED,
-} from "@/utils/Permissions.ts";
+import { getProjectPermissions, PERMISSION_DENIED } from "@/utils/Permissions.ts";
 import {
   buildMemberRows,
   filterMemberRows,
@@ -56,20 +48,18 @@ export default function MembersPage() {
     projectId: searchParams.get("projectId") || undefined,
   }));
   const getMembersPageErrorMessage = useCallback(
-    (requestError: unknown) =>
-      getApiErrorMessage(requestError, t("membersPage.loadError")),
+    (requestError: unknown) => getApiErrorMessage(requestError, t("membersPage.loadError")),
     [t],
   );
   const loadPage = useCallback(
     () => loadMembersPageData(appSettings.pageSize),
     [appSettings.pageSize],
   );
-  const { data, setData, loading, refreshing, error, reload, refresh } =
-    useAsyncPageData({
-      initialData: INITIAL_MEMBERS_PAGE_DATA,
-      load: loadPage,
-      getErrorMessage: getMembersPageErrorMessage,
-    });
+  const { data, setData, loading, refreshing, error, reload, refresh } = useAsyncPageData({
+    initialData: INITIAL_MEMBERS_PAGE_DATA,
+    load: loadPage,
+    getErrorMessage: getMembersPageErrorMessage,
+  });
   const { tasks, projects, members } = data;
   const {
     open: drawerOpen,
@@ -90,19 +80,12 @@ export default function MembersPage() {
     [filters, memberRows],
   );
 
-  const activeFilterCount = useMemo(
-    () => countActiveFilters(filters),
-    [filters],
-  );
-  const selectedProject = filters.projectId
-    ? projectsById.get(filters.projectId)
-    : undefined;
+  const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
+  const selectedProject = filters.projectId ? projectsById.get(filters.projectId) : undefined;
 
   const handleProjectSaved = useCallback(
     (savedProject: Project) => {
-      const activeMemberIds = new Set(
-        savedProject.members.map((item) => item.memberId),
-      );
+      const activeMemberIds = new Set(savedProject.members.map((item) => item.memberId));
       setData((current) => ({
         ...current,
         projects: current.projects.map((project) =>
@@ -126,10 +109,7 @@ export default function MembersPage() {
       message.info(t("membersPage.messages.selectProject"));
       return;
     }
-    if (
-      !getProjectPermissions(selectedProject, currentUser.memberId)
-        .canManageMembers
-    ) {
+    if (!getProjectPermissions(selectedProject, currentUser.memberId).canManageMembers) {
       message.error(PERMISSION_DENIED.manageMembers);
       return;
     }
@@ -139,9 +119,7 @@ export default function MembersPage() {
   const handleManageMember = useCallback(
     (row: MemberRow) => {
       const project = projectsById.get(row.projectId);
-      if (
-        !getProjectPermissions(project, currentUser.memberId).canManageMembers
-      ) {
+      if (!getProjectPermissions(project, currentUser.memberId).canManageMembers) {
         message.error(PERMISSION_DENIED.manageMembers);
         return;
       }
@@ -202,9 +180,7 @@ export default function MembersPage() {
         width: 120,
         render: (_, row) => {
           return (
-            <Tag color={PROJECT_ROLE_META[row.role].color}>
-              {t(`options.role.${row.role}`)}
-            </Tag>
+            <Tag color={PROJECT_ROLE_META[row.role].color}>{t(`options.role.${row.role}`)}</Tag>
           );
         },
       },
@@ -238,11 +214,7 @@ export default function MembersPage() {
         fixed: "right",
         width: 80,
         render: (_, row) => (
-          <Button
-            type="link"
-            size="small"
-            onClick={() => handleManageMember(row)}
-          >
+          <Button type="link" size="small" onClick={() => handleManageMember(row)}>
             {row.role === "owner"
               ? t("membersPage.actions.owner")
               : t("membersPage.actions.manage")}
@@ -293,9 +265,7 @@ export default function MembersPage() {
             label: project.name,
             value: project.id,
           }))}
-          onChange={(projectId) =>
-            setFilters((current) => ({ ...current, projectId }))
-          }
+          onChange={(projectId) => setFilters((current) => ({ ...current, projectId }))}
         />
         <Tag>{t("membersPage.memberCount", { count: members.length })}</Tag>
         <Tag>
@@ -348,16 +318,12 @@ export default function MembersPage() {
         loadingDescription={t("membersPage.states.loading")}
         errorTitle={t("membersPage.states.errorTitle")}
         emptyDescription={
-          memberRows.length
-            ? t("membersPage.states.noMatch")
-            : t("membersPage.states.empty")
+          memberRows.length ? t("membersPage.states.noMatch") : t("membersPage.states.empty")
         }
         onRetry={reload}
         emptyAction={
           memberRows.length ? (
-            <Button onClick={() => setFilters({})}>
-              {t("membersPage.actions.clearFilters")}
-            </Button>
+            <Button onClick={() => setFilters({})}>{t("membersPage.actions.clearFilters")}</Button>
           ) : undefined
         }
       >
@@ -369,19 +335,14 @@ export default function MembersPage() {
           pagination={{
             pageSize: appSettings.pageSize,
             showSizeChanger: false,
-            showTotal: (total) =>
-              t("membersPage.paginationTotal", { count: total }),
+            showTotal: (total) => t("membersPage.paginationTotal", { count: total }),
           }}
         />
       </PageState>
 
       <MemberFormDrawer
         open={drawerOpen}
-        project={
-          editingMemberRow
-            ? projectsById.get(editingMemberRow.projectId)
-            : selectedProject
-        }
+        project={editingMemberRow ? projectsById.get(editingMemberRow.projectId) : selectedProject}
         members={members}
         currentMemberId={currentUser.memberId}
         initial={

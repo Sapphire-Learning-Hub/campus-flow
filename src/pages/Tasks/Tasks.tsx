@@ -7,13 +7,7 @@ import {
   WarningFilled,
 } from "@ant-design/icons";
 import { App, Button, Pagination, Space, Tooltip } from "antd";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type SetStateAction,
-} from "react";
+import { useCallback, useEffect, useMemo, useState, type SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -29,11 +23,7 @@ import type { TaskView } from "@/types/settings";
 import type { Task } from "@/types/task";
 
 import { countActiveFilters, indexById } from "@/utils/collection";
-import {
-  canEditTask,
-  getProjectPermissions,
-  PERMISSION_DENIED,
-} from "@/utils/Permissions.ts";
+import { canEditTask, getProjectPermissions, PERMISSION_DENIED } from "@/utils/Permissions.ts";
 import { summarizeTasks } from "@/utils/task";
 import {
   filterTasks,
@@ -68,8 +58,7 @@ export default function TasksWorkspacePage() {
     assigneeId: searchParams.get("assigneeId") || undefined,
   }));
   const getTasksPageErrorMessage = useCallback(
-    (requestError: unknown) =>
-      getApiErrorMessage(requestError, t("tasksPage.loadError")),
+    (requestError: unknown) => getApiErrorMessage(requestError, t("tasksPage.loadError")),
     [t],
   );
   const updatePage = useCallback(
@@ -82,10 +71,7 @@ export default function TasksWorkspacePage() {
     },
     [searchParams, setSearchParams],
   );
-  const handlePageChange = useCallback(
-    (nextPage: number) => updatePage(nextPage),
-    [updatePage],
-  );
+  const handlePageChange = useCallback((nextPage: number) => updatePage(nextPage), [updatePage]);
   const resetPage = useCallback(() => {
     if (page > 1) updatePage(1, true);
   }, [page, updatePage]);
@@ -117,12 +103,11 @@ export default function TasksWorkspacePage() {
       pageSize,
     ],
   );
-  const { data, setData, loading, refreshing, error, reload, refresh } =
-    useAsyncPageData({
-      initialData: INITIAL_TASKS_PAGE_DATA,
-      load: loadPage,
-      getErrorMessage: getTasksPageErrorMessage,
-    });
+  const { data, setData, loading, refreshing, error, reload, refresh } = useAsyncPageData({
+    initialData: INITIAL_TASKS_PAGE_DATA,
+    load: loadPage,
+    getErrorMessage: getTasksPageErrorMessage,
+  });
   const { taskSummary, taskTotal, tasks, projects, members } = data;
   useEffect(() => {
     if (loading) return;
@@ -151,14 +136,11 @@ export default function TasksWorkspacePage() {
     [currentUser.memberId, projects],
   );
   const isTaskEditable = useCallback(
-    (task: Task) =>
-      canEditTask(projectsById.get(task.projectId), currentUser.memberId, task),
+    (task: Task) => canEditTask(projectsById.get(task.projectId), currentUser.memberId, task),
     [currentUser.memberId, projectsById],
   );
   const handleOpenCreate = useCallback(() => {
-    const scopedProject = filters.projectId
-      ? projectsById.get(filters.projectId)
-      : undefined;
+    const scopedProject = filters.projectId ? projectsById.get(filters.projectId) : undefined;
     if (
       scopedProject &&
       !getProjectPermissions(scopedProject, currentUser.memberId).canCreateTask
@@ -204,13 +186,9 @@ export default function TasksWorkspacePage() {
   const handleTaskSaved = useCallback(
     (savedTask: Task) => {
       setData((current) => {
-        const taskExists = current.tasks.some(
-          (task) => task.id === savedTask.id,
-        );
+        const taskExists = current.tasks.some((task) => task.id === savedTask.id);
         const tasks = taskExists
-          ? current.tasks.map((task) =>
-              task.id === savedTask.id ? savedTask : task,
-            )
+          ? current.tasks.map((task) => (task.id === savedTask.id ? savedTask : task))
           : [savedTask, ...current.tasks];
         return {
           ...current,
@@ -242,8 +220,7 @@ export default function TasksWorkspacePage() {
       total: taskTotal,
       hideOnSinglePage: true,
       showSizeChanger: false,
-      showTotal: (total: number) =>
-        t("tasksPage.paginationTotal", { count: total }),
+      showTotal: (total: number) => t("tasksPage.paginationTotal", { count: total }),
       onChange: handlePageChange,
     }),
     [handlePageChange, page, pageSize, t, taskTotal],
@@ -256,9 +233,7 @@ export default function TasksWorkspacePage() {
         projectsById={projectsById}
         membersById={membersById}
         emptyDescription={
-          tasks.length
-            ? t("tasksPage.states.noMatch")
-            : t("tasksPage.states.empty")
+          tasks.length ? t("tasksPage.states.noMatch") : t("tasksPage.states.empty")
         }
         canEdit={isTaskEditable}
         onEdit={openEdit}
@@ -352,9 +327,7 @@ export default function TasksWorkspacePage() {
           <small>{t("tasksPage.summary.overdue")}</small>
           <strong>{summary.overdue}</strong>
           <em>
-            {summary.overdue
-              ? t("tasksPage.summary.riskNote")
-              : t("tasksPage.summary.healthyNote")}
+            {summary.overdue ? t("tasksPage.summary.riskNote") : t("tasksPage.summary.healthyNote")}
           </em>
         </article>
       </section>
@@ -378,22 +351,14 @@ export default function TasksWorkspacePage() {
         loadingDescription={t("tasksPage.states.loading")}
         errorTitle={t("tasksPage.states.errorTitle")}
         emptyDescription={
-          tasks.length
-            ? t("tasksPage.states.noMatch")
-            : t("tasksPage.states.empty")
+          tasks.length ? t("tasksPage.states.noMatch") : t("tasksPage.states.empty")
         }
         onRetry={reload}
         emptyAction={
           tasks.length ? (
-            <Button onClick={() => updateFilters({})}>
-              {t("tasksPage.actions.clearFilters")}
-            </Button>
+            <Button onClick={() => updateFilters({})}>{t("tasksPage.actions.clearFilters")}</Button>
           ) : (
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={handleOpenCreate}
-            >
+            <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenCreate}>
               {t("tasksPage.actions.createFirst")}
             </Button>
           )

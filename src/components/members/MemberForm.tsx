@@ -3,17 +3,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocalizedOptions } from "@/hooks/useLocalizedOptions";
 import { getApiErrorMessage } from "@/services/client";
-import {
-  addProjectMember,
-  removeProjectMember,
-  updateProjectMember,
-} from "@/services/members";
+import { addProjectMember, removeProjectMember, updateProjectMember } from "@/services/members";
 import type { Member, ProjectMember, ProjectMemberInput } from "@/types/member";
 import type { Project } from "@/types/project";
-import {
-  getProjectPermissions,
-  PERMISSION_DENIED,
-} from "@/utils/Permissions.ts";
+import { getProjectPermissions, PERMISSION_DENIED } from "@/utils/Permissions.ts";
 import { getMemberValidationRules } from "@/utils/formRules";
 
 interface MemberFormDrawerProps {
@@ -46,20 +39,12 @@ export function MemberFormDrawer({
   const [submitting, setSubmitting] = useState(false);
   const [removing, setRemoving] = useState(false);
   const validationRules = getMemberValidationRules(t);
-  const canManageMembers = getProjectPermissions(
-    project,
-    currentMemberId,
-  ).canManageMembers;
+  const canManageMembers = getProjectPermissions(project, currentMemberId).canManageMembers;
 
   const memberOptions = useMemo(() => {
-    const existingMemberIds = new Set(
-      project?.members.map((item) => item.memberId) ?? [],
-    );
+    const existingMemberIds = new Set(project?.members.map((item) => item.memberId) ?? []);
     return members
-      .filter(
-        (member) =>
-          member.id === initial?.memberId || !existingMemberIds.has(member.id),
-      )
+      .filter((member) => member.id === initial?.memberId || !existingMemberIds.has(member.id))
       .map((member) => ({
         label: `${member.name} · ${member.department}`,
         value: member.id,
@@ -110,16 +95,12 @@ export function MemberFormDrawer({
           })
         : await addProjectMember(project.id, values);
       message.success(
-        initial
-          ? t("memberForm.messages.roleUpdated")
-          : t("memberForm.messages.added"),
+        initial ? t("memberForm.messages.roleUpdated") : t("memberForm.messages.added"),
       );
       onSaved(savedProject);
       close();
     } catch (requestError) {
-      message.error(
-        getApiErrorMessage(requestError, t("memberForm.messages.saveFailed")),
-      );
+      message.error(getApiErrorMessage(requestError, t("memberForm.messages.saveFailed")));
     } finally {
       setSubmitting(false);
     }
@@ -147,21 +128,13 @@ export function MemberFormDrawer({
       async onOk() {
         setRemoving(true);
         try {
-          const savedProject = await removeProjectMember(
-            project.id,
-            initial.memberId,
-          );
+          const savedProject = await removeProjectMember(project.id, initial.memberId);
           message.success(t("memberForm.messages.removed"));
           onSaved(savedProject);
           form.resetFields();
           onClose();
         } catch (requestError) {
-          message.error(
-            getApiErrorMessage(
-              requestError,
-              t("memberForm.messages.removeFailed"),
-            ),
-          );
+          message.error(getApiErrorMessage(requestError, t("memberForm.messages.removeFailed")));
           throw requestError;
         } finally {
           setRemoving(false);
@@ -184,12 +157,7 @@ export function MemberFormDrawer({
         <div className="entity-form-footer">
           <div>
             {initial && initial.role !== "owner" && canManageMembers ? (
-              <Button
-                danger
-                loading={removing}
-                disabled={submitting}
-                onClick={confirmRemove}
-              >
+              <Button danger loading={removing} disabled={submitting} onClick={confirmRemove}>
                 {t("memberForm.actions.remove")}
               </Button>
             ) : null}
@@ -204,9 +172,7 @@ export function MemberFormDrawer({
               disabled={!project || !canManageMembers || removing}
               onClick={() => form.submit()}
             >
-              {initial
-                ? t("memberForm.actions.saveRole")
-                : t("memberForm.actions.add")}
+              {initial ? t("memberForm.actions.saveRole") : t("memberForm.actions.add")}
             </Button>
           </Space>
         </div>
@@ -216,9 +182,7 @@ export function MemberFormDrawer({
         <Alert
           showIcon
           type="warning"
-          title={
-            !project ? t("memberForm.noProject") : t("common.permissionDenied")
-          }
+          title={!project ? t("memberForm.noProject") : t("common.permissionDenied")}
           description={permissionDescription}
           style={{ marginBottom: 16 }}
         />
@@ -242,11 +206,7 @@ export function MemberFormDrawer({
             disabled={Boolean(initial)}
           />
         </Form.Item>
-        <Form.Item
-          name="role"
-          label={t("memberForm.fields.role")}
-          rules={validationRules.role}
-        >
+        <Form.Item name="role" label={t("memberForm.fields.role")} rules={validationRules.role}>
           <Select options={manageableRoleOptions} />
         </Form.Item>
       </Form>

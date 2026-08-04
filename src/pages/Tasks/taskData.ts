@@ -1,12 +1,6 @@
 import type { Member } from "@/types/member";
 import type { Project } from "@/types/project";
-import type {
-  Task,
-  TaskPriority,
-  TaskStage,
-  TaskStatus,
-  TaskType,
-} from "@/types/task";
+import type { Task, TaskPriority, TaskStage, TaskStatus, TaskType } from "@/types/task";
 import { listMembers } from "@/services/members";
 import { listProjects } from "@/services/projects";
 import { listTasks } from "@/services/tasks";
@@ -43,9 +37,7 @@ export interface TasksPageQuery {
   assigneeId?: string;
 }
 
-export async function loadTasksPageData(
-  query: TasksPageQuery,
-): Promise<TasksPageData> {
+export async function loadTasksPageData(query: TasksPageQuery): Promise<TasksPageData> {
   const allTaskResultPromise = fetchAllPages(
     (page, pageSize) =>
       listTasks({
@@ -59,17 +51,12 @@ export async function loadTasksPageData(
       }),
     query.pageSize,
   );
-  const [taskResult, allTaskResult, projectResult, members] = await Promise.all(
-    [
-      listTasks(query),
-      allTaskResultPromise,
-      fetchAllPages(
-        (page, pageSize) => listProjects({ page, pageSize }),
-        query.pageSize,
-      ),
-      listMembers(),
-    ],
-  );
+  const [taskResult, allTaskResult, projectResult, members] = await Promise.all([
+    listTasks(query),
+    allTaskResultPromise,
+    fetchAllPages((page, pageSize) => listProjects({ page, pageSize }), query.pageSize),
+    listMembers(),
+  ]);
 
   return {
     tasks: taskResult.items,
@@ -91,9 +78,7 @@ export function filterTasks(
   return tasks
     .filter((task) => {
       const project = projectsById.get(task.projectId);
-      const member = task.assigneeId
-        ? membersById.get(task.assigneeId)
-        : undefined;
+      const member = task.assigneeId ? membersById.get(task.assigneeId) : undefined;
       const searchableText = [
         task.title,
         task.description,
@@ -113,8 +98,7 @@ export function filterTasks(
         (!filters.status || task.status === filters.status) &&
         (!filters.priority || task.priority === filters.priority) &&
         (!filters.assigneeId || task.assigneeId === filters.assigneeId) &&
-        (!filters.overdueOnly ||
-          isOverdue(task.deadline, task.status === "done"))
+        (!filters.overdueOnly || isOverdue(task.deadline, task.status === "done"))
       );
     })
     .toSorted((left, right) => {

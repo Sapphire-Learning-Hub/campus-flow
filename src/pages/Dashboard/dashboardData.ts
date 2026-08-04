@@ -34,15 +34,10 @@ export interface DashboardSummary {
   members: number;
 }
 
-export async function loadDashboardData(
-  pageSize: number,
-): Promise<DashboardData> {
+export async function loadDashboardData(pageSize: number): Promise<DashboardData> {
   const [taskResult, projectResult, members, activities] = await Promise.all([
     fetchAllPages((page, pageSize) => listTasks({ page, pageSize }), pageSize),
-    fetchAllPages(
-      (page, pageSize) => listProjects({ page, pageSize }),
-      pageSize,
-    ),
+    fetchAllPages((page, pageSize) => listProjects({ page, pageSize }), pageSize),
     listMembers(),
     listActivities({ limit: 8 }),
   ]);
@@ -134,14 +129,9 @@ export function getRecentProjects(projects: ReadonlyArray<Project>): Project[] {
     .slice(0, 5);
 }
 
-export function getFocusTasks(
-  tasks: ReadonlyArray<Task>,
-  currentMemberId: string,
-): Task[] {
+export function getFocusTasks(tasks: ReadonlyArray<Task>, currentMemberId: string): Task[] {
   const incompleteTasks = tasks.filter((task) => task.status !== "done");
-  const myTasks = incompleteTasks.filter(
-    (task) => task.assigneeId === currentMemberId,
-  );
+  const myTasks = incompleteTasks.filter((task) => task.assigneeId === currentMemberId);
   const source = myTasks.length ? myTasks : incompleteTasks;
 
   return [...source]

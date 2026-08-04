@@ -29,20 +29,9 @@ import {
   Flex,
   AutoComplete,
 } from "antd";
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Outlet,
-  useLocation,
-  useNavigate,
-  useRouteLoaderData,
-} from "react-router";
+import { Outlet, useLocation, useNavigate, useRouteLoaderData } from "react-router";
 import { BrandMark } from "@/components/common/BrandMark";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import { getCurrentUser, logout } from "@/services/auth";
@@ -71,13 +60,7 @@ function getServerMobileLayoutSnapshot() {
   return false;
 }
 
-function CurrentUserAvatar({
-  user,
-  large = false,
-}: {
-  user: AuthUser;
-  large?: boolean;
-}) {
+function CurrentUserAvatar({ user, large = false }: { user: AuthUser; large?: boolean }) {
   const initial = user.name.trim().slice(0, 1).toUpperCase() || "?";
 
   return (
@@ -280,14 +263,7 @@ export function AppLayout() {
     return () => {
       active = false;
     };
-  }, [
-    loaderUser,
-    location.hash,
-    location.pathname,
-    location.search,
-    navigate,
-    recoveredUser,
-  ]);
+  }, [loaderUser, location.hash, location.pathname, location.search, navigate, recoveredUser]);
 
   const user = loaderUser ?? recoveredUser;
 
@@ -371,9 +347,7 @@ export function AppLayout() {
                   <MenuFoldOutlined />
                 )
               }
-              onClick={() =>
-                isMobile ? setMobileOpen(true) : setCollapsed((value) => !value)
-              }
+              onClick={() => (isMobile ? setMobileOpen(true) : setCollapsed((value) => !value))}
               aria-label={t("navigation.toggle")}
             />
             <Breadcrumb className="header-breadcrumb" items={breadcrumbItems} />
@@ -472,10 +446,7 @@ export function AppLayout() {
               <span>@{user.username}</span>
             </div>
           </section>
-          <section
-            className="profile-stat-grid"
-            aria-label={t("profile.accountInformation")}
-          >
+          <section className="profile-stat-grid" aria-label={t("profile.accountInformation")}>
             <article>
               <strong>{user.username}</strong>
               <span>{t("profile.username")}</span>
@@ -520,11 +491,7 @@ export function AppLayout() {
               <FolderOpenOutlined />
               <span>{t("profile.projects")}</span>
             </button>
-            <button
-              className="danger"
-              type="button"
-              onClick={() => void handleSignOut()}
-            >
+            <button className="danger" type="button" onClick={() => void handleSignOut()}>
               <LogoutOutlined />
               <span>{t("profile.signOut")}</span>
             </button>

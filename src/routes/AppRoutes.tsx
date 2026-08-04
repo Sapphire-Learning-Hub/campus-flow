@@ -10,20 +10,14 @@ const LoginPage = lazy(() => import("@/pages/Login/Login"));
 const RegisterPage = lazy(() => import("@/pages/Register/Register.tsx"));
 const DashboardPage = lazy(() => import("@/pages/Dashboard/Dashboard"));
 const ProjectsPage = lazy(() => import("@/pages/Projects/Project.tsx"));
-const ProjectDetailPage = lazy(
-  () => import("@/pages/Projects/ProjectDetail.tsx"),
-);
+const ProjectDetailPage = lazy(() => import("@/pages/Projects/ProjectDetail.tsx"));
 const TasksPage = lazy(() => import("@/pages/Tasks/Tasks"));
 const MembersPage = lazy(() => import("@/pages/Members/Members.tsx"));
 const SettingsPage = lazy(() => import("@/pages/Settings/Setting.tsx"));
 const ErrorPage = lazy(() => import("@/pages/Error/Error"));
 
 // ---------- 2. 统一懒加载包装（消除重复代码） ----------
-function LazyRoute({
-  Component,
-}: {
-  Component: React.LazyExoticComponent<React.FC>;
-}) {
+function LazyRoute({ Component }: { Component: React.LazyExoticComponent<React.FC> }) {
   const { t } = useTranslation();
 
   return (

@@ -1,11 +1,6 @@
 import type { ProjectRole } from "@/types/member";
 import type { ProjectStatus } from "@/types/project";
-import type {
-  TaskPriority,
-  TaskStage,
-  TaskStatus,
-  TaskType,
-} from "@/types/task";
+import type { TaskPriority, TaskStage, TaskStatus, TaskType } from "@/types/task";
 
 /**
  * 业务枚举 → 展示元数据的唯一事实来源。
@@ -28,9 +23,7 @@ interface TagMeta {
 /**
  * 项目状态。hex 与 `pages/Projects/Project.css` 中 `.project-status-dot.*` 保持一致。
  */
-export const PROJECT_STATUS_META: Readonly<
-  Record<ProjectStatus, StatusMeta>
-> = {
+export const PROJECT_STATUS_META: Readonly<Record<ProjectStatus, StatusMeta>> = {
   planning: { color: "default", className: "planning", hex: "#98a2b3" },
   active: { color: "processing", className: "active", hex: "#1d5eff" },
   completed: { color: "success", className: "completed", hex: "#10b981" },

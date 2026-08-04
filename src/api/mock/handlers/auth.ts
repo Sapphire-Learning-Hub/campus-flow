@@ -38,14 +38,10 @@ export const authHandlers = [
     await delay(300);
     const payload = (await request.json()) as LoginPayload;
     const user = mockDatabase.users.find(
-      (item) =>
-        item.username === payload.username.trim() &&
-        item.password === payload.password,
+      (item) => item.username === payload.username.trim() && item.password === payload.password,
     );
 
-    return user
-      ? ok(createSession(user), "登录成功")
-      : fail("用户名或密码错误", 401);
+    return user ? ok(createSession(user), "登录成功") : fail("用户名或密码错误", 401);
   }),
 
   http.post("/api/auth/register", async ({ request }) => {
@@ -107,17 +103,11 @@ export const authHandlers = [
     if (!/^\S+@\S+\.\S+$/.test(email)) {
       return fail("邮箱格式不正确", 400);
     }
-    if (
-      mockDatabase.users.some(
-        (item) => item.id !== user.id && item.username === username,
-      )
-    ) {
+    if (mockDatabase.users.some((item) => item.id !== user.id && item.username === username)) {
       return fail("用户名已存在", 409);
     }
     if (
-      mockDatabase.users.some(
-        (item) => item.id !== user.id && item.email.toLowerCase() === email,
-      )
+      mockDatabase.users.some((item) => item.id !== user.id && item.email.toLowerCase() === email)
     ) {
       return fail("邮箱已被使用", 409);
     }
@@ -128,9 +118,7 @@ export const authHandlers = [
       department,
       avatar: payload.avatar,
     });
-    const member = mockDatabase.members.find(
-      (item) => item.id === user.memberId,
-    );
+    const member = mockDatabase.members.find((item) => item.id === user.memberId);
     if (member) {
       Object.assign(member, {
         email,
@@ -151,11 +139,7 @@ export const authHandlers = [
     if (payload.currentPassword !== user.password) {
       return fail("当前密码不正确", 400);
     }
-    if (
-      !payload.newPassword ||
-      payload.newPassword.length < 6 ||
-      payload.newPassword.length > 32
-    ) {
+    if (!payload.newPassword || payload.newPassword.length < 6 || payload.newPassword.length > 32) {
       return fail("新密码应为 6–32 位", 400);
     }
     if (payload.newPassword === user.password) {

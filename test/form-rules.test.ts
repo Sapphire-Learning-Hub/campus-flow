@@ -18,10 +18,7 @@ type MinimalForm = {
   getFieldValue: (name: string) => unknown;
 };
 
-function invokeValidator(
-  validator: NonNullable<RuleObject["validator"]>,
-  value: unknown,
-) {
+function invokeValidator(validator: NonNullable<RuleObject["validator"]>, value: unknown) {
   return Reflect.apply(validator, undefined, [{} as RuleObject, value]);
 }
 
@@ -59,9 +56,7 @@ describe("表单校验规则", () => {
     if (typeof confirmRule !== "function") {
       throw new Error("确认密码规则应为动态规则");
     }
-    const confirmValidator = (
-      confirmRule as unknown as (form: MinimalForm) => RuleObject
-    )({
+    const confirmValidator = (confirmRule as unknown as (form: MinimalForm) => RuleObject)({
       getFieldValue: () => "正确密码",
     }).validator;
     if (!confirmValidator) throw new Error("缺少确认密码校验器");
@@ -69,13 +64,9 @@ describe("表单校验规则", () => {
     await expect(invokeValidator(confirmValidator, "错误密码")).rejects.toThrow(
       "auth.validation.passwordMismatch",
     );
-    await expect(
-      invokeValidator(confirmValidator, "正确密码"),
-    ).resolves.toBeUndefined();
+    await expect(invokeValidator(confirmValidator, "正确密码")).resolves.toBeUndefined();
 
-    const agreementValidator = ruleObject(
-      rules.agreement[0] as RuleObject,
-    ).validator;
+    const agreementValidator = ruleObject(rules.agreement[0] as RuleObject).validator;
     if (!agreementValidator) throw new Error("缺少协议校验器");
     await expect(invokeValidator(agreementValidator, false)).rejects.toThrow(
       "auth.validation.agreementRequired",
@@ -90,12 +81,10 @@ describe("表单校验规则", () => {
     }).validator;
     if (!validator) throw new Error("缺少截止日期校验器");
 
-    await expect(
-      invokeValidator(validator, dayjs("2026-08-09")),
-    ).rejects.toThrow("taskForm.validation.deadlineOrder");
-    await expect(
-      invokeValidator(validator, dayjs("2026-08-10")),
-    ).resolves.toBeUndefined();
+    await expect(invokeValidator(validator, dayjs("2026-08-09"))).rejects.toThrow(
+      "taskForm.validation.deadlineOrder",
+    );
+    await expect(invokeValidator(validator, dayjs("2026-08-10"))).resolves.toBeUndefined();
   });
 
   it("为登录、项目、成员、任务、个人资料和安全表单提供规则", () => {
@@ -120,9 +109,7 @@ describe("表单校验规则", () => {
     expect(ruleObject(projectRules.description[1] as RuleObject).max).toBe(300);
 
     expect(Object.keys(memberRules)).toEqual(["memberId", "role"]);
-    expect(ruleObject(memberRules.memberId[0] as RuleObject).required).toBe(
-      true,
-    );
+    expect(ruleObject(memberRules.memberId[0] as RuleObject).required).toBe(true);
 
     expect(Object.keys(taskRules)).toEqual([
       "projectId",
@@ -137,21 +124,13 @@ describe("表单校验规则", () => {
     expect(ruleObject(taskRules.title[1] as RuleObject).max).toBe(80);
     expect(typeof taskRules.deadline[0]).toBe("function");
 
-    expect(Object.keys(profileRules)).toEqual([
-      "username",
-      "department",
-      "email",
-    ]);
-    expect(
-      ruleObject(profileRules.username[1] as RuleObject).pattern?.test(
-        "valid_name",
-      ),
-    ).toBe(true);
-    expect(
-      ruleObject(profileRules.username[1] as RuleObject).pattern?.test(
-        "invalid-name",
-      ),
-    ).toBe(false);
+    expect(Object.keys(profileRules)).toEqual(["username", "department", "email"]);
+    expect(ruleObject(profileRules.username[1] as RuleObject).pattern?.test("valid_name")).toBe(
+      true,
+    );
+    expect(ruleObject(profileRules.username[1] as RuleObject).pattern?.test("invalid-name")).toBe(
+      false,
+    );
 
     expect(Object.keys(securityRules)).toEqual([
       "currentPassword",
@@ -165,16 +144,12 @@ describe("表单校验规则", () => {
     const rules = getSecurityValidationRules(translate);
     const samePasswordRule = rules.newPassword[2];
     const confirmPasswordRule = rules.confirmPassword[1];
-    if (
-      typeof samePasswordRule !== "function" ||
-      typeof confirmPasswordRule !== "function"
-    ) {
+    if (typeof samePasswordRule !== "function" || typeof confirmPasswordRule !== "function") {
       throw new Error("应为动态安全规则");
     }
 
     const form = {
-      getFieldValue: (name: string) =>
-        name === "currentPassword" ? "当前密码" : "新密码",
+      getFieldValue: (name: string) => (name === "currentPassword" ? "当前密码" : "新密码"),
     };
     const samePasswordValidator = (
       samePasswordRule as unknown as (form: MinimalForm) => RuleObject
@@ -186,14 +161,12 @@ describe("表单校验规则", () => {
       throw new Error("缺少安全校验器");
     }
 
-    await expect(
-      invokeValidator(samePasswordValidator, "当前密码"),
-    ).rejects.toThrow("settings.security.validation.samePassword");
-    await expect(
-      invokeValidator(confirmPasswordValidator, "错误确认"),
-    ).rejects.toThrow("settings.security.validation.mismatch");
-    await expect(
-      invokeValidator(confirmPasswordValidator, "新密码"),
-    ).resolves.toBeUndefined();
+    await expect(invokeValidator(samePasswordValidator, "当前密码")).rejects.toThrow(
+      "settings.security.validation.samePassword",
+    );
+    await expect(invokeValidator(confirmPasswordValidator, "错误确认")).rejects.toThrow(
+      "settings.security.validation.mismatch",
+    );
+    await expect(invokeValidator(confirmPasswordValidator, "新密码")).resolves.toBeUndefined();
   });
 });

@@ -8,10 +8,6 @@ export interface ActivityListQuery {
   limit?: number;
 }
 
-export function listActivities(
-  params: ActivityListQuery = {},
-): Promise<Activity[]> {
-  return unwrap(
-    http.get<ApiResponse<Activity[]>>("/activities", { params }),
-  );
+export function listActivities(params: ActivityListQuery = {}): Promise<Activity[]> {
+  return unwrap(http.get<ApiResponse<Activity[]>>("/activities", { params }));
 }

@@ -6,10 +6,6 @@ export function indexById<Item extends { id: PropertyKey }>(
 
 export function countActiveFilters(filters: object): number {
   return Object.values(filters).filter(
-    (value) =>
-      value !== undefined &&
-      value !== null &&
-      value !== "" &&
-      value !== false,
+    (value) => value !== undefined && value !== null && value !== "" && value !== false,
   ).length;
 }

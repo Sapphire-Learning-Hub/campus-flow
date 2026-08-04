@@ -29,9 +29,7 @@ import { getRegisterValidationRules } from "@/utils/formRules";
 import "./index.css";
 
 function getInternalPath(value: unknown): string | undefined {
-  return typeof value === "string" &&
-    value.startsWith("/") &&
-    !value.startsWith("//")
+  return typeof value === "string" && value.startsWith("/") && !value.startsWith("//")
     ? value
     : undefined;
 }
@@ -53,9 +51,7 @@ const Register: React.FC = () => {
   const [termsOpen, setTermsOpen] = useState(false);
   const validationRules = getRegisterValidationRules(t);
 
-  const from =
-    getInternalPath((location.state as { from?: string } | null)?.from) ??
-    "/dashboard";
+  const from = getInternalPath((location.state as { from?: string } | null)?.from) ?? "/dashboard";
 
   const onFinish: FormProps<RegisterProps>["onFinish"] = async (values) => {
     setSubmitted(true);
@@ -96,9 +92,7 @@ const Register: React.FC = () => {
           <BrandMark />
         </div>
 
-        <Typography.Title level={2}>
-          {t("auth.register.title")}
-        </Typography.Title>
+        <Typography.Title level={2}>{t("auth.register.title")}</Typography.Title>
         <Typography.Paragraph type="secondary">
           {t("auth.register.description")}
         </Typography.Paragraph>
@@ -112,11 +106,7 @@ const Register: React.FC = () => {
           scrollToFirstError
         >
           <div className="register-form-grid">
-            <Form.Item
-              name="name"
-              label={t("auth.fields.name")}
-              rules={validationRules.name}
-            >
+            <Form.Item name="name" label={t("auth.fields.name")} rules={validationRules.name}>
               <Input
                 size="middle"
                 prefix={<UserOutlined />}
@@ -139,11 +129,7 @@ const Register: React.FC = () => {
             </Form.Item>
           </div>
 
-          <Form.Item
-            name="email"
-            label={t("auth.fields.email")}
-            rules={validationRules.email}
-          >
+          <Form.Item name="email" label={t("auth.fields.email")} rules={validationRules.email}>
             <Input
               size="middle"
               prefix={<MailOutlined />}
@@ -210,23 +196,13 @@ const Register: React.FC = () => {
                 <Checkbox>{t("auth.register.agreement")}</Checkbox>
               </Form.Item>
 
-              <Button
-                type="link"
-                className="agreement-link"
-                onClick={openTerms}
-              >
+              <Button type="link" className="agreement-link" onClick={openTerms}>
                 {t("auth.register.termsLink")}
               </Button>
             </div>
           </div>
 
-          <Button
-            type="primary"
-            size="middle"
-            htmlType="submit"
-            loading={submitted}
-            block
-          >
+          <Button type="primary" size="middle" htmlType="submit" loading={submitted} block>
             {t("auth.register.submit")}
           </Button>
         </Form>

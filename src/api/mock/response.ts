@@ -22,10 +22,7 @@ export function fail(message: string, status: number): Response {
   });
 }
 
-export function readPositiveInteger(
-  value: string | null,
-  fallback: number,
-): number {
+export function readPositiveInteger(value: string | null, fallback: number): number {
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 }

@@ -60,10 +60,7 @@ export function SecuritySettingsContent({
   const validationRules = getSecurityValidationRules(t);
   const [form] = Form.useForm<PasswordFormValues>();
   const newPassword = Form.useWatch("newPassword", form) ?? "";
-  const strength = useMemo(
-    () => getPasswordStrength(newPassword, t),
-    [newPassword, t],
-  );
+  const strength = useMemo(() => getPasswordStrength(newPassword, t), [newPassword, t]);
 
   return (
     <Form
@@ -103,12 +100,7 @@ export function SecuritySettingsContent({
           <span>{t("settings.security.strength.label")}</span>
           <b>{strength.label}</b>
         </div>
-        <Progress
-          percent={strength.percent}
-          status={strength.tone}
-          showInfo={false}
-          size="small"
-        />
+        <Progress percent={strength.percent} status={strength.tone} showInfo={false} size="small" />
       </div>
       <Form.Item
         label={t("settings.security.confirmPassword")}

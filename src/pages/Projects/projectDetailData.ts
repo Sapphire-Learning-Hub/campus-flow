@@ -54,9 +54,7 @@ export function summarizeProjectDetail(
 ): ProjectDetailSummary {
   const openTasks = tasks.filter((task) => task.status !== "done").length;
   const totalTasks = tasks.length;
-  const inProgressTasks = tasks.filter(
-    (task) => task.status === "in_progress",
-  ).length;
+  const inProgressTasks = tasks.filter((task) => task.status === "in_progress").length;
   const overdueTasks = tasks.filter((task) =>
     isOverdue(task.deadline, task.status === "done"),
   ).length;

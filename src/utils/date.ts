@@ -18,13 +18,9 @@ export function formatShortDate(value?: string): string {
 }
 
 export function isOverdue(deadline?: string, completed = false): boolean {
-  return Boolean(
-    deadline && !completed && dayjs(deadline).endOf("day").isBefore(dayjs()),
-  );
+  return Boolean(deadline && !completed && dayjs(deadline).endOf("day").isBefore(dayjs()));
 }
 
 export function daysUntil(deadline?: string): number | null {
-  return deadline
-    ? dayjs(deadline).startOf("day").diff(dayjs().startOf("day"), "day")
-    : null;
+  return deadline ? dayjs(deadline).startOf("day").diff(dayjs().startOf("day"), "day") : null;
 }

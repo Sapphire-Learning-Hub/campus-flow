@@ -31,24 +31,17 @@ function applyDocumentLanguage(language: string) {
   document.documentElement.dir = i18n.dir(supportedLanguage);
   dayjs.locale(supportedLanguage === "zh-CN" ? "zh-cn" : "en");
 
-  if (
-    !i18n.isInitialized ||
-    !i18n.hasResourceBundle(supportedLanguage, "common")
-  ) {
+  if (!i18n.isInitialized || !i18n.hasResourceBundle(supportedLanguage, "common")) {
     return;
   }
 
   document.title = i18n.t("meta.title");
-  const description = document.querySelector<HTMLMetaElement>(
-    'meta[name="description"]',
-  );
+  const description = document.querySelector<HTMLMetaElement>('meta[name="description"]');
   if (description) description.content = i18n.t("meta.description");
 }
 
 i18n.on("languageChanged", applyDocumentLanguage);
-i18n.on("loaded", () =>
-  applyDocumentLanguage(i18n.resolvedLanguage ?? DEFAULT_LANGUAGE),
-);
+i18n.on("loaded", () => applyDocumentLanguage(i18n.resolvedLanguage ?? DEFAULT_LANGUAGE));
 
 export const i18nReady = i18n
   .use(HttpBackend)

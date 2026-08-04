@@ -57,9 +57,7 @@ export const EMPTY_PROJECT_METRICS: ProjectMetrics = {
   progress: 0,
 };
 
-export async function loadProjectsPageData(
-  query: ProjectsPageQuery,
-): Promise<ProjectsPageData> {
+export async function loadProjectsPageData(query: ProjectsPageQuery): Promise<ProjectsPageData> {
   const taskResultPromise = fetchAllPages(
     (page, pageSize) => listTasks({ page, pageSize }),
     query.pageSize,
@@ -74,13 +72,12 @@ export async function loadProjectsPageData(
       }),
     query.pageSize,
   );
-  const [taskResult, projectResult, allProjectResult, members] =
-    await Promise.all([
-      taskResultPromise,
-      listProjects(query),
-      allProjectResultPromise,
-      listMembers(),
-    ]);
+  const [taskResult, projectResult, allProjectResult, members] = await Promise.all([
+    taskResultPromise,
+    listProjects(query),
+    allProjectResultPromise,
+    listMembers(),
+  ]);
 
   return {
     tasks: taskResult.items,
@@ -108,10 +105,7 @@ export function calculateProjectMetrics(
   projects: ReadonlyArray<Project>,
   tasks: ReadonlyArray<Task>,
 ): Map<string, ProjectMetrics> {
-  const mutableMetrics = new Map<
-    string,
-    ProjectMetrics & { completed: number }
-  >();
+  const mutableMetrics = new Map<string, ProjectMetrics & { completed: number }>();
 
   for (const project of projects) {
     mutableMetrics.set(project.id, { ...EMPTY_PROJECT_METRICS, completed: 0 });
@@ -173,12 +167,7 @@ export function filterProjects(
   return projects
     .filter((project) => {
       const leader = membersById.get(project.leaderId);
-      const searchableText = [
-        project.name,
-        project.description,
-        leader?.name,
-        leader?.department,
-      ]
+      const searchableText = [project.name, project.description, leader?.name, leader?.department]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();

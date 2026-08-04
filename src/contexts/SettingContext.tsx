@@ -1,10 +1,4 @@
-import {
-  createContext,
-  useCallback,
-  useMemo,
-  useSyncExternalStore,
-  type ReactNode,
-} from "react";
+import { createContext, useCallback, useMemo, useSyncExternalStore, type ReactNode } from "react";
 import {
   getAppSettingsSnapshot,
   getServerAppSettingsSnapshot,
@@ -19,9 +13,7 @@ export interface SettingsContextValue {
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const SettingsContext = createContext<SettingsContextValue | undefined>(
-  undefined,
-);
+export const SettingsContext = createContext<SettingsContextValue | undefined>(undefined);
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const settings = useSyncExternalStore(
@@ -29,18 +21,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     getAppSettingsSnapshot,
     getServerAppSettingsSnapshot,
   );
-  const updateSettings = useCallback(
-    (patch: Partial<AppSettings>) => saveAppSettings(patch),
-    [],
-  );
-  const value = useMemo(
-    () => ({ settings, updateSettings }),
-    [settings, updateSettings],
-  );
+  const updateSettings = useCallback((patch: Partial<AppSettings>) => saveAppSettings(patch), []);
+  const value = useMemo(() => ({ settings, updateSettings }), [settings, updateSettings]);
 
-  return (
-    <SettingsContext.Provider value={value}>
-      {children}
-    </SettingsContext.Provider>
-  );
+  return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 }

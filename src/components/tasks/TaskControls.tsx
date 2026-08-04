@@ -44,21 +44,11 @@ export function TaskControls({
   overdueCount,
 }: TaskFilterProps) {
   const { t } = useTranslation();
-  const {
-    priorityOptions,
-    taskStageOptions,
-    taskStatusOptions,
-    taskTypeOptions,
-  } = useLocalizedOptions();
-  const activeFilterCount = useMemo(
-    () => countActiveFilters(filters),
-    [filters],
-  );
+  const { priorityOptions, taskStageOptions, taskStatusOptions, taskTypeOptions } =
+    useLocalizedOptions();
+  const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
   return (
-    <section
-      className="task-controls surface-panel"
-      aria-label={t("tasksPage.filters.label")}
-    >
+    <section className="task-controls surface-panel" aria-label={t("tasksPage.filters.label")}>
       <div className="task-filter-grid">
         <Input
           className="task-search-input"
@@ -95,9 +85,7 @@ export function TaskControls({
           value={filters.workItemType}
           placeholder={t("tasksPage.filters.allTypes")}
           options={taskTypeOptions}
-          onChange={(workItemType) =>
-            onFiltersChange((current) => ({ ...current, workItemType }))
-          }
+          onChange={(workItemType) => onFiltersChange((current) => ({ ...current, workItemType }))}
         />
         <Select
           {...FILTER_SELECT_PROPS}
@@ -105,9 +93,7 @@ export function TaskControls({
           value={filters.stage}
           placeholder={t("tasksPage.filters.allStages")}
           options={taskStageOptions}
-          onChange={(stage) =>
-            onFiltersChange((current) => ({ ...current, stage }))
-          }
+          onChange={(stage) => onFiltersChange((current) => ({ ...current, stage }))}
         />
         <Select
           {...FILTER_SELECT_PROPS}
@@ -115,9 +101,7 @@ export function TaskControls({
           value={filters.status}
           placeholder={t("tasksPage.filters.allStatuses")}
           options={taskStatusOptions}
-          onChange={(status) =>
-            onFiltersChange((current) => ({ ...current, status }))
-          }
+          onChange={(status) => onFiltersChange((current) => ({ ...current, status }))}
         />
         <Select
           {...FILTER_SELECT_PROPS}
@@ -125,9 +109,7 @@ export function TaskControls({
           value={filters.priority}
           placeholder={t("tasksPage.filters.allPriorities")}
           options={priorityOptions}
-          onChange={(priority) =>
-            onFiltersChange((current) => ({ ...current, priority }))
-          }
+          onChange={(priority) => onFiltersChange((current) => ({ ...current, priority }))}
         />
         <Select
           {...FILTER_SELECT_PROPS}
@@ -138,9 +120,7 @@ export function TaskControls({
             label: member.name,
             value: member.id,
           }))}
-          onChange={(assigneeId) =>
-            onFiltersChange((current) => ({ ...current, assigneeId }))
-          }
+          onChange={(assigneeId) => onFiltersChange((current) => ({ ...current, assigneeId }))}
         />
         <Button
           type={filters.overdueOnly ? "primary" : "default"}
@@ -155,10 +135,7 @@ export function TaskControls({
         >
           {t("tasksPage.filters.overdueOnly")}
         </Button>
-        <Button
-          disabled={!activeFilterCount}
-          onClick={() => onFiltersChange({})}
-        >
+        <Button disabled={!activeFilterCount} onClick={() => onFiltersChange({})}>
           {t("tasksPage.actions.clear")}
           {activeFilterCount ? ` (${activeFilterCount})` : ""}
         </Button>

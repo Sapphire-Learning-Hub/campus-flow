@@ -1,9 +1,4 @@
-import type {
-  PageSize,
-  ProjectView,
-  SettingsFormValues,
-  TaskView,
-} from "@/types/settings.ts";
+import type { PageSize, ProjectView, SettingsFormValues, TaskView } from "@/types/settings.ts";
 import { useTranslation } from "react-i18next";
 import { Button, Form, Select } from "antd";
 import { useEffect, useMemo } from "react";
@@ -12,10 +7,7 @@ export function PreferencesSettingsContent({
   initialValues,
   onSave,
 }: {
-  initialValues: Pick<
-    SettingsFormValues,
-    "pageSize" | "defaultProjectView" | "defaultTaskView"
-  >;
+  initialValues: Pick<SettingsFormValues, "pageSize" | "defaultProjectView" | "defaultTaskView">;
   onSave: (values: SettingsFormValues) => Promise<void>;
 }) {
   const { t } = useTranslation();
@@ -29,9 +21,7 @@ export function PreferencesSettingsContent({
       })),
     [t],
   );
-  const viewOptions = useMemo<
-    Array<{ label: string; value: ProjectView | TaskView }>
-  >(
+  const viewOptions = useMemo<Array<{ label: string; value: ProjectView | TaskView }>>(
     () => [
       { label: t("settings.preferences.cardView"), value: "card" },
       { label: t("settings.preferences.listView"), value: "list" },
@@ -52,22 +42,13 @@ export function PreferencesSettingsContent({
       onFinish={(values) => void onSave(values)}
     >
       <div className="settings-form-grid">
-        <Form.Item
-          label={t("settings.preferences.defaultPageSize")}
-          name="pageSize"
-        >
+        <Form.Item label={t("settings.preferences.defaultPageSize")} name="pageSize">
           <Select options={pageSizeOptions} />
         </Form.Item>
-        <Form.Item
-          label={t("settings.preferences.defaultProjectView")}
-          name="defaultProjectView"
-        >
+        <Form.Item label={t("settings.preferences.defaultProjectView")} name="defaultProjectView">
           <Select options={viewOptions} />
         </Form.Item>
-        <Form.Item
-          label={t("settings.preferences.defaultTaskView")}
-          name="defaultTaskView"
-        >
+        <Form.Item label={t("settings.preferences.defaultTaskView")} name="defaultTaskView">
           <Select options={viewOptions} />
         </Form.Item>
       </div>

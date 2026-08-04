@@ -1,14 +1,5 @@
 import type { AuthUser } from "@/types/user.ts";
-import {
-  Avatar,
-  Button,
-  Form,
-  Input,
-  Space,
-  Typography,
-  Upload,
-  type UploadProps,
-} from "antd";
+import { Avatar, Button, Form, Input, Space, Typography, Upload, type UploadProps } from "antd";
 import type { SettingsFormValues } from "@/types/settings.ts";
 import { useTranslation } from "react-i18next";
 import { getProfileValidationRules } from "@/utils/formRules.ts";
@@ -57,11 +48,7 @@ export function ProfileSettingsContent({
       onFinish={(values) => void onSave(values)}
     >
       <section className="profile-identity">
-        <Avatar
-          size={76}
-          src={avatar}
-          style={{ backgroundColor: "var(--brand-primary)" }}
-        >
+        <Avatar size={76} src={avatar} style={{ backgroundColor: "var(--brand-primary)" }}>
           {user.name.slice(0, 1)}
         </Avatar>
         <div className="profile-identity-copy">
@@ -95,37 +82,23 @@ export function ProfileSettingsContent({
 
       <div className="settings-form-grid">
         <Form.Item label={t("settings.profile.nameReadOnly")}>
-          <Input
-            value={user.name}
-            disabled
-            aria-label={t("settings.profile.nameReadOnly")}
-          />
+          <Input value={user.name} disabled aria-label={t("settings.profile.nameReadOnly")} />
         </Form.Item>
         <Form.Item
           label={t("settings.profile.username")}
           name="username"
           rules={validationRules.username}
         >
-          <Input
-            placeholder={t("settings.profile.placeholders.username")}
-            maxLength={20}
-          />
+          <Input placeholder={t("settings.profile.placeholders.username")} maxLength={20} />
         </Form.Item>
         <Form.Item
           label={t("settings.profile.department")}
           name="department"
           rules={validationRules.department}
         >
-          <Input
-            placeholder={t("settings.profile.placeholders.department")}
-            maxLength={30}
-          />
+          <Input placeholder={t("settings.profile.placeholders.department")} maxLength={30} />
         </Form.Item>
-        <Form.Item
-          label={t("settings.profile.email")}
-          name="email"
-          rules={validationRules.email}
-        >
+        <Form.Item label={t("settings.profile.email")} name="email" rules={validationRules.email}>
           <Input placeholder={t("settings.profile.placeholders.email")} />
         </Form.Item>
       </div>

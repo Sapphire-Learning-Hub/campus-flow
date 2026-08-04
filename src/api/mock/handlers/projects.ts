@@ -5,10 +5,7 @@ import { fail, ok, readPositiveInteger } from "../response";
 import { createId } from "@/utils/id";
 import type { PaginatedResult } from "@/types/common";
 import type { Project, ProjectFormValues, ProjectPatch } from "@/types/project";
-import {
-  getProjectPermissions,
-  PERMISSION_DENIED,
-} from "@/utils/Permissions.ts";
+import { getProjectPermissions, PERMISSION_DENIED } from "@/utils/Permissions.ts";
 
 export const projectHandlers = [
   http.get("/api/projects", async ({ request }) => {
@@ -47,9 +44,7 @@ export const projectHandlers = [
     const user = findAuthorizedUser(request);
     if (!user) return fail("请先登录", 401);
 
-    const project = mockDatabase.projects.find(
-      (item) => item.id === String(params.projectId),
-    );
+    const project = mockDatabase.projects.find((item) => item.id === String(params.projectId));
     if (!project) return fail("项目不存在", 404);
     if (!getProjectPermissions(project, user.memberId).canViewProject) {
       return fail(PERMISSION_DENIED.viewProject, 403);
@@ -93,9 +88,7 @@ export const projectHandlers = [
     const user = findAuthorizedUser(request);
     if (!user) return fail("请先登录", 401);
 
-    const project = mockDatabase.projects.find(
-      (item) => item.id === String(params.projectId),
-    );
+    const project = mockDatabase.projects.find((item) => item.id === String(params.projectId));
     if (!project) return fail("项目不存在", 404);
     if (!getProjectPermissions(project, user.memberId).canEditProject) {
       return fail(PERMISSION_DENIED.editProject, 403);
@@ -111,9 +104,7 @@ export const projectHandlers = [
     if (!user) return fail("请先登录", 401);
 
     const projectId = String(params.projectId);
-    const index = mockDatabase.projects.findIndex(
-      (item) => item.id === projectId,
-    );
+    const index = mockDatabase.projects.findIndex((item) => item.id === projectId);
     if (index === -1) return fail("项目不存在", 404);
     const project = mockDatabase.projects[index];
     if (!getProjectPermissions(project, user.memberId).canDeleteProject) {
@@ -121,9 +112,7 @@ export const projectHandlers = [
     }
 
     mockDatabase.projects.splice(index, 1);
-    mockDatabase.tasks = mockDatabase.tasks.filter(
-      (task) => task.projectId !== projectId,
-    );
+    mockDatabase.tasks = mockDatabase.tasks.filter((task) => task.projectId !== projectId);
     mockDatabase.activities = mockDatabase.activities.filter(
       (activity) => activity.projectId !== projectId,
     );

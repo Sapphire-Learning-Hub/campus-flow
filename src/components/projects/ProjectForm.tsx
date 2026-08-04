@@ -1,14 +1,4 @@
-import {
-  Alert,
-  App,
-  Button,
-  DatePicker,
-  Drawer,
-  Form,
-  Input,
-  Select,
-  Space,
-} from "antd";
+import { Alert, App, Button, DatePicker, Drawer, Form, Input, Select, Space } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -18,16 +8,10 @@ import { createProject, updateProject } from "@/services/projects";
 import type { Member } from "@/types/member";
 import type { Project, ProjectFormValues, ProjectPatch } from "@/types/project";
 import { DATE_FORMAT } from "@/utils/date";
-import {
-  getProjectPermissions,
-  PERMISSION_DENIED,
-} from "@/utils/Permissions.ts";
+import { getProjectPermissions, PERMISSION_DENIED } from "@/utils/Permissions.ts";
 import { getProjectValidationRules } from "@/utils/formRules";
 
-type ProjectFormModel = Pick<
-  Project,
-  "name" | "description" | "status" | "color"
-> & {
+type ProjectFormModel = Pick<Project, "name" | "description" | "status" | "color"> & {
   deadline: Dayjs;
   memberIds?: string[];
 };
@@ -66,9 +50,7 @@ export function ProjectFormDrawer({
       name: project?.name ?? "",
       description: project?.description ?? "",
       status: project?.status ?? "planning",
-      deadline: project?.deadline
-        ? dayjs(project.deadline)
-        : dayjs().add(30, "day"),
+      deadline: project?.deadline ? dayjs(project.deadline) : dayjs().add(30, "day"),
       color: project?.color ?? "#1d5eff",
       memberIds: [],
     });
@@ -134,9 +116,7 @@ export function ProjectFormDrawer({
       message.error(
         getApiErrorMessage(
           requestError,
-          project
-            ? t("projectForm.messages.updateFailed")
-            : t("projectForm.messages.createFailed"),
+          project ? t("projectForm.messages.updateFailed") : t("projectForm.messages.createFailed"),
         ),
       );
     } finally {
@@ -169,9 +149,7 @@ export function ProjectFormDrawer({
               disabled={!canEditProject}
               onClick={() => form.submit()}
             >
-              {project
-                ? t("projectForm.actions.save")
-                : t("projectForm.actions.create")}
+              {project ? t("projectForm.actions.save") : t("projectForm.actions.create")}
             </Button>
           </Space>
         </div>
@@ -192,11 +170,7 @@ export function ProjectFormDrawer({
         disabled={submitting || !canEditProject}
         onFinish={(values) => void handleSubmit(values)}
       >
-        <Form.Item
-          name="name"
-          label={t("projectForm.fields.name")}
-          rules={validationRules.name}
-        >
+        <Form.Item name="name" label={t("projectForm.fields.name")} rules={validationRules.name}>
           <Input maxLength={50} showCount />
         </Form.Item>
         <Form.Item
@@ -220,18 +194,11 @@ export function ProjectFormDrawer({
         >
           <DatePicker style={{ width: "100%" }} />
         </Form.Item>
-        <Form.Item
-          name="color"
-          label={t("projectForm.fields.color")}
-          rules={validationRules.color}
-        >
+        <Form.Item name="color" label={t("projectForm.fields.color")} rules={validationRules.color}>
           <Input type="color" style={{ width: 72 }} />
         </Form.Item>
         {!project ? (
-          <Form.Item
-            name="memberIds"
-            label={t("projectForm.fields.initialMembers")}
-          >
+          <Form.Item name="memberIds" label={t("projectForm.fields.initialMembers")}>
             <Select
               mode="multiple"
               allowClear
