@@ -1,27 +1,12 @@
 import {
-  AppstoreOutlined,
   ApartmentOutlined,
   CalendarOutlined,
   FieldTimeOutlined,
   PlusOutlined,
   ReloadOutlined,
-  SearchOutlined,
-  UnorderedListOutlined,
   WarningFilled,
 } from "@ant-design/icons";
-import {
-  App,
-  Button,
-  Input,
-  Pagination,
-  Segmented,
-  Select,
-  Space,
-  Table,
-  Tag,
-  Tooltip,
-  type TableProps,
-} from "antd";
+import { App, Button, Pagination, Space, Tooltip } from "antd";
 import {
   useCallback,
   useEffect,
@@ -31,7 +16,6 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router";
-import { MemberAvatar } from "@/components/common/MemberAvatar";
 import { PageHeader } from "@/components/common/PageHeader";
 import { PageState } from "@/components/common/PageState";
 import { TaskFormDrawer } from "@/components/tasks/TaskForm";
@@ -39,32 +23,18 @@ import { getApiErrorMessage } from "@/services/client";
 import { useAsyncPageData } from "@/hooks/useAsyncPageData";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useEntityEditor } from "@/hooks/useEntityEditor";
-import { useLocalizedOptions } from "@/hooks/useLocalizedOptions";
 import { useSettings } from "@/hooks/useSettings";
-import type { Member } from "@/types/member";
-import type { Project } from "@/types/project";
+import { TaskBoard } from "@/components/tasks/TaskBoard.tsx";
 import type { TaskView } from "@/types/settings";
-import {
-  TASK_PRIORITY_META,
-  TASK_STAGE_META,
-  TASK_STATUS_META,
-  TASK_TYPE_META,
-} from "@/constants/status.ts";
-import type {
-  Task,
-  TaskPriority,
-  TaskStage,
-  TaskStatus,
-  TaskType,
-} from "@/types/task";
-import { formatShortDate, isOverdue } from "@/utils/date";
+import type { Task } from "@/types/task";
+
 import { countActiveFilters, indexById } from "@/utils/collection";
 import {
   canEditTask,
   getProjectPermissions,
   PERMISSION_DENIED,
 } from "@/utils/Permissions.ts";
-import { getTaskStage, getTaskType, summarizeTasks } from "@/utils/task";
+import { summarizeTasks } from "@/utils/task";
 import {
   filterTasks,
   loadTasksPageData,
@@ -73,11 +43,8 @@ import {
   type TasksPageData,
 } from "./taskData";
 import "./index.css";
-
-const FILTER_SELECT_PROPS = {
-  allowClear: true,
-  showSearch: false,
-};
+import { TaskControls } from "@/components/tasks/TaskControls.tsx";
+import { TaskList } from "@/components/tasks/TaskList.tsx";
 
 const INITIAL_TASKS_PAGE_DATA: TasksPageData = {
   tasks: [],
@@ -87,152 +54,9 @@ const INITIAL_TASKS_PAGE_DATA: TasksPageData = {
   members: [],
 };
 
-interface TaskCardProps {
-  task: Task;
-  project?: Project;
-  member?: Member;
-  editable: boolean;
-  onEdit: (task: Task) => void;
-}
-
-function TypeTag({ type }: { type: TaskType }) {
-  const { t } = useTranslation();
-  return (
-    <Tag color={TASK_TYPE_META[type].color}>
-      {t(`options.taskType.${type}`)}
-    </Tag>
-  );
-}
-
-function StageTag({ stage }: { stage: TaskStage }) {
-  const { t } = useTranslation();
-  return (
-    <Tag color={TASK_STAGE_META[stage].color}>
-      {t(`options.taskStage.${stage}`)}
-    </Tag>
-  );
-}
-
-function PriorityTag({ priority }: { priority: TaskPriority }) {
-  const { t } = useTranslation();
-  return (
-    <Tag color={TASK_PRIORITY_META[priority].color}>
-      {t(`options.priority.${priority}`)}
-    </Tag>
-  );
-}
-
-function StatusTag({ status }: { status: TaskStatus }) {
-  const { t } = useTranslation();
-  const meta = TASK_STATUS_META[status];
-  return <Tag color={meta.color}>{t(`options.taskStatus.${status}`)}</Tag>;
-}
-
-function TaskCard({ task, project, member, editable, onEdit }: TaskCardProps) {
-  const { t } = useTranslation();
-  const overdue = isOverdue(task.deadline, task.status === "done");
-
-  return (
-    <article className={`task-card${overdue ? " is-overdue" : ""}`}>
-      <header className="task-card-header">
-        <button
-          type="button"
-          className="task-card-title"
-          onClick={() => onEdit(task)}
-        >
-          {task.title}
-        </button>
-        <Button type="link" size="small" onClick={() => onEdit(task)}>
-          {editable ? t("tasksPage.actions.edit") : t("tasksPage.actions.view")}
-        </Button>
-      </header>
-
-      <p className="task-card-description">{task.description}</p>
-
-      <div className="task-card-tags">
-        <TypeTag type={getTaskType(task)} />
-        <StageTag stage={getTaskStage(task)} />
-        <PriorityTag priority={task.priority} />
-      </div>
-
-      <div className="task-card-project">
-        <span style={{ background: project?.color ?? "#94a3b8" }} />
-        <b>{project?.name ?? t("tasksPage.unknownProject")}</b>
-      </div>
-
-      <footer className="task-card-footer">
-        <MemberAvatar member={member} size={24} showName />
-        <Tooltip
-          title={
-            overdue
-              ? t("tasksPage.card.overdue")
-              : t("tasksPage.columns.schedule")
-          }
-        >
-          <time className={overdue ? "danger-text" : undefined}>
-            {overdue ? <WarningFilled /> : null}
-            {formatShortDate(task.deadline)}
-          </time>
-        </Tooltip>
-      </footer>
-
-      <div className="task-card-status">
-        <StatusTag status={task.status} />
-      </div>
-    </article>
-  );
-}
-
-interface TaskBoardProps {
-  tasks: Task[];
-  projectsById: ReadonlyMap<string, Project>;
-  membersById: ReadonlyMap<string, Member>;
-  emptyDescription: string;
-  canEdit: (task: Task) => boolean;
-  onEdit: (task: Task) => void;
-}
-
-function TaskBoard({
-  tasks,
-  projectsById,
-  membersById,
-  emptyDescription,
-  canEdit,
-  onEdit,
-}: TaskBoardProps) {
-  const { t } = useTranslation();
-
-  return (
-    <div className="task-board" aria-label={t("tasksPage.boardLabel")}>
-      {tasks.length ? (
-        tasks.map((task) => (
-          <TaskCard
-            key={task.id}
-            task={task}
-            project={projectsById.get(task.projectId)}
-            member={
-              task.assigneeId ? membersById.get(task.assigneeId) : undefined
-            }
-            editable={canEdit(task)}
-            onEdit={onEdit}
-          />
-        ))
-      ) : (
-        <div className="task-board-empty">{emptyDescription}</div>
-      )}
-    </div>
-  );
-}
-
 export default function TasksWorkspacePage() {
   const { t } = useTranslation();
   const { message } = App.useApp();
-  const {
-    priorityOptions,
-    taskStageOptions,
-    taskStatusOptions,
-    taskTypeOptions,
-  } = useLocalizedOptions();
   const currentUser = useCurrentUser();
   const { settings: appSettings } = useSettings();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -376,12 +200,7 @@ export default function TasksWorkspacePage() {
     () => filterTasks(tasks, filters, projectsById, membersById),
     [filters, membersById, projectsById, tasks],
   );
-
-  const activeFilterCount = useMemo(
-    () => countActiveFilters(filters),
-    [filters],
-  );
-
+  useMemo(() => countActiveFilters(filters), [filters]);
   const handleTaskSaved = useCallback(
     (savedTask: Task) => {
       setData((current) => {
@@ -416,107 +235,6 @@ export default function TasksWorkspacePage() {
     [refresh, setData],
   );
 
-  const columns: TableProps<Task>["columns"] = useMemo(
-    () => [
-      {
-        title: t("tasksPage.columns.task"),
-        key: "task",
-        width: 260,
-        render: (_, task) => (
-          <div className="task-title-cell">
-            <button type="button" onClick={() => openEdit(task)}>
-              {task.title}
-            </button>
-            {task.tags.length ? (
-              <small>{task.tags.map((tag) => `#${tag}`).join(" ")}</small>
-            ) : null}
-          </div>
-        ),
-      },
-      {
-        title: t("tasksPage.columns.project"),
-        key: "project",
-        width: 145,
-        render: (_, task) => {
-          const project = projectsById.get(task.projectId);
-          return (
-            <span className="task-project-cell">
-              <i style={{ background: project?.color ?? "#94a3b8" }} />
-              {project?.name ?? t("tasksPage.unknownProject")}
-            </span>
-          );
-        },
-      },
-      {
-        title: t("tasksPage.columns.type"),
-        key: "type",
-        width: 72,
-        render: (_, task) => <TypeTag type={getTaskType(task)} />,
-      },
-      {
-        title: t("tasksPage.columns.status"),
-        key: "status",
-        width: 82,
-        render: (_, task) => <StatusTag status={task.status} />,
-      },
-      {
-        title: t("tasksPage.columns.stage"),
-        key: "stage",
-        width: 72,
-        render: (_, task) => <StageTag stage={getTaskStage(task)} />,
-      },
-      {
-        title: t("tasksPage.columns.priority"),
-        key: "priority",
-        width: 72,
-        render: (_, task) => <PriorityTag priority={task.priority} />,
-      },
-      {
-        title: t("tasksPage.columns.assignee"),
-        key: "assignee",
-        width: 105,
-        render: (_, task) => (
-          <MemberAvatar
-            member={
-              task.assigneeId ? membersById.get(task.assigneeId) : undefined
-            }
-            size={24}
-            showName
-          />
-        ),
-      },
-      {
-        title: t("tasksPage.columns.schedule"),
-        key: "schedule",
-        width: 145,
-        render: (_, task) => {
-          const overdue = isOverdue(task.deadline, task.status === "done");
-          return (
-            <span className={overdue ? "danger-text" : undefined}>
-              {overdue ? <WarningFilled /> : null}
-              {formatShortDate(task.startDate)} -{" "}
-              {formatShortDate(task.deadline)}
-            </span>
-          );
-        },
-      },
-      {
-        title: t("tasksPage.columns.actions"),
-        key: "actions",
-        fixed: "right",
-        width: 65,
-        render: (_, task) => (
-          <Button type="link" size="small" onClick={() => openEdit(task)}>
-            {isTaskEditable(task)
-              ? t("tasksPage.actions.edit")
-              : t("tasksPage.actions.view")}
-          </Button>
-        ),
-      },
-    ],
-    [isTaskEditable, membersById, openEdit, projectsById, t],
-  );
-
   const taskPagination = useMemo(
     () => ({
       current: page,
@@ -547,17 +265,13 @@ export default function TasksWorkspacePage() {
       />
     ) : (
       <div className="task-table-panel">
-        <Table
-          rowKey="id"
-          columns={columns}
-          dataSource={filteredTasks}
-          scroll={{ x: 1060 }}
-          rowClassName={(task) =>
-            isOverdue(task.deadline, task.status === "done")
-              ? "task-table-row-overdue"
-              : ""
-          }
+        <TaskList
+          tasks={filteredTasks}
+          projectsById={projectsById}
+          membersById={membersById}
           pagination={taskPagination}
+          canEdit={isTaskEditable}
+          onEdit={openEdit}
         />
       </div>
     );
@@ -645,145 +359,17 @@ export default function TasksWorkspacePage() {
         </article>
       </section>
 
-      <section
-        className="task-controls surface-panel"
-        aria-label={t("tasksPage.filters.label")}
-      >
-        <div className="task-filter-grid">
-          <Input
-            className="task-search-input"
-            prefix={<SearchOutlined />}
-            allowClear
-            value={filters.keyword}
-            placeholder={t("tasksPage.filters.search")}
-            onChange={(event) =>
-              updateFilters((current) => ({
-                ...current,
-                keyword: event.target.value || undefined,
-              }))
-            }
-          />
-          <Select
-            {...FILTER_SELECT_PROPS}
-            aria-label={t("tasksPage.filters.byProject")}
-            value={filters.projectId}
-            placeholder={t("tasksPage.filters.allProjects")}
-            options={projects.map((project) => ({
-              label: project.name,
-              value: project.id,
-            }))}
-            onChange={(projectId) => {
-              updateFilters((current) => ({
-                ...current,
-                projectId,
-              }));
-            }}
-          />
-          <Select
-            {...FILTER_SELECT_PROPS}
-            aria-label={t("tasksPage.filters.byType")}
-            value={filters.workItemType}
-            placeholder={t("tasksPage.filters.allTypes")}
-            options={taskTypeOptions}
-            onChange={(workItemType) =>
-              updateFilters((current) => ({ ...current, workItemType }))
-            }
-          />
-          <Select
-            {...FILTER_SELECT_PROPS}
-            aria-label={t("tasksPage.filters.byStage")}
-            value={filters.stage}
-            placeholder={t("tasksPage.filters.allStages")}
-            options={taskStageOptions}
-            onChange={(stage) =>
-              updateFilters((current) => ({ ...current, stage }))
-            }
-          />
-          <Select
-            {...FILTER_SELECT_PROPS}
-            aria-label={t("tasksPage.filters.byStatus")}
-            value={filters.status}
-            placeholder={t("tasksPage.filters.allStatuses")}
-            options={taskStatusOptions}
-            onChange={(status) =>
-              updateFilters((current) => ({ ...current, status }))
-            }
-          />
-          <Select
-            {...FILTER_SELECT_PROPS}
-            aria-label={t("tasksPage.filters.byPriority")}
-            value={filters.priority}
-            placeholder={t("tasksPage.filters.allPriorities")}
-            options={priorityOptions}
-            onChange={(priority) =>
-              updateFilters((current) => ({ ...current, priority }))
-            }
-          />
-          <Select
-            {...FILTER_SELECT_PROPS}
-            aria-label={t("tasksPage.filters.byAssignee")}
-            value={filters.assigneeId}
-            placeholder={t("tasksPage.filters.allAssignees")}
-            options={members.map((member) => ({
-              label: member.name,
-              value: member.id,
-            }))}
-            onChange={(assigneeId) =>
-              updateFilters((current) => ({ ...current, assigneeId }))
-            }
-          />
-          <Button
-            type={filters.overdueOnly ? "primary" : "default"}
-            danger={filters.overdueOnly}
-            icon={<WarningFilled />}
-            onClick={() =>
-              updateFilters((current) => ({
-                ...current,
-                overdueOnly: !current.overdueOnly,
-              }))
-            }
-          >
-            {t("tasksPage.filters.overdueOnly")}
-          </Button>
-          <Button
-            disabled={!activeFilterCount}
-            onClick={() => updateFilters({})}
-          >
-            {t("tasksPage.actions.clear")}
-            {activeFilterCount ? ` (${activeFilterCount})` : ""}
-          </Button>
-        </div>
-
-        <div className="task-controls-footer">
-          <span>
-            {t("tasksPage.resultSummary", {
-              filtered: filteredTasks.length,
-              total: taskTotal,
-            })}
-            {summary.overdue
-              ? ` · ${t("tasksPage.overdueCount", {
-                  count: summary.overdue,
-                })}`
-              : ""}
-          </span>
-          <Segmented
-            value={view}
-            onChange={(value) => setView(value as TaskView)}
-            options={[
-              {
-                value: "list",
-                icon: <UnorderedListOutlined />,
-                label: t("tasksPage.views.list"),
-              },
-              {
-                value: "card",
-                icon: <AppstoreOutlined />,
-                label: t("tasksPage.views.board"),
-              },
-            ]}
-          />
-        </div>
-      </section>
+      <TaskControls
+        filters={filters}
+        onFiltersChange={updateFilters}
+        view={view}
+        onViewChange={setView}
+        projects={projects}
+        members={members}
+        filteredCount={filteredTasks.length}
+        totalCount={taskTotal}
+        overdueCount={summary.overdue}
+      />
 
       <PageState
         loading={loading}

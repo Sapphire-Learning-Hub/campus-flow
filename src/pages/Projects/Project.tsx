@@ -1,81 +1,51 @@
 import {
-  AppstoreOutlined,
   CalendarOutlined,
   FlagOutlined,
   PlusOutlined,
   ProjectOutlined,
   ReloadOutlined,
-  SearchOutlined,
-  StarFilled,
-  StarOutlined,
-  UnorderedListOutlined,
   WarningFilled,
 } from "@ant-design/icons";
-import {
-  App,
-  Button,
-  Input,
-  Pagination,
-  Progress,
-  Segmented,
-  Select,
-  Space,
-  Table,
-  Tag,
-  Tooltip,
-  type TableProps,
-} from "antd";
+import { App, Button, Pagination, Space, Tooltip } from "antd";
 import {
   useCallback,
   useEffect,
   useMemo,
   useState,
-  type CSSProperties,
   type SetStateAction,
 } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router";
-import { MemberAvatar } from "@/components/common/MemberAvatar";
 import { PageHeader } from "@/components/common/PageHeader";
 import { PageState } from "@/components/common/PageState";
 import { ProjectFormDrawer } from "@/components/projects/ProjectForm";
 import { useAsyncPageData } from "@/hooks/useAsyncPageData";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useEntityEditor } from "@/hooks/useEntityEditor";
-import { useLocalizedOptions } from "@/hooks/useLocalizedOptions";
 import { useSettings } from "@/hooks/useSettings";
 import { getApiErrorMessage } from "@/services/client";
 import { updateProject } from "@/services/projects";
-import type { Member } from "@/types/member";
-import type { Project, ProjectStatus } from "@/types/project";
+import { ProjectBoard } from "@/components/projects/ProjectBoard.tsx";
+import type { Project } from "@/types/project";
 import type { ProjectView } from "@/types/settings";
-import { PROJECT_STATUS_META } from "@/constants/status.ts";
-import { countActiveFilters, indexById } from "@/utils/collection";
-import { formatShortDate } from "@/utils/date";
+import { indexById } from "@/utils/collection";
 import {
   getProjectPermissions,
   PERMISSION_DENIED,
 } from "@/utils/Permissions.ts";
 import {
   calculateProjectMetrics,
-  EMPTY_PROJECT_METRICS,
   filterProjects,
-  isProjectOverdue,
   loadProjectsPageData,
   readProjectPage,
   summarizeProjects,
   type DateSort,
   type ProjectFilters,
-  type ProjectMetrics,
   type ProjectsPageData,
 } from "./projectData";
 import "./Project.css";
-
-const FILTER_SELECT_PROPS = {
-  allowClear: true,
-  showSearch: false,
-};
-
+import { ProjectControls } from "@/components/projects/ProjectControls.tsx";
+import { ProjectList } from "@/components/projects/ProjectList.tsx";
 const INITIAL_PROJECTS_PAGE_DATA: ProjectsPageData = {
   tasks: [],
   taskTotal: 0,
@@ -85,184 +55,9 @@ const INITIAL_PROJECTS_PAGE_DATA: ProjectsPageData = {
   members: [],
 };
 
-function StatusTag({ status }: { status: ProjectStatus }) {
-  const { t } = useTranslation();
-  const meta = PROJECT_STATUS_META[status];
-  return <Tag color={meta.color}>{t(`options.projectStatus.${status}`)}</Tag>;
-}
-
-interface ProjectCardProps {
-  project: Project;
-  member?: Member;
-  metrics: ProjectMetrics;
-  editable: boolean;
-  favoriteBusy: boolean;
-  onEdit: (project: Project) => void;
-  onOpenDetail: (project: Project) => void;
-  onToggleFavorite: (project: Project) => void;
-}
-
-function ProjectCard({
-  project,
-  member,
-  metrics,
-  editable,
-  favoriteBusy,
-  onEdit,
-  onOpenDetail,
-  onToggleFavorite,
-}: ProjectCardProps) {
-  const { t } = useTranslation();
-  const overdue = isProjectOverdue(project);
-
-  return (
-    <article
-      className={`project-workspace-card${overdue ? " is-overdue" : ""}`}
-      style={{ "--project-accent": project.color } as CSSProperties}
-    >
-      <header className="project-card-heading">
-        <span className="project-card-symbol" aria-hidden="true">
-          {project.name.slice(0, 1)}
-        </span>
-        <div>
-          <button type="button" onClick={() => onEdit(project)}>
-            {project.name}
-          </button>
-          <small>
-            {t("projectsPage.memberCount", {
-              count: project.members.length,
-            })}
-          </small>
-        </div>
-        <Tooltip
-          title={
-            editable
-              ? t("projectsPage.actions.toggleFavorite")
-              : PERMISSION_DENIED.editProject
-          }
-        >
-          <Button
-            className="project-favorite-button"
-            type="text"
-            size="small"
-            aria-label={
-              project.favorite
-                ? t("projectsPage.actions.unfavorite")
-                : t("projectsPage.actions.favorite")
-            }
-            icon={project.favorite ? <StarFilled /> : <StarOutlined />}
-            loading={favoriteBusy}
-            onClick={() => onToggleFavorite(project)}
-          />
-        </Tooltip>
-      </header>
-
-      <p className="project-card-description">{project.description}</p>
-
-      <div className="project-card-insights">
-        <span>
-          <b>{metrics.total}</b> {t("projectsPage.card.workItems")}
-        </span>
-        <span>
-          <b>{metrics.open}</b> {t("projectsPage.card.incomplete")}
-        </span>
-        <span className={metrics.overdue ? "danger-text" : undefined}>
-          <b>{metrics.overdue}</b> {t("projectsPage.card.overdue")}
-        </span>
-      </div>
-
-      <div className="project-card-progress">
-        <div>
-          <span>{t("projectsPage.card.progress")}</span>
-          <b>{metrics.progress}%</b>
-        </div>
-        <Progress
-          percent={metrics.progress}
-          showInfo={false}
-          strokeColor={project.color}
-        />
-      </div>
-
-      <footer className="project-card-footer">
-        <MemberAvatar member={member} size={24} showName />
-        <Tooltip
-          title={
-            overdue
-              ? t("projectsPage.card.projectOverdue")
-              : t("projectsPage.columns.deadline")
-          }
-        >
-          <time className={overdue ? "danger-text" : undefined}>
-            {overdue ? <WarningFilled /> : <CalendarOutlined />}
-            {formatShortDate(project.deadline)}
-          </time>
-        </Tooltip>
-      </footer>
-
-      <div className="project-card-status">
-        <StatusTag status={project.status} />
-        <Button type="link" size="small" onClick={() => onOpenDetail(project)}>
-          {t("projectsPage.actions.viewDetails")}
-        </Button>
-      </div>
-    </article>
-  );
-}
-
-interface ProjectBoardProps {
-  projects: Project[];
-  membersById: ReadonlyMap<string, Member>;
-  metricsByProjectId: ReadonlyMap<string, ProjectMetrics>;
-  emptyDescription: string;
-  favoriteBusyId?: string;
-  canEdit: (project: Project) => boolean;
-  onEdit: (project: Project) => void;
-  onOpenDetail: (project: Project) => void;
-  onToggleFavorite: (project: Project) => void;
-}
-
-function ProjectBoard({
-  projects,
-  membersById,
-  metricsByProjectId,
-  emptyDescription,
-  favoriteBusyId,
-  canEdit,
-  onEdit,
-  onOpenDetail,
-  onToggleFavorite,
-}: ProjectBoardProps) {
-  const { t } = useTranslation();
-
-  return (
-    <div className="project-board" aria-label={t("projectsPage.boardLabel")}>
-      {projects.length ? (
-        projects.map((project) => (
-          <ProjectCard
-            key={project.id}
-            project={project}
-            member={membersById.get(project.leaderId)}
-            metrics={
-              metricsByProjectId.get(project.id) ?? EMPTY_PROJECT_METRICS
-            }
-            editable={canEdit(project)}
-            favoriteBusy={favoriteBusyId === project.id}
-            onEdit={onEdit}
-            onOpenDetail={onOpenDetail}
-            onToggleFavorite={onToggleFavorite}
-          />
-        ))
-      ) : (
-        <div className="project-board-empty">{emptyDescription}</div>
-      )}
-    </div>
-  );
-}
-
 export default function ProjectsWorkspacePage() {
   const { t } = useTranslation();
   const { message } = App.useApp();
-  const { projectStatusOptions } = useLocalizedOptions();
   const currentUser = useCurrentUser();
   const { settings: appSettings } = useSettings();
   const navigate = useNavigate();
@@ -303,23 +98,6 @@ export default function ProjectsWorkspacePage() {
       resetPage();
     },
     [resetPage],
-  );
-  const dateSortOptions = useMemo<Array<{ label: string; value: DateSort }>>(
-    () => [
-      {
-        label: t("projectsPage.sort.updatedAt"),
-        value: "updatedAt",
-      },
-      {
-        label: t("projectsPage.sort.createdAt"),
-        value: "createdAt",
-      },
-      {
-        label: t("projectsPage.sort.deadline"),
-        value: "deadline",
-      },
-    ],
-    [t],
   );
   const loadPage = useCallback(
     () =>
@@ -399,12 +177,6 @@ export default function ProjectsWorkspacePage() {
     () => filterProjects(projects, filters, membersById, sort),
     [filters, membersById, projects, sort],
   );
-
-  const activeFilterCount = useMemo(
-    () => countActiveFilters(filters),
-    [filters],
-  );
-
   const handleProjectSaved = useCallback(
     (savedProject: Project) => {
       setData((current) => {
@@ -466,133 +238,6 @@ export default function ProjectsWorkspacePage() {
     [favoriteBusyId, handleProjectSaved, isProjectEditable, message, t],
   );
 
-  const columns: TableProps<Project>["columns"] = useMemo(
-    () => [
-      {
-        title: t("projectsPage.columns.project"),
-        key: "project",
-        width: 300,
-        render: (_, project) => (
-          <div className="project-title-cell">
-            <i style={{ background: project.color }} />
-            <div>
-              <button type="button" onClick={() => openProjectDetail(project)}>
-                {project.name}
-              </button>
-              <small>{project.description}</small>
-            </div>
-          </div>
-        ),
-      },
-      {
-        title: t("projectsPage.columns.status"),
-        key: "status",
-        width: 90,
-        render: (_, project) => <StatusTag status={project.status} />,
-      },
-      {
-        title: t("projectsPage.columns.owner"),
-        key: "leader",
-        width: 120,
-        render: (_, project) => (
-          <MemberAvatar
-            member={membersById.get(project.leaderId)}
-            size={24}
-            showName
-          />
-        ),
-      },
-      {
-        title: t("projectsPage.columns.progress"),
-        key: "progress",
-        width: 150,
-        render: (_, project) => {
-          const metrics =
-            metricsByProjectId.get(project.id) ?? EMPTY_PROJECT_METRICS;
-          return (
-            <span className="project-progress-cell">
-              <Progress
-                percent={metrics.progress}
-                size="small"
-                strokeColor={project.color}
-              />
-            </span>
-          );
-        },
-      },
-      {
-        title: t("projectsPage.columns.workItems"),
-        key: "tasks",
-        width: 145,
-        render: (_, project) => {
-          const metrics =
-            metricsByProjectId.get(project.id) ?? EMPTY_PROJECT_METRICS;
-          return (
-            <span className="project-task-count">
-              <b>{metrics.open}</b> {t("projectsPage.card.incomplete")}
-              {metrics.review
-                ? ` · ${t("projectsPage.reviewCount", {
-                    count: metrics.review,
-                  })}`
-                : ""}
-            </span>
-          );
-        },
-      },
-      {
-        title: t("projectsPage.columns.members"),
-        key: "members",
-        width: 75,
-        render: (_, project) =>
-          t("projectsPage.personCount", { count: project.members.length }),
-      },
-      {
-        title: t("projectsPage.columns.deadline"),
-        key: "deadline",
-        width: 120,
-        render: (_, project) => {
-          const overdue = isProjectOverdue(project);
-          return (
-            <time className={overdue ? "danger-text" : undefined}>
-              {overdue ? <WarningFilled /> : null}
-              {formatShortDate(project.deadline)}
-            </time>
-          );
-        },
-      },
-      {
-        title: t("projectsPage.columns.actions"),
-        key: "actions",
-        fixed: "right",
-        width: 130,
-        render: (_, project) => (
-          <Space size={0}>
-            <Button
-              type="link"
-              size="small"
-              onClick={() => openProjectDetail(project)}
-            >
-              {t("projectsPage.actions.details")}
-            </Button>
-            <Button type="link" size="small" onClick={() => openEdit(project)}>
-              {isProjectEditable(project)
-                ? t("projectsPage.actions.edit")
-                : t("projectsPage.actions.view")}
-            </Button>
-          </Space>
-        ),
-      },
-    ],
-    [
-      isProjectEditable,
-      membersById,
-      metricsByProjectId,
-      openEdit,
-      openProjectDetail,
-      t,
-    ],
-  );
-
   const projectPagination = useMemo(
     () => ({
       current: page,
@@ -608,20 +253,7 @@ export default function ProjectsWorkspacePage() {
   );
 
   const projectContent =
-    view === "list" ? (
-      <div className="project-table-panel">
-        <Table
-          rowKey="id"
-          columns={columns}
-          dataSource={filteredProjects}
-          scroll={{ x: 1110 }}
-          rowClassName={(project) =>
-            isProjectOverdue(project) ? "project-table-row-overdue" : ""
-          }
-          pagination={projectPagination}
-        />
-      </div>
-    ) : (
+    view === "card" ? (
       <ProjectBoard
         projects={filteredProjects}
         membersById={membersById}
@@ -637,6 +269,18 @@ export default function ProjectsWorkspacePage() {
         onOpenDetail={openProjectDetail}
         onToggleFavorite={(project) => void handleToggleFavorite(project)}
       />
+    ) : (
+      <div className="project-table-panel">
+        <ProjectList
+          projects={filteredProjects}
+          membersById={membersById}
+          metricsByProjectId={metricsByProjectId}
+          pagination={projectPagination}
+          canEdit={isProjectEditable}
+          onEdit={openEdit}
+          onOpenDetail={openProjectDetail}
+        />
+      </div>
     );
   const projectCardPagination =
     view === "card" ? (
@@ -719,118 +363,18 @@ export default function ProjectsWorkspacePage() {
         </article>
       </section>
 
-      <section
-        className="project-controls surface-panel"
-        aria-label={t("projectsPage.filters.label")}
-      >
-        <div className="project-filter-grid">
-          <Input
-            className="project-search-input"
-            prefix={<SearchOutlined />}
-            allowClear
-            value={filters.keyword}
-            placeholder={t("projectsPage.filters.search")}
-            onChange={(event) =>
-              updateFilters((current) => ({
-                ...current,
-                keyword: event.target.value || undefined,
-              }))
-            }
-          />
-          <Select
-            {...FILTER_SELECT_PROPS}
-            aria-label={t("projectsPage.filters.byStatus")}
-            value={filters.status}
-            placeholder={t("projectsPage.filters.allStatuses")}
-            options={projectStatusOptions}
-            onChange={(status) =>
-              updateFilters((current) => ({ ...current, status }))
-            }
-          />
-          <Select
-            aria-label={t("projectsPage.filters.sort")}
-            value={sort}
-            placeholder={t("projectsPage.sort.updatedAt")}
-            options={dateSortOptions}
-            onChange={setSort}
-          ></Select>
-          <Select
-            {...FILTER_SELECT_PROPS}
-            aria-label={t("projectsPage.filters.byOwner")}
-            value={filters.leaderId}
-            placeholder={t("projectsPage.filters.allOwners")}
-            options={members.map((member) => ({
-              label: member.name,
-              value: member.id,
-            }))}
-            onChange={(leaderId) =>
-              updateFilters((current) => ({ ...current, leaderId }))
-            }
-          />
-          <Button
-            type={filters.favoriteOnly ? "primary" : "default"}
-            icon={<StarFilled />}
-            onClick={() =>
-              updateFilters((current) => ({
-                ...current,
-                favoriteOnly: !current.favoriteOnly,
-              }))
-            }
-          >
-            {t("projectsPage.filters.favoritesOnly")}
-          </Button>
-          <Button
-            type={filters.overdueOnly ? "primary" : "default"}
-            danger={filters.overdueOnly}
-            icon={<WarningFilled />}
-            onClick={() =>
-              updateFilters((current) => ({
-                ...current,
-                overdueOnly: !current.overdueOnly,
-              }))
-            }
-          >
-            {t("projectsPage.filters.overdueOnly")}
-          </Button>
-          <Button
-            disabled={!activeFilterCount}
-            onClick={() => updateFilters({})}
-          >
-            {t("projectsPage.actions.clear")}
-            {activeFilterCount ? ` (${activeFilterCount})` : ""}
-          </Button>
-        </div>
-
-        <div className="project-controls-footer">
-          <span>
-            {t("projectsPage.resultSummary", {
-              filtered: filteredProjects.length,
-              total: projectTotal,
-            })}
-            {summary.favorites
-              ? ` · ${t("projectsPage.favoriteCount", {
-                  count: summary.favorites,
-                })}`
-              : ""}
-          </span>
-          <Segmented
-            value={view}
-            onChange={(value) => setView(value as ProjectView)}
-            options={[
-              {
-                value: "list",
-                icon: <UnorderedListOutlined />,
-                label: t("projectsPage.views.list"),
-              },
-              {
-                value: "card",
-                icon: <AppstoreOutlined />,
-                label: t("projectsPage.views.board"),
-              },
-            ]}
-          />
-        </div>
-      </section>
+      <ProjectControls
+        filters={filters}
+        onFiltersChange={updateFilters}
+        view={view}
+        onViewChange={setView}
+        sort={sort}
+        onSortChange={setSort}
+        members={members}
+        filteredCount={filteredProjects.length}
+        totalCount={projectTotal}
+        favoriteCount={summary.favorites}
+      />
 
       <PageState
         loading={loading}
