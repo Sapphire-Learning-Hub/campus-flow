@@ -1,4 +1,5 @@
-.not-found-page {
+.not-found-page,
+.route-error-page {
   display: grid;
   min-height: 100vh;
   place-items: center;

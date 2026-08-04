@@ -4,6 +4,7 @@ import { createBrowserRouter, Navigate } from "react-router";
 import { RouterProvider } from "react-router/dom";
 import AppLayout from "@/layouts/AppLayout";
 import { ProtectedRouter } from "@/routes/ProtectedRouter";
+import { ErrorBoundary } from "@/pages/Error/ErrorBoundary";
 // ---------- 1. 懒加载所有页面组件 ----------
 const LoginPage = lazy(() => import("@/pages/Login/Login"));
 const RegisterPage = lazy(() => import("@/pages/Register/Register.tsx"));
@@ -51,6 +52,7 @@ const router = createBrowserRouter([
     path: "/",
     loader: ProtectedRouter,
     element: <AppLayout />,
+    errorElement: <ErrorBoundary />,
     children: [
       { index: true, element: <Navigate to="/dashboard" replace /> },
       { path: "dashboard", element: withLazy(DashboardPage) },

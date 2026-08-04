@@ -2,6 +2,7 @@ import axios from "axios";
 import { redirect, type LoaderFunctionArgs } from "react-router";
 import { getCurrentUser } from "@/services/auth";
 import { clearAccessToken, getAccessToken } from "@/services/session";
+import { toRouteError } from "@/routes/RouterError.ts";
 
 function loginUrl(request: Request) {
   const url = new URL(request.url);
@@ -22,6 +23,6 @@ export async function ProtectedRouter({ request }: LoaderFunctionArgs) {
       throw redirect(loginUrl(request));
     }
 
-    throw error; // 网络或服务端异常应交给 errorElement 处理
+    throw toRouteError(error); // 网络或服务端异常应交给 errorElement 处理
   }
 }

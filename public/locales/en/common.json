@@ -824,6 +824,28 @@
     "description": "The page you requested does not exist or may have been moved.",
     "back": "Back to dashboard"
   },
+  "routeError": {
+    "unauthorized": {
+      "title": "Your session has expired",
+      "description": "Please sign in again to continue."
+    },
+    "forbidden": {
+      "title": "Access denied",
+      "description": "Your account does not have permission to view this content."
+    },
+    "network": {
+      "title": "Network connection failed",
+      "description": "Unable to connect to the service. Check your network and try again."
+    },
+    "service": {
+      "title": "Service temporarily unavailable",
+      "description": "The server encountered an error. Please try again later."
+    },
+    "actions": {
+      "login": "Sign in again",
+      "back": "Back to dashboard"
+    }
+  },
   "permissions": {
     "viewProject": "You do not have access to this project.",
     "editProject": "Only the project owner or an admin can edit project details.",
