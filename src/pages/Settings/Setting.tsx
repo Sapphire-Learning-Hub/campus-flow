@@ -1,34 +1,21 @@
 import {
   BgColorsOutlined,
-  CheckCircleFilled,
-  DeleteOutlined,
   LockOutlined,
   SettingOutlined,
-  UploadOutlined,
   UserOutlined,
 } from "@ant-design/icons";
 import {
   App,
-  Avatar,
-  Button,
   Card,
   Collapse,
-  ColorPicker,
-  Form,
-  Input,
   Layout,
   Menu,
-  Progress,
-  Radio,
-  Select,
-  Space,
-  Typography,
   Upload,
   type CollapseProps,
   type MenuProps,
   type UploadProps,
 } from "antd";
-import type { TFunction } from "i18next";
+
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useRevalidator } from "react-router";
@@ -37,22 +24,18 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useSettings } from "@/hooks/useSettings";
 import { changePassword, updateProfile } from "@/services/auth";
 import { getApiErrorMessage } from "@/services/client";
-import type {
-  PageSize,
-  ProjectView,
-  SettingsFormValues,
-  TaskView,
-  ThemeMode,
-} from "@/types/settings";
-import type { AuthUser } from "@/types/user";
-import {
-  getProfileValidationRules,
-  getSecurityValidationRules,
-} from "@/utils/formRules";
+import type { SettingsFormValues } from "@/types/settings";
+
 import "./index.css";
+import { ProfileSettingsContent } from "@/components/stttings/ProfileSettings.tsx";
+import {
+  SecuritySettingsContent,
+  type PasswordFormValues,
+} from "@/components/stttings/SecuritySettings.tsx";
+import { AppearanceSettingsContent } from "@/components/stttings/AppearanceSettings.tsx";
+import { PreferencesSettingsContent } from "@/components/stttings/PreferencesSettings.tsx";
 
 const { Sider, Content } = Layout;
-const { Text } = Typography;
 
 type TabKey = "profile" | "security" | "appearance" | "preferences";
 
@@ -63,24 +46,7 @@ interface SettingsSection {
   icon: ReactNode;
 }
 
-interface PasswordFormValues {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-}
-
 const MOBILE_SETTINGS_QUERY = "(max-width: 768px)";
-
-const THEME_COLORS = [
-  "#1d5eff",
-  "#722ed1",
-  "#13c2c2",
-  "#52c41a",
-  "#faad14",
-  "#fa541c",
-  "#f5222d",
-  "#2f54eb",
-];
 
 function useMediaQuery(query: string) {
   const [matches, setMatches] = useState(() =>
@@ -97,425 +63,6 @@ function useMediaQuery(query: string) {
   }, [query]);
 
   return matches;
-}
-
-function getPasswordStrength(password: string, t: TFunction) {
-  if (!password)
-    return {
-      percent: 0,
-      label: t("settings.security.strength.empty"),
-      tone: "normal" as const,
-    };
-
-  let score = 0;
-  if (password.length >= 6) score += 1;
-  if (password.length >= 10) score += 1;
-  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score += 1;
-  if (/\d/.test(password) && /[^a-zA-Z0-9]/.test(password)) score += 1;
-
-  if (score <= 1)
-    return {
-      percent: 25,
-      label: t("settings.security.strength.weak"),
-      tone: "exception" as const,
-    };
-  if (score === 2)
-    return {
-      percent: 50,
-      label: t("settings.security.strength.fair"),
-      tone: "normal" as const,
-    };
-  if (score === 3)
-    return {
-      percent: 75,
-      label: t("settings.security.strength.good"),
-      tone: "normal" as const,
-    };
-  return {
-    percent: 100,
-    label: t("settings.security.strength.strong"),
-    tone: "success" as const,
-  };
-}
-
-function ProfileSettingsContent({
-  user,
-  avatar,
-  submitting,
-  onAvatarSelect,
-  onAvatarRemove,
-  onSave,
-}: {
-  user: AuthUser;
-  avatar?: string;
-  submitting: boolean;
-  onAvatarSelect: NonNullable<UploadProps["beforeUpload"]>;
-  onAvatarRemove: () => void;
-  onSave: (values: SettingsFormValues) => Promise<void>;
-}) {
-  const { t } = useTranslation();
-  const validationRules = getProfileValidationRules(t);
-  const [form] = Form.useForm<SettingsFormValues>();
-
-  useEffect(() => {
-    form.setFieldsValue({
-      username: user.username,
-      department: user.department,
-      email: user.email,
-    });
-  }, [form, user]);
-
-  return (
-    <Form
-      form={form}
-      layout="vertical"
-      requiredMark={false}
-      initialValues={{
-        username: user.username,
-        department: user.department,
-        email: user.email,
-      }}
-      onFinish={(values) => void onSave(values)}
-    >
-      <section className="profile-identity">
-        <Avatar
-          size={76}
-          src={avatar}
-          style={{ backgroundColor: "var(--brand-primary)" }}
-        >
-          {user.name.slice(0, 1)}
-        </Avatar>
-        <div className="profile-identity-copy">
-          <b>{user.name}</b>
-          <span>{user.email}</span>
-          <Space wrap size={8}>
-            <Upload
-              accept="image/jpeg,image/png"
-              showUploadList={false}
-              beforeUpload={onAvatarSelect}
-            >
-              <Button size="small" icon={<UploadOutlined />}>
-                {t("settings.profile.changeAvatar")}
-              </Button>
-            </Upload>
-            {avatar ? (
-              <Button
-                size="small"
-                type="text"
-                danger
-                icon={<DeleteOutlined />}
-                onClick={onAvatarRemove}
-              >
-                {t("settings.profile.removeAvatar")}
-              </Button>
-            ) : null}
-          </Space>
-          <small>{t("settings.profile.avatarHelp")}</small>
-        </div>
-      </section>
-
-      <div className="settings-form-grid">
-        <Form.Item label={t("settings.profile.nameReadOnly")}>
-          <Input
-            value={user.name}
-            disabled
-            aria-label={t("settings.profile.nameReadOnly")}
-          />
-        </Form.Item>
-        <Form.Item
-          label={t("settings.profile.username")}
-          name="username"
-          rules={validationRules.username}
-        >
-          <Input
-            placeholder={t("settings.profile.placeholders.username")}
-            maxLength={20}
-          />
-        </Form.Item>
-        <Form.Item
-          label={t("settings.profile.department")}
-          name="department"
-          rules={validationRules.department}
-        >
-          <Input
-            placeholder={t("settings.profile.placeholders.department")}
-            maxLength={30}
-          />
-        </Form.Item>
-        <Form.Item
-          label={t("settings.profile.email")}
-          name="email"
-          rules={validationRules.email}
-        >
-          <Input placeholder={t("settings.profile.placeholders.email")} />
-        </Form.Item>
-      </div>
-
-      <div className="settings-actions">
-        <Text type="secondary">{t("settings.profile.syncNote")}</Text>
-        <Button type="primary" htmlType="submit" loading={submitting}>
-          {t("settings.profile.save")}
-        </Button>
-      </div>
-    </Form>
-  );
-}
-
-function SecuritySettingsContent({
-  submitting,
-  onSave,
-}: {
-  submitting: boolean;
-  onSave: (values: PasswordFormValues) => Promise<boolean>;
-}) {
-  const { t } = useTranslation();
-  const validationRules = getSecurityValidationRules(t);
-  const [form] = Form.useForm<PasswordFormValues>();
-  const newPassword = Form.useWatch("newPassword", form) ?? "";
-  const strength = useMemo(
-    () => getPasswordStrength(newPassword, t),
-    [newPassword, t],
-  );
-
-  return (
-    <Form
-      className="security-form"
-      form={form}
-      layout="vertical"
-      requiredMark={false}
-      onFinish={(values) => {
-        void onSave(values).then((saved) => {
-          if (saved) form.resetFields();
-        });
-      }}
-    >
-      <Form.Item
-        label={t("settings.security.currentPassword")}
-        name="currentPassword"
-        rules={validationRules.currentPassword}
-      >
-        <Input.Password
-          autoComplete="current-password"
-          placeholder={t("settings.security.placeholders.current")}
-        />
-      </Form.Item>
-      <Form.Item
-        label={t("settings.security.newPassword")}
-        name="newPassword"
-        dependencies={["currentPassword"]}
-        rules={validationRules.newPassword}
-      >
-        <Input.Password
-          autoComplete="new-password"
-          placeholder={t("settings.security.placeholders.new")}
-        />
-      </Form.Item>
-      <div className="password-strength" aria-live="polite">
-        <div>
-          <span>{t("settings.security.strength.label")}</span>
-          <b>{strength.label}</b>
-        </div>
-        <Progress
-          percent={strength.percent}
-          status={strength.tone}
-          showInfo={false}
-          size="small"
-        />
-      </div>
-      <Form.Item
-        label={t("settings.security.confirmPassword")}
-        name="confirmPassword"
-        dependencies={["newPassword"]}
-        rules={validationRules.confirmPassword}
-      >
-        <Input.Password
-          autoComplete="new-password"
-          placeholder={t("settings.security.placeholders.confirm")}
-        />
-      </Form.Item>
-
-      <div className="password-guidance">
-        <span>{t("settings.security.guidance.length")}</span>
-        <span>{t("settings.security.guidance.avoidWeak")}</span>
-        <span>{t("settings.security.guidance.session")}</span>
-      </div>
-
-      <div className="settings-actions settings-actions-end">
-        <Button type="primary" htmlType="submit" loading={submitting}>
-          {t("settings.security.save")}
-        </Button>
-      </div>
-    </Form>
-  );
-}
-
-function AppearanceSettingsContent({
-  themeMode,
-  themeColor,
-  onThemeModeChange,
-  onThemeColorChange,
-}: {
-  themeMode: ThemeMode;
-  themeColor: string;
-  onThemeModeChange: (mode: ThemeMode) => void;
-  onThemeColorChange: (color: string) => void;
-}) {
-  const { t } = useTranslation();
-
-  return (
-    <>
-      <section className="settings-section-block">
-        <div className="settings-field-heading">
-          <div>
-            <b>{t("settings.appearance.themeMode")}</b>
-            <span>{t("settings.appearance.themeModeDescription")}</span>
-          </div>
-          <small>{t("settings.appearance.autoSave")}</small>
-        </div>
-        <Radio.Group
-          className="theme-mode-group"
-          value={themeMode}
-          onChange={(event) =>
-            onThemeModeChange(event.target.value as ThemeMode)
-          }
-        >
-          <Radio.Button value="light">
-            <div className="theme-card">
-              <div className="theme-preview light">
-                <i />
-                <span />
-              </div>
-              <b>{t("settings.appearance.light")}</b>
-            </div>
-          </Radio.Button>
-          <Radio.Button value="dark">
-            <div className="theme-card">
-              <div className="theme-preview dark">
-                <i />
-                <span />
-              </div>
-              <b>{t("settings.appearance.dark")}</b>
-            </div>
-          </Radio.Button>
-          <Radio.Button value="system">
-            <div className="theme-card">
-              <div className="theme-preview system">
-                <i />
-                <span />
-              </div>
-              <b>{t("settings.appearance.system")}</b>
-            </div>
-          </Radio.Button>
-        </Radio.Group>
-      </section>
-
-      <section className="settings-section-block settings-section-block-last">
-        <div className="settings-field-heading">
-          <div>
-            <b>{t("settings.appearance.themeColor")}</b>
-            <span>{t("settings.appearance.themeColorDescription")}</span>
-          </div>
-          <ColorPicker
-            value={themeColor}
-            showText
-            onChangeComplete={(color) =>
-              onThemeColorChange(color.toHexString())
-            }
-          />
-        </div>
-        <div
-          className="color-options"
-          aria-label={t("settings.appearance.recommendedColors")}
-        >
-          {THEME_COLORS.map((color) => (
-            <button
-              key={color}
-              type="button"
-              className={`color-item ${themeColor === color ? "active" : ""}`}
-              aria-label={t("settings.appearance.selectColor", { color })}
-              title={color}
-              style={{ backgroundColor: color }}
-              onClick={() => onThemeColorChange(color)}
-            >
-              {themeColor === color ? <CheckCircleFilled /> : null}
-            </button>
-          ))}
-        </div>
-      </section>
-    </>
-  );
-}
-
-function PreferencesSettingsContent({
-  initialValues,
-  onSave,
-}: {
-  initialValues: Pick<
-    SettingsFormValues,
-    "pageSize" | "defaultProjectView" | "defaultTaskView"
-  >;
-  onSave: (values: SettingsFormValues) => Promise<void>;
-}) {
-  const { t } = useTranslation();
-  const [form] = Form.useForm<SettingsFormValues>();
-  const { pageSize, defaultProjectView, defaultTaskView } = initialValues;
-  const pageSizeOptions = useMemo(
-    () =>
-      ([5, 10, 20, 50] as PageSize[]).map((value) => ({
-        label: t("settings.preferences.rowsPerPage", { count: value }),
-        value,
-      })),
-    [t],
-  );
-  const viewOptions = useMemo<
-    Array<{ label: string; value: ProjectView | TaskView }>
-  >(
-    () => [
-      { label: t("settings.preferences.cardView"), value: "card" },
-      { label: t("settings.preferences.listView"), value: "list" },
-    ],
-    [t],
-  );
-
-  useEffect(() => {
-    form.setFieldsValue({ pageSize, defaultProjectView, defaultTaskView });
-  }, [defaultProjectView, defaultTaskView, form, pageSize]);
-
-  return (
-    <Form
-      form={form}
-      layout="vertical"
-      requiredMark={false}
-      initialValues={initialValues}
-      onFinish={(values) => void onSave(values)}
-    >
-      <div className="settings-form-grid">
-        <Form.Item
-          label={t("settings.preferences.defaultPageSize")}
-          name="pageSize"
-        >
-          <Select options={pageSizeOptions} />
-        </Form.Item>
-        <Form.Item
-          label={t("settings.preferences.defaultProjectView")}
-          name="defaultProjectView"
-        >
-          <Select options={viewOptions} />
-        </Form.Item>
-        <Form.Item
-          label={t("settings.preferences.defaultTaskView")}
-          name="defaultTaskView"
-        >
-          <Select options={viewOptions} />
-        </Form.Item>
-      </div>
-      <div className="settings-actions settings-actions-end">
-        <Button type="primary" htmlType="submit">
-          {t("settings.preferences.save")}
-        </Button>
-      </div>
-    </Form>
-  );
 }
 
 export default function SettingsPage() {
