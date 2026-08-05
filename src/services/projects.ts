@@ -1,5 +1,5 @@
 import { http } from "@/utils/request";
-import { unwrap } from "./client";
+import { unwrap, type RequestOptions } from "./client";
 import type { ApiResponse, PaginatedResult } from "@/types/common";
 import type { Project, ProjectFormValues, ProjectPatch, ProjectStatus } from "@/types/project";
 
@@ -10,12 +10,17 @@ export interface ProjectListQuery {
   pageSize?: number;
 }
 
-export function listProjects(params: ProjectListQuery = {}): Promise<PaginatedResult<Project>> {
-  return unwrap(http.get<ApiResponse<PaginatedResult<Project>>>("/projects", { params }));
+export function listProjects(
+  params: ProjectListQuery = {},
+  options: RequestOptions = {},
+): Promise<PaginatedResult<Project>> {
+  return unwrap(
+    http.get<ApiResponse<PaginatedResult<Project>>>("/projects", { params, ...options }),
+  );
 }
 
-export function getProject(projectId: string): Promise<Project> {
-  return unwrap(http.get<ApiResponse<Project>>(`/projects/${projectId}`));
+export function getProject(projectId: string, options: RequestOptions = {}): Promise<Project> {
+  return unwrap(http.get<ApiResponse<Project>>(`/projects/${projectId}`, options));
 }
 
 export function createProject(values: ProjectFormValues): Promise<Project> {

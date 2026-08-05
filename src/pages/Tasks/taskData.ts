@@ -37,25 +37,36 @@ export interface TasksPageQuery {
   assigneeId?: string;
 }
 
-export async function loadTasksPageData(query: TasksPageQuery): Promise<TasksPageData> {
+export async function loadTasksPageData(
+  query: TasksPageQuery,
+  signal?: AbortSignal,
+): Promise<TasksPageData> {
   const allTaskResultPromise = fetchAllPages(
     (page, pageSize) =>
-      listTasks({
-        page,
-        pageSize,
-        keyword: query.keyword,
-        projectId: query.projectId,
-        status: query.status,
-        priority: query.priority,
-        assigneeId: query.assigneeId,
-      }),
+      listTasks(
+        {
+          page,
+          pageSize,
+          keyword: query.keyword,
+          projectId: query.projectId,
+          status: query.status,
+          priority: query.priority,
+          assigneeId: query.assigneeId,
+        },
+        { signal },
+      ),
     query.pageSize,
+    signal,
   );
   const [taskResult, allTaskResult, projectResult, members] = await Promise.all([
-    listTasks(query),
+    listTasks(query, { signal }),
     allTaskResultPromise,
-    fetchAllPages((page, pageSize) => listProjects({ page, pageSize }), query.pageSize),
-    listMembers(),
+    fetchAllPages(
+      (page, pageSize) => listProjects({ page, pageSize }, { signal }),
+      query.pageSize,
+      signal,
+    ),
+    listMembers({}, { signal }),
   ]);
 
   return {

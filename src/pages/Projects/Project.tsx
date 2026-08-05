@@ -87,13 +87,16 @@ export default function ProjectsWorkspacePage() {
     [resetPage],
   );
   const loadPage = useCallback(
-    () =>
-      loadProjectsPageData({
-        page,
-        pageSize,
-        keyword: filters.keyword?.trim() || undefined,
-        status: filters.status,
-      }),
+    (signal: AbortSignal) =>
+      loadProjectsPageData(
+        {
+          page,
+          pageSize,
+          keyword: filters.keyword?.trim() || undefined,
+          status: filters.status,
+        },
+        signal,
+      ),
     [filters.keyword, filters.status, page, pageSize],
   );
   const { data, setData, loading, refreshing, error, reload, refresh } = useAsyncPageData({

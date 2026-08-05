@@ -30,16 +30,21 @@ export interface ProjectDetailSummary {
 export function loadProjectDetailData(
   projectId: string | undefined,
   missingProjectIdMessage: string,
+  signal?: AbortSignal,
 ): Promise<ProjectDetailData> {
   if (!projectId) {
     return Promise.reject(new Error(missingProjectIdMessage));
   }
 
   return Promise.all([
-    getProject(projectId),
-    fetchAllPages((page, pageSize) => listTasks({ projectId, page, pageSize })),
-    listMembers({ projectId }),
-    listActivities({ projectId, limit: 10 }),
+    getProject(projectId, { signal }),
+    fetchAllPages(
+      (page, pageSize) => listTasks({ projectId, page, pageSize }, { signal }),
+      undefined,
+      signal,
+    ),
+    listMembers({ projectId }, { signal }),
+    listActivities({ projectId, limit: 10 }, { signal }),
   ]).then(([project, taskResult, members, activities]) => ({
     project,
     tasks: taskResult.items,

@@ -57,26 +57,34 @@ export const EMPTY_PROJECT_METRICS: ProjectMetrics = {
   progress: 0,
 };
 
-export async function loadProjectsPageData(query: ProjectsPageQuery): Promise<ProjectsPageData> {
+export async function loadProjectsPageData(
+  query: ProjectsPageQuery,
+  signal?: AbortSignal,
+): Promise<ProjectsPageData> {
   const taskResultPromise = fetchAllPages(
-    (page, pageSize) => listTasks({ page, pageSize }),
+    (page, pageSize) => listTasks({ page, pageSize }, { signal }),
     query.pageSize,
+    signal,
   );
   const allProjectResultPromise = fetchAllPages(
     (page, pageSize) =>
-      listProjects({
-        page,
-        pageSize,
-        keyword: query.keyword,
-        status: query.status,
-      }),
+      listProjects(
+        {
+          page,
+          pageSize,
+          keyword: query.keyword,
+          status: query.status,
+        },
+        { signal },
+      ),
     query.pageSize,
+    signal,
   );
   const [taskResult, projectResult, allProjectResult, members] = await Promise.all([
     taskResultPromise,
-    listProjects(query),
+    listProjects(query, { signal }),
     allProjectResultPromise,
-    listMembers(),
+    listMembers({}, { signal }),
   ]);
 
   return {

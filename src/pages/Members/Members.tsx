@@ -52,7 +52,7 @@ export default function MembersPage() {
     [t],
   );
   const loadPage = useCallback(
-    () => loadMembersPageData(appSettings.pageSize),
+    (signal: AbortSignal) => loadMembersPageData(appSettings.pageSize, signal),
     [appSettings.pageSize],
   );
   const { data, setData, loading, refreshing, error, reload, refresh } = useAsyncPageData({

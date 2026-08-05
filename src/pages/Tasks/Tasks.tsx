@@ -83,16 +83,19 @@ export default function TasksWorkspacePage() {
     [resetPage],
   );
   const loadPage = useCallback(
-    () =>
-      loadTasksPageData({
-        page,
-        pageSize,
-        keyword: filters.keyword?.trim() || undefined,
-        projectId: filters.projectId,
-        status: filters.status,
-        priority: filters.priority,
-        assigneeId: filters.assigneeId,
-      }),
+    (signal: AbortSignal) =>
+      loadTasksPageData(
+        {
+          page,
+          pageSize,
+          keyword: filters.keyword?.trim() || undefined,
+          projectId: filters.projectId,
+          status: filters.status,
+          priority: filters.priority,
+          assigneeId: filters.assigneeId,
+        },
+        signal,
+      ),
     [
       filters.assigneeId,
       filters.keyword,

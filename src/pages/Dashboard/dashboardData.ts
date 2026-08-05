@@ -34,12 +34,19 @@ export interface DashboardSummary {
   members: number;
 }
 
-export async function loadDashboardData(pageSize: number): Promise<DashboardData> {
+export async function loadDashboardData(
+  pageSize: number,
+  signal?: AbortSignal,
+): Promise<DashboardData> {
   const [taskResult, projectResult, members, activities] = await Promise.all([
-    fetchAllPages((page, pageSize) => listTasks({ page, pageSize }), pageSize),
-    fetchAllPages((page, pageSize) => listProjects({ page, pageSize }), pageSize),
-    listMembers(),
-    listActivities({ limit: 8 }),
+    fetchAllPages((page, pageSize) => listTasks({ page, pageSize }, { signal }), pageSize, signal),
+    fetchAllPages(
+      (page, pageSize) => listProjects({ page, pageSize }, { signal }),
+      pageSize,
+      signal,
+    ),
+    listMembers({}, { signal }),
+    listActivities({ limit: 8 }, { signal }),
   ]);
 
   return {

@@ -54,7 +54,8 @@ export default function ProjectDetailPage() {
   }, []);
 
   const loadProjectDetail = useCallback(
-    () => loadProjectDetailData(projectId, t("projectDetail.missingProjectId")),
+    (signal: AbortSignal) =>
+      loadProjectDetailData(projectId, t("projectDetail.missingProjectId"), signal),
     [projectId, t],
   );
 

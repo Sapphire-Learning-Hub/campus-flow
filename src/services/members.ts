@@ -1,5 +1,5 @@
 import { http } from "@/utils/request";
-import { unwrap } from "./client";
+import { unwrap, type RequestOptions } from "./client";
 import type { ApiResponse } from "@/types/common";
 import type { Member, ProjectMemberInput, ProjectMemberPatch } from "@/types/member";
 import type { Project } from "@/types/project";
@@ -8,8 +8,11 @@ export interface MemberListQuery {
   projectId?: string;
 }
 
-export function listMembers(params: MemberListQuery = {}): Promise<Member[]> {
-  return unwrap(http.get<ApiResponse<Member[]>>("/members", { params }));
+export function listMembers(
+  params: MemberListQuery = {},
+  options: RequestOptions = {},
+): Promise<Member[]> {
+  return unwrap(http.get<ApiResponse<Member[]>>("/members", { params, ...options }));
 }
 
 export function addProjectMember(projectId: string, values: ProjectMemberInput): Promise<Project> {

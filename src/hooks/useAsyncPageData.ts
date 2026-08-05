@@ -6,10 +6,11 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
+import { isAbortError } from "@/services/client";
 
 interface UseAsyncPageDataOptions<T> {
   initialData: T;
-  load: () => Promise<T>;
+  load: (signal: AbortSignal) => Promise<T>;
   getErrorMessage: (error: unknown) => string;
 }
 
@@ -34,33 +35,41 @@ export function useAsyncPageData<T>({
   const [error, setError] = useState<string>();
   const mountedRef = useRef(false);
   const requestRef = useRef(0);
+  const activeCtrlRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
       requestRef.current += 1;
+      activeCtrlRef.current?.abort();
+      activeCtrlRef.current = null;
     };
   }, []);
 
   const execute = useCallback(
     async (background: boolean, isActive: () => boolean) => {
       if (!isActive()) return;
+      activeCtrlRef.current?.abort();
+      const ctrl = new AbortController();
+      activeCtrlRef.current = ctrl;
       const request = ++requestRef.current;
       if (background) setRefreshing(true);
       else setLoading(true);
       setError(undefined);
 
       try {
-        const result = await load();
+        const result = await load(ctrl.signal);
         if (isActive() && request === requestRef.current) setData(result);
       } catch (requestError) {
+        if (isAbortError(requestError)) return;
         if (isActive() && request === requestRef.current) setError(getErrorMessage(requestError));
       } finally {
         if (isActive() && request === requestRef.current) {
           setLoading(false);
           setRefreshing(false);
         }
+        if (activeCtrlRef.current === ctrl) activeCtrlRef.current = null;
       }
     },
     [getErrorMessage, load],

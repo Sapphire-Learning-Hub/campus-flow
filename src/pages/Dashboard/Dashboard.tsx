@@ -71,7 +71,7 @@ export default function DashboardPage() {
     [t],
   );
   const loadPage = useCallback(
-    () => loadDashboardData(appSettings.pageSize),
+    (signal: AbortSignal) => loadDashboardData(appSettings.pageSize, signal),
     [appSettings.pageSize],
   );
   const { data, setData, loading, refreshing, error, reload, refresh } = useAsyncPageData({
