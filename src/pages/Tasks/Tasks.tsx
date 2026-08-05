@@ -35,6 +35,7 @@ import {
 import "./index.css";
 import { TaskControls } from "@/components/tasks/TaskControls.tsx";
 import { TaskList } from "@/components/tasks/TaskList.tsx";
+import { useDebounce } from "@/hooks/useDebounce.ts";
 
 const INITIAL_TASKS_PAGE_DATA: TasksPageData = {
   tasks: [],
@@ -57,6 +58,7 @@ export default function TasksWorkspacePage() {
     projectId: searchParams.get("projectId") || undefined,
     assigneeId: searchParams.get("assigneeId") || undefined,
   }));
+  const debounceKeyword = useDebounce(filters.keyword ?? "", 300);
   const getTasksPageErrorMessage = useCallback(
     (requestError: unknown) => getApiErrorMessage(requestError, t("tasksPage.loadError")),
     [t],
@@ -88,7 +90,7 @@ export default function TasksWorkspacePage() {
         {
           page,
           pageSize,
-          keyword: filters.keyword?.trim() || undefined,
+          keyword: debounceKeyword.trim() || undefined,
           projectId: filters.projectId,
           status: filters.status,
           priority: filters.priority,
@@ -98,7 +100,7 @@ export default function TasksWorkspacePage() {
       ),
     [
       filters.assigneeId,
-      filters.keyword,
+      debounceKeyword,
       filters.priority,
       filters.projectId,
       filters.status,

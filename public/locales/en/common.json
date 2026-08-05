@@ -312,7 +312,7 @@
     },
     "filters": {
       "label": "Project filters",
-      "search": "Search project, owner, or department",
+      "search": "Search project",
       "byStatus": "Filter by status",
       "allStatuses": "All statuses",
       "sort": "Sort by date",
@@ -389,7 +389,7 @@
     },
     "filters": {
       "label": "Work item filters",
-      "search": "Search title, project, assignee, or tag",
+      "search": "Search work item title",
       "byProject": "Filter by project",
       "allProjects": "All projects",
       "byType": "Filter by type",

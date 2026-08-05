@@ -35,6 +35,7 @@ import { Outlet, useLocation, useNavigate, useRouteLoaderData } from "react-rout
 import { BrandMark } from "@/components/common/BrandMark";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import { getCurrentUser, logout } from "@/services/auth";
+import { isAbortError } from "@/services/client";
 import { clearAccessToken } from "@/services/session";
 import "./AppLayout.css";
 import type { AuthUser } from "@/types/user.ts";
@@ -103,22 +104,30 @@ export function AppLayout() {
     getMobileLayoutSnapshot,
     getServerMobileLayoutSnapshot,
   );
-  async function searchGlobal(keyword: string) {
+  async function searchGlobal(keyword: string, signal: AbortSignal) {
     const query = keyword.trim();
     if (!query) return [];
+    if (signal.aborted) return [];
     const [projectResult, taskResult, members] = await Promise.all([
-      listProjects({
-        keyword: query,
-        page: 1,
-        pageSize: 5,
-      }),
-      listTasks({
-        keyword: query,
-        page: 1,
-        pageSize: 5,
-      }),
-      listMembers(),
+      listProjects(
+        {
+          keyword: query,
+          page: 1,
+          pageSize: 5,
+        },
+        { signal },
+      ),
+      listTasks(
+        {
+          keyword: query,
+          page: 1,
+          pageSize: 5,
+        },
+        { signal },
+      ),
+      listMembers({}, { signal }),
     ]);
+    if (signal.aborted) return [];
 
     const normalizedQuery = query.toLowerCase();
 
@@ -166,13 +175,15 @@ export function AppLayout() {
       return;
     }
     let active = true;
+    const ctrl = new AbortController();
     const timer = window.setTimeout(() => {
       setSearching(true);
-      void searchGlobal(query)
+      void searchGlobal(query, ctrl.signal)
         .then((items) => {
           if (active && request === requestRef.current) setSearchItems(items);
         })
         .catch((error: unknown) => {
+          if (isAbortError(error)) return;
           if (active && request === requestRef.current) {
             console.error("全局搜索失败：", error);
             setSearchItems([]);
@@ -181,10 +192,11 @@ export function AppLayout() {
         .finally(() => {
           if (active && request === requestRef.current) setSearching(false);
         });
-    }, 250);
+    }, 300);
     return () => {
       active = false;
       window.clearTimeout(timer);
+      ctrl.abort();
     };
   }, [keyword]);
   const isLight = settings.themeMode === "light";

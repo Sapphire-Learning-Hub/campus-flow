@@ -37,6 +37,7 @@ import {
 import "./Project.css";
 import { ProjectControls } from "@/components/projects/ProjectControls.tsx";
 import { ProjectList } from "@/components/projects/ProjectList.tsx";
+import { useDebounce } from "@/hooks/useDebounce.ts";
 const INITIAL_PROJECTS_PAGE_DATA: ProjectsPageData = {
   tasks: [],
   taskTotal: 0,
@@ -65,6 +66,7 @@ export default function ProjectsWorkspacePage() {
     (requestError: unknown) => getApiErrorMessage(requestError, t("projectsPage.loadError")),
     [t],
   );
+  const debounce = useDebounce(filters.keyword ?? "", 300);
   const updatePage = useCallback(
     (nextPage: number, replace = false) => {
       const nextParams = new URLSearchParams(searchParams);
@@ -92,12 +94,12 @@ export default function ProjectsWorkspacePage() {
         {
           page,
           pageSize,
-          keyword: filters.keyword?.trim() || undefined,
+          keyword: debounce.trim() || undefined,
           status: filters.status,
         },
         signal,
       ),
-    [filters.keyword, filters.status, page, pageSize],
+    [debounce, filters.status, page, pageSize],
   );
   const { data, setData, loading, refreshing, error, reload, refresh } = useAsyncPageData({
     initialData: INITIAL_PROJECTS_PAGE_DATA,

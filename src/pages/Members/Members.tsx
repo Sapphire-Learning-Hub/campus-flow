@@ -29,6 +29,7 @@ import {
   type MembersPageData,
 } from "./memberData";
 import "./index.css";
+import { useDebounce } from "@/hooks/useDebounce.ts";
 
 const INITIAL_MEMBERS_PAGE_DATA: MembersPageData = {
   tasks: [],
@@ -47,6 +48,7 @@ export default function MembersPage() {
   const [filters, setFilters] = useState<MemberFilters>(() => ({
     projectId: searchParams.get("projectId") || undefined,
   }));
+  const debounceKeyword = useDebounce(filters.keyword ?? "", 300);
   const getMembersPageErrorMessage = useCallback(
     (requestError: unknown) => getApiErrorMessage(requestError, t("membersPage.loadError")),
     [t],
@@ -76,8 +78,13 @@ export default function MembersPage() {
   );
 
   const filteredMemberRows = useMemo(
-    () => filterMemberRows(memberRows, filters),
-    [filters, memberRows],
+    () =>
+      filterMemberRows(memberRows, {
+        keyword: debounceKeyword.trim() || undefined,
+        projectId: filters.projectId,
+        role: filters.role,
+      }),
+    [debounceKeyword, filters.role, filters.projectId, memberRows],
   );
 
   const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);

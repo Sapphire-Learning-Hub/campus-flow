@@ -302,7 +302,7 @@
     },
     "filters": {
       "label": "项目筛选",
-      "search": "搜索项目、负责人或院系",
+      "search": "搜索项目",
       "byStatus": "按状态筛选",
       "allStatuses": "全部状态",
       "sort": "按时间排序",
@@ -377,7 +377,7 @@
     },
     "filters": {
       "label": "工作项筛选",
-      "search": "搜索标题、项目、负责人或标签",
+      "search": "搜索工作项标题",
       "byProject": "按项目筛选",
       "allProjects": "全部项目",
       "byType": "按类型筛选",
